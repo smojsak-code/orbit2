@@ -491,9 +491,12 @@ function render(vendorName) {
 
 // --- Tab switching ---
 function switchView(view) {
+  // Note: #viewReports has a hard `display: none` in the stylesheet, so showing it needs an
+  // explicit 'block' — setting style.display = '' just falls back to that CSS rule and leaves
+  // it hidden even though nothing errors.
   const isReports = view === 'reports';
-  document.getElementById('viewDashboard').style.display = isReports ? 'none' : '';
-  document.getElementById('viewReports').style.display = isReports ? '' : 'none';
+  document.getElementById('viewDashboard').style.display = isReports ? 'none' : 'block';
+  document.getElementById('viewReports').style.display = isReports ? 'block' : 'none';
   document.getElementById('tabDashboard').classList.toggle('active', !isReports);
   document.getElementById('tabReports').classList.toggle('active', isReports);
 }
