@@ -27,7 +27,15 @@ WORKDIR="$(mktemp -d)"
 git clone --quiet "https://x-access-token:${TOKEN}@github.com/${REPO}.git" "$WORKDIR"
 
 rsync -a --exclude 'node_modules' --exclude '.git' --exclude '.github_token' --exclude '.git-credentials' \
+  --exclude 'reports/_qa_tmp' --exclude 'reports/*.tmp' --exclude 'reports/slide-*.jpg' \
+  --exclude 'data/embedded_snapshot.json' \
   "$BASE_DIR/" "$WORKDIR/"
+
+# rsync --exclude only stops NEW copies of these paths — if they were committed by an earlier
+# push, they need to be actively removed from the clone too, since the clone starts from
+# whatever's already on GitHub.
+rm -rf "$WORKDIR/reports/_qa_tmp" "$WORKDIR"/reports/*.tmp "$WORKDIR"/reports/slide-*.jpg \
+  "$WORKDIR/data/embedded_snapshot.json" 2>/dev/null || true
 
 cd "$WORKDIR"
 git config user.email "smojsak@gmail.com"
