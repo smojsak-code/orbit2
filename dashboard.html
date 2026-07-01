@@ -80,6 +80,7 @@
   .status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
   .status-active { background: #ecfdf5; color: #059669; }
   .status-superseded { background: #f3f4f6; color: #9ca3af; }
+  .status-removed { background: #fef2f2; color: #dc2626; }
   .evidence-layout { display: grid; grid-template-columns: 1fr 300px; gap: 16px; }
   @media (max-width: 860px) { .evidence-layout { grid-template-columns: 1fr; } }
   .dropzone {
@@ -328,6 +329,12 @@ function esc(s) {
 let radarChart = null;
 let allEvidence = [];
 
+function evidenceStatusClass(s) {
+  if (s === 'active') return 'active';
+  if (s === 'removed') return 'removed';
+  return 'superseded';
+}
+
 function renderEvidenceTable(query) {
   const evTable = document.getElementById('evidenceTable');
   const hint = document.getElementById('evidenceSearchHint');
@@ -340,26 +347,68 @@ function renderEvidenceTable(query) {
   rows.sort((a, b) => (b.date_added || '').localeCompare(a.date_added || ''));
 
   if (!allEvidence.length) {
-    evTable.innerHTML = '<tr><td class="empty">No evidence filed yet.</td></tr>';
+    evTable.innerHTML = '<tr><td class="empty" colspan="7">No evidence filed yet.</td></tr>';
     hint.textContent = '';
     return;
   }
   if (!rows.length) {
-    evTable.innerHTML = '<tr><td class="empty">No evidence matches that search.</td></tr>';
+    evTable.innerHTML = '<tr><td class="empty" colspan="7">No evidence matches that search.</td></tr>';
     hint.textContent = `0 of ${allEvidence.length} evidence items match "${query}"`;
     return;
   }
   evTable.innerHTML = `
-    <tr><th>Date</th><th>Category</th><th>Sub-metric</th><th>Quarter</th><th>File</th><th>Status</th></tr>
+    <tr><th>Date</th><th>Category</th><th>Sub-metric</th><th>Quarter</th><th>File</th><th>Status</th><th>Action</th></tr>
     ${rows.map(e => `<tr>
       <td>${esc(e.date_added)}</td>
       <td>${esc(e.category)}</td>
       <td>${esc(e.sub_metric)}</td>
       <td>${esc(e.quarter)}</td>
       <td title="${esc(e.description)}">${esc(e.filename)}</td>
-      <td><span class="status-pill status-${e.status === 'active' ? 'active' : 'superseded'}">${esc(e.status)}</span></td>
+      <td><span class="status-pill status-${evidenceStatusClass(e.status)}">${esc(e.status)}</span></td>
+      ${e.status === 'removed'
+        ? `<td class="empty" style="font-style:italic;">${e.removed_reason ? esc(e.removed_reason) : 'removed'}</td>`
+        : `<td id="evAction-${esc(e.evidence_id)}"><button class="btn-secondary" style="padding:2px 8px;font-size:10.5px;" onclick="startRemoveEvidence('${esc(e.evidence_id)}')">Remove</button></td>`}
     </tr>`).join('')}`;
-  hint.textContent = q ? `${rows.length} of ${allEvidence.length} evidence items match "${query}"` : `${allEvidence.length} evidence items total (active + superseded)`;
+  hint.textContent = q ? `${rows.length} of ${allEvidence.length} evidence items match "${query}"` : `${allEvidence.length} evidence items total (active + superseded + removed)`;
+}
+
+function startRemoveEvidence(evidenceId) {
+  const cell = document.getElementById('evAction-' + evidenceId);
+  if (!cell) return;
+  cell.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:4px;min-width:170px;">
+      <input type="text" id="evReason-${evidenceId}" placeholder="Why is this being removed?"
+        style="font-size:11px;padding:4px 6px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;">
+      <div style="display:flex;gap:4px;">
+        <button class="btn-primary" style="padding:3px 8px;font-size:10.5px;" onclick="confirmRemoveEvidence('${evidenceId}')">Confirm removal</button>
+        <button class="btn-secondary" style="padding:3px 8px;font-size:10.5px;" onclick="renderEvidenceTable(document.getElementById('evidenceSearch').value)">Cancel</button>
+      </div>
+    </div>`;
+  const input = document.getElementById('evReason-' + evidenceId);
+  if (input) input.focus();
+}
+
+function confirmRemoveEvidence(evidenceId) {
+  const input = document.getElementById('evReason-' + evidenceId);
+  const reason = (input.value || '').trim();
+  if (!reason) {
+    input.style.borderColor = '#dc2626';
+    input.placeholder = 'A reason is required...';
+    return;
+  }
+  const e = allEvidence.find(ev => ev.evidence_id === evidenceId);
+  const cell = document.getElementById('evAction-' + evidenceId);
+  if (cell) cell.innerHTML = '<span class="empty">Requested — check chat ↓</span>';
+  sendPrompt(
+    `Remove evidence ${evidenceId} from the Orbit2 Evidence Library — it's incorrect (not just outdated), so this is a retraction, not a supersede.\n` +
+    `File: ${e ? e.filename : evidenceId} | ${e ? e.category + ' / ' + e.sub_metric : ''} | ${e ? e.quarter : ''}\n` +
+    `Reason: ${reason}\n\n` +
+    `Please process this automatically — don't pause to ask me anything else, just run it:\n` +
+    `1. Run scripts/evidence_ingest.py remove --evidence-id "${evidenceId}" --reason "${reason.replace(/"/g, '\\"')}"\n` +
+    `2. If that evidence was the ACTIVE source for its metric, the script resets that sub-metric's actual value to 0 with a note (the pre-evidence value isn't stored anywhere, so it can't be restored automatically) — tell me which metric that affected so I know it needs correct data re-entered.\n` +
+    `3. Re-run scripts/scoring.py, rebuild the dashboard (scripts/build_dashboard.py) and the public site (scripts/build_web.py), push to GitHub (scripts/git_push.sh), and update the Cowork artifact.\n` +
+    `4. Confirm back to me what changed.`
+  );
 }
 
 function render(vendorName) {

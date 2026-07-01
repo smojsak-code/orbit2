@@ -1,1 +1,1 @@
-evidence_id,date_added,vendor,category,sub_metric,quarter,filename,description,dedupe_key,status,superseded_by,source_type
+evidence_id,date_added,vendor,category,sub_metric,quarter,filename,description,dedupe_key,status,superseded_by,source_type,removed_date,removed_reason

@@ -1,0 +1,2 @@
+(orphaned test artifact — this file has no corresponding row in data/evidence_index.csv; it was
+created while testing the evidence-removal feature and can be ignored/deleted)

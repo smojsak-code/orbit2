@@ -83,6 +83,7 @@
   .status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
   .status-active { background: #ecfdf5; color: #059669; }
   .status-superseded { background: #f3f4f6; color: #9ca3af; }
+  .status-removed { background: #fef2f2; color: #dc2626; }
   .evidence-layout { display: block; }
   .changelog-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f3f4f6; font-size: 12px; }
   .changelog-item:last-child { border-bottom: none; }
@@ -261,6 +262,12 @@ function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+function evidenceStatusClass(s) {
+  if (s === 'active') return 'active';
+  if (s === 'removed') return 'removed';
+  return 'superseded';
+}
+
 function renderEvidenceTable(query) {
   const evTable = document.getElementById('evidenceTable');
   const hint = document.getElementById('evidenceSearchHint');
@@ -290,9 +297,9 @@ function renderEvidenceTable(query) {
       <td>${esc(e.sub_metric)}</td>
       <td>${esc(e.quarter)}</td>
       <td title="${esc(e.description)}">${esc(e.filename)}</td>
-      <td><span class="status-pill status-${e.status === 'active' ? 'active' : 'superseded'}">${esc(e.status)}</span></td>
+      <td><span class="status-pill status-${evidenceStatusClass(e.status)}">${esc(e.status)}</span></td>
     </tr>`).join('')}`;
-  hint.textContent = q ? `${rows.length} of ${allEvidence.length} evidence items match "${query}"` : `${allEvidence.length} evidence items total (active + superseded)`;
+  hint.textContent = q ? `${rows.length} of ${allEvidence.length} evidence items match "${query}"` : `${allEvidence.length} evidence items total (active + superseded + removed)`;
 }
 
 function render(vendorName) {

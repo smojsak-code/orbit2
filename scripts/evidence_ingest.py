@@ -26,6 +26,8 @@ Usage:
     python3 scripts/evidence_ingest.py search "marketplace"
     python3 scripts/evidence_ingest.py search "" --status active
 
+    python3 scripts/evidence_ingest.py remove --evidence-id EVD-0003 --reason "Wrong file uploaded — was Q2 data mislabeled as Q3"
+
 Effect of `file`:
   - Moves the file from wherever it is into evidence_library/<category>/
     (prefixed with the new evidence_id to avoid name collisions).
@@ -33,9 +35,23 @@ Effect of `file`:
   - Appends a new ACTIVE row to data/evidence_index.csv.
 
 Effect of `search`:
-  - Prints every evidence row (active or superseded) whose filename, category,
-    sub-metric, quarter, status, description, source type, or vendor contains
-    the query text — the same search the dashboard's Evidence Library box does.
+  - Prints every evidence row (active, superseded, or removed) whose filename,
+    category, sub-metric, quarter, status, description, source type, or vendor
+    contains the query text — the same search the dashboard's Evidence Library
+    box does.
+
+Effect of `remove`:
+  - For evidence that turns out to be wrong (bad file, mis-typed number, wrong
+    metric entirely) rather than just outdated. Marks the row "removed" with a
+    reason and date — never deletes it, so there's still a record that it was
+    filed and then retracted, and why.
+  - If the removed evidence was the ACTIVE source for its metric, the
+    corresponding row in data/<category>.csv has its actual value reset to 0
+    (the pre-evidence value was never stored anywhere, so it can't be restored
+    automatically — this flags the metric as needing correct data rather than
+    guessing) and the correction is logged to data/metric_changelog.csv.
+  - If it was already "superseded", removing it is just a record correction —
+    it wasn't feeding the scorecard, so nothing else changes.
 """
 import argparse
 import csv
@@ -50,7 +66,8 @@ EVIDENCE_DIR = os.path.join(BASE_DIR, "evidence_library")
 INDEX_PATH = os.path.join(DATA_DIR, "evidence_index.csv")
 
 FIELDS = ["evidence_id", "date_added", "vendor", "category", "sub_metric", "quarter",
-          "filename", "description", "dedupe_key", "status", "superseded_by", "source_type"]
+          "filename", "description", "dedupe_key", "status", "superseded_by", "source_type",
+          "removed_date", "removed_reason"]
 
 
 def read_index():
@@ -135,6 +152,74 @@ def cmd_search(args):
     print(f"\n{len(matches)} match(es).")
 
 
+def cmd_remove(args):
+    rows = read_index()
+    target = next((r for r in rows if r["evidence_id"] == args.evidence_id), None)
+    if target is None:
+        print(f"ERROR: no evidence found with id {args.evidence_id}", file=sys.stderr)
+        sys.exit(1)
+    if target["status"] == "removed":
+        print(f"{args.evidence_id} is already marked removed (on {target.get('removed_date') or 'unknown date'}). Nothing to do.")
+        return
+
+    was_active = target["status"] == "active"
+    old_status = target["status"]
+    target["status"] = "removed"
+    target["removed_date"] = date.today().isoformat()
+    target["removed_reason"] = args.reason
+    write_index(rows)
+
+    old_actual = None
+    if was_active:
+        category_csv = os.path.join(DATA_DIR, f"{target['category']}.csv")
+        if os.path.exists(category_csv):
+            with open(category_csv, newline="") as f:
+                reader = csv.DictReader(f)
+                fieldnames = reader.fieldnames
+                cat_rows = list(reader)
+            for cr in cat_rows:
+                if (cr["vendor"] == target["vendor"] and cr["quarter"] == target["quarter"]
+                        and cr["sub_metric"] == target["sub_metric"]):
+                    old_actual = cr["actual"]
+                    cr["actual"] = "0"
+                    cr["notes"] = (f"RESET {date.today().isoformat()} — evidence {args.evidence_id} "
+                                    f"removed ({args.reason}); awaiting correct data")
+                    cr["source"] = ""
+            with open(category_csv, "w", newline="") as f:
+                w = csv.DictWriter(f, fieldnames=fieldnames)
+                w.writeheader()
+                for cr in cat_rows:
+                    w.writerow(cr)
+
+        changelog_path = os.path.join(DATA_DIR, "metric_changelog.csv")
+        if os.path.exists(changelog_path):
+            with open(changelog_path, newline="") as f:
+                cl_fields = csv.DictReader(f).fieldnames
+            with open(changelog_path, "a", newline="") as f:
+                w = csv.DictWriter(f, fieldnames=cl_fields)
+                w.writerow({
+                    "date": date.today().isoformat(),
+                    "vendor": target["vendor"],
+                    "category": target["category"],
+                    "sub_metric": target["sub_metric"],
+                    "change_type": "amended",
+                    "old_value": f"actual={old_actual}" if old_actual is not None else "",
+                    "new_value": "actual=0 (reset)",
+                    "reason": f"Evidence {args.evidence_id} removed as incorrect: {args.reason}",
+                    "source": "evidence_ingest.py remove",
+                })
+
+    print(f"Marked {args.evidence_id} as removed (was {old_status}).")
+    if was_active:
+        print(f"That evidence was ACTIVE — reset data/{target['category']}.csv's "
+              f"'{target['sub_metric']}' ({target['vendor']}, {target['quarter']}) actual to 0 "
+              f"and logged the correction to metric_changelog.csv. Re-file correct evidence when available.")
+    else:
+        print("That evidence was not active (already superseded), so no metric value or changelog entry changed — "
+              "this only corrects the evidence record itself.")
+    print("Reminder: re-run scripts/scoring.py, then rebuild/push the dashboard.")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="command", required=True)
@@ -149,10 +234,15 @@ def main():
     p.add_argument("--source-type", default="document", dest="source_type", help="screenshot | spreadsheet | document | article | manual")
     p.set_defaults(func=cmd_file)
 
-    p = sub.add_parser("search", help="Search past evidence (active + superseded)")
+    p = sub.add_parser("search", help="Search past evidence (active + superseded + removed)")
     p.add_argument("query", help="text to search for across filename/category/sub-metric/quarter/description/status")
-    p.add_argument("--status", choices=["active", "superseded"], default=None, help="filter to only this status")
+    p.add_argument("--status", choices=["active", "superseded", "removed"], default=None, help="filter to only this status")
     p.set_defaults(func=cmd_search)
+
+    p = sub.add_parser("remove", help="Mark a piece of evidence as removed (incorrect, not just outdated)")
+    p.add_argument("--evidence-id", required=True, dest="evidence_id", help="e.g. EVD-0003")
+    p.add_argument("--reason", required=True, help="why this is being removed, e.g. 'wrong file uploaded'")
+    p.set_defaults(func=cmd_remove)
 
     args = ap.parse_args()
     args.func(args)
