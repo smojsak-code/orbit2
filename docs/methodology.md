@@ -50,7 +50,15 @@ These weights are a starting point reflecting what typically matters most to an 
 
 The only time this stops to ask you something is if a file is genuinely ambiguous between two categories — otherwise it's a one-click, one-response action. This is still a Claude-in-the-loop process rather than a deterministic OCR pipeline (reading a screenshot and judging relevance is inherently a judgment call), but the loop happens in a single turn, not a back-and-forth.
 
-**Searching past evidence:** the Evidence Library panel has a search box (filename, category, sub-metric, quarter, status, description — matches active and superseded evidence). The same search is available from the terminal: `python3 scripts/evidence_ingest.py search "<text>"` (add `--status active` or `--status superseded` to narrow it).
+**Searching past evidence:** the Evidence Library panel has a search box (filename, category, sub-metric, quarter, status, description — matches active, superseded, and removed evidence). The same search is available from the terminal: `python3 scripts/evidence_ingest.py search "<text>"` (add `--status active`, `--status superseded`, or `--status removed` to narrow it).
+
+**Removing evidence that's wrong (not just outdated):** supersede is for evidence that was correct at the time and has since been replaced by newer data — the old row is kept for history but isn't "wrong." Sometimes evidence is filed and turns out to be flat-out incorrect: the wrong file, a mis-typed number, evidence attached to the wrong metric entirely. For that, every evidence row in the Evidence Library table has a **Remove** button. Clicking it asks for a one-line reason, then processes automatically:
+1. `scripts/evidence_ingest.py remove --evidence-id <id> --reason "<reason>"` marks that row `removed` with the reason and date — it's never deleted, so there's still a record that it was filed and then retracted, and why.
+2. If the removed evidence was the **active** source for its metric, the corresponding CSV row's `actual` is reset to `0` with a note, since the pre-evidence value was never stored anywhere and can't be restored automatically — the metric is flagged as needing correct data rather than silently keeping a number backed by evidence that's now known to be wrong. The correction is logged to `data/metric_changelog.csv`.
+3. If it was already `superseded`, removing it only corrects the record — it wasn't feeding the scorecard, so no metric value or changelog entry changes.
+4. The dashboard, public site, and GitHub are all refreshed as part of the same step, same as filing evidence.
+
+Removed evidence stays visible in the table (with a red "removed" pill and the reason shown) rather than disappearing, so the Evidence Library remains a complete, honest record of everything that was ever filed — including mistakes and their corrections.
 
 ## Why sub-metrics, not one raw number, per category
 
