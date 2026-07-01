@@ -1,0 +1,6 @@
+vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
+Atlassian,2026-Q3,Active joint engagements with SIs/ISVs,20,8,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Count of active joint engagements with other system integrators or ISV partners."
+Atlassian,2026-Q3,Revenue influenced via 3rd-party referrals,20,300000,0,EUR,ratio,,RESET 2026-07-01 — awaiting real data,"Revenue where a third-party vendor or partner referral was a material factor."
+Atlassian,2026-Q3,AWS co-sell deals (ACE) registered,20,10,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Deals registered in AWS's ACE (APN Customer Engagements) co-sell program."
+Atlassian,2026-Q3,Google co-sell engagements,20,6,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Joint engagements run through Google's partner co-sell motion."
+Atlassian,2026-Q3,GSI joint pipeline value,20,400000,0,EUR,ratio,,RESET 2026-07-01 — awaiting real data,"Pipeline value being jointly pursued with Global System Integrators."

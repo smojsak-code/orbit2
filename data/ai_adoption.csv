@@ -1,0 +1,4 @@
+vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
+Atlassian,2026-Q3,Internal AI tool adoption rate (e.g. Rovo),40,100,0,%,ratio,,RESET 2026-07-01 — awaiting real data,"Share of relevant staff actively using Atlassian's AI tooling (e.g. Rovo) internally — a leading indicator Atlassian evaluates for AI-forward partners."
+Atlassian,2026-Q3,AI-related customer engagements delivered,40,8,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Number of customer engagements this quarter that specifically involved AI capability (Rovo, AI-powered workflows, etc.)."
+Atlassian,2026-Q3,AI enablement certifications completed,20,15,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Staff certifications completed in Atlassian's AI-related enablement tracks."

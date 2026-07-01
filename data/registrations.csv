@@ -1,0 +1,4 @@
+vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
+Atlassian,2026-Q3,Deal Registration volume & approval rate,40,30,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Number of deals registered with Atlassian and approved, protecting margin and signaling active pipeline to the vendor."
+Atlassian,2026-Q3,PVR (Partner Value Registration) volume/approval,30,15,0,count,ratio,,RESET 2026-07-01 — awaiting real data; confirm with Atlassian whether PVR is still an active program before re-entering data,"Registrations under Atlassian's Partner Value Registration program, recognizing partner-sourced value beyond a single deal."
+Atlassian,2026-Q3,Service Registration volume/approval,30,10,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Registered services engagements, recognizing services-attach as part of the partner value delivered."

@@ -1,0 +1,14 @@
+{
+  "_comment": "Category weights (%) must sum to 100 per vendor. Edit freely — this is the single source of truth for how much each category counts toward the overall Orbit2 score.",
+  "Atlassian": {
+    "sales_performance": 18,
+    "marketing": 8,
+    "market_visibility": 8,
+    "ai_adoption": 8,
+    "business_planning_qbr": 12,
+    "registrations": 12,
+    "third_party_coselling": 12,
+    "solutions": 12,
+    "services": 10
+  }
+}

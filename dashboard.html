@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Orbit2 — Communardo Partner Performance</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; background: #f6f7f9; color: #1c1f24;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand .mark { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg,#2563eb,#0ea5e9); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:15px; }
+  .brand h1 { font-size: 19px; margin: 0; }
+  .brand .sub { font-size: 12px; color: #6b7280; margin-top: 1px; }
+  .controls { display: flex; align-items: center; gap: 10px; }
+  select, button { font: inherit; }
+  select { padding: 7px 10px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; color: #1c1f24; font-size: 13px; }
+  .btn-primary {
+    background: #2563eb; color: #fff; border: none; padding: 9px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-secondary {
+    background: #fff; color: #2563eb; border: 1px solid #bfdbfe; padding: 8px 14px; border-radius: 8px;
+    font-size: 12.5px; font-weight: 600; cursor: pointer;
+  }
+  .btn-secondary:hover { background: #eff6ff; }
+  .top-grid { display: grid; grid-template-columns: 280px 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 820px) { .top-grid { grid-template-columns: 1fr; } }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px; }
+  .score-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .score-big { font-size: 52px; font-weight: 800; line-height: 1; margin: 6px 0 2px; }
+  .score-band { font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; margin-bottom: 8px; }
+  .score-label { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; }
+  .score-meta { font-size: 11px; color: #9ca3af; margin-top: 10px; }
+  .band-green { color: #059669; background: #ecfdf5; }
+  .band-amber { color: #b45309; background: #fffbeb; }
+  .band-red { color: #dc2626; background: #fef2f2; }
+  canvas#radar { max-height: 230px; }
+  .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+  @media (max-width: 980px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .cat-grid { grid-template-columns: 1fr; } }
+  .cat-card { cursor: pointer; }
+  .cat-card .head { display: flex; justify-content: space-between; align-items: flex-start; }
+  .cat-card h3 { font-size: 13.5px; margin: 0 0 8px; line-height: 1.3; }
+  .cat-score { font-size: 26px; font-weight: 800; }
+  .bar-track { height: 7px; border-radius: 99px; background: #eef0f3; margin: 10px 0 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; }
+  .weight-tag { font-size: 10.5px; color: #9ca3af; }
+  .sub-list { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e5e7eb; display: none; }
+  .cat-card.open .sub-list { display: block; }
+  .sub-row { font-size: 11.5px; padding: 5px 0; border-bottom: 1px solid #f3f4f6; }
+  .sub-row:last-child { border-bottom: none; }
+  .sub-row .name { font-weight: 600; color: #374151; }
+  .sub-row .detail { color: #9ca3af; display: flex; justify-content: space-between; margin-top: 1px; }
+  .toggle-hint { font-size: 10.5px; color: #9ca3af; margin-top: 6px; }
+  section.block { margin-bottom: 16px; }
+  section.block h2 { font-size: 15px; margin: 0 0 10px; }
+  section.block h2 .toggle-hint { display: block; margin-top: 2px; font-weight: 400; }
+  .news-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+  .news-item:last-child { border-bottom: none; }
+  .sent-badge { flex-shrink: 0; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; height: fit-content; text-transform: uppercase; letter-spacing: .03em; }
+  .sent-positive { background: #ecfdf5; color: #059669; }
+  .sent-negative { background: #fef2f2; color: #dc2626; }
+  .sent-neutral { background: #f3f4f6; color: #6b7280; }
+  .news-text .headline { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .news-text .meta { font-size: 11px; color: #9ca3af; }
+  .footer-note { font-size: 11.5px; color: #9ca3af; text-align: center; margin-top: 22px; line-height: 1.6; }
+  .empty { font-size: 12.5px; color: #9ca3af; padding: 6px 0; }
+  .missing-list { font-size: 12.5px; line-height: 1.7; color: #374151; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.data-table th { text-align: left; color: #6b7280; font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
+  table.data-table td { padding: 7px 8px; border-bottom: 1px solid #f3f4f6; color: #374151; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  .status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
+  .status-active { background: #ecfdf5; color: #059669; }
+  .status-superseded { background: #f3f4f6; color: #9ca3af; }
+  .evidence-layout { display: grid; grid-template-columns: 1fr 300px; gap: 16px; }
+  @media (max-width: 860px) { .evidence-layout { grid-template-columns: 1fr; } }
+  .dropzone {
+    border: 2px dashed #bfdbfe; border-radius: 12px; padding: 22px 16px; text-align: center;
+    color: #6b7280; font-size: 12px; cursor: pointer; background: #f8fafc; transition: background .15s, border-color .15s;
+  }
+  .dropzone.dragover { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
+  .dropzone .icon { font-size: 22px; margin-bottom: 6px; }
+  .dropzone input { display: none; }
+  .dz-note { font-size: 10.5px; color: #9ca3af; margin-top: 10px; line-height: 1.6; }
+  .file-chip { display: inline-flex; align-items: center; gap: 6px; background: #eef2ff; color: #4338ca; font-size: 11px; padding: 4px 9px; border-radius: 999px; margin: 4px 4px 0 0; }
+  .file-chip .chip-rm { cursor: pointer; font-weight: 700; color: #4338ca; opacity: .6; }
+  .file-chip .chip-rm:hover { opacity: 1; }
+  .dz-context { width: 100%; margin-top: 8px; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 11.5px; font-family: inherit; resize: vertical; min-height: 44px; }
+  .dz-submit { width: 100%; margin-top: 8px; }
+  .dz-submit:disabled { opacity: .4; cursor: not-allowed; }
+  .dz-empty-hint { font-size: 10.5px; color: #9ca3af; margin-top: 6px; }
+  .manage-layout { display: grid; grid-template-columns: 1fr 300px; gap: 16px; }
+  @media (max-width: 860px) { .manage-layout { grid-template-columns: 1fr; } }
+  .manage-row { border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+  .manage-row-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; cursor: pointer; background: #fafbfc; }
+  .manage-row-head:hover { background: #f3f4f6; }
+  .manage-row-head .name { font-size: 12.5px; font-weight: 600; }
+  .manage-row-head .meta { font-size: 11px; color: #9ca3af; }
+  .manage-row-body { display: none; padding: 10px 12px; border-top: 1px solid #f3f4f6; }
+  .manage-row.open .manage-row-body { display: block; }
+  .edit-line { display: grid; grid-template-columns: 2fr 70px 90px 90px 70px 28px; gap: 6px; align-items: center; margin-bottom: 6px; font-size: 11.5px; }
+  .edit-line input { width: 100%; padding: 5px 6px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 11.5px; font-family: inherit; }
+  .edit-line .rm-btn { border: none; background: #fef2f2; color: #dc2626; border-radius: 6px; cursor: pointer; height: 26px; font-size: 13px; }
+  .field-label-row { display: grid; grid-template-columns: 2fr 70px 90px 90px 70px 28px; gap: 6px; font-size: 9.5px; color: #9ca3af; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
+  .cat-weight-input { width: 56px; padding: 3px 6px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 11.5px; margin-left: 6px; }
+  .changelog-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f3f4f6; font-size: 12px; }
+  .changelog-item:last-child { border-bottom: none; }
+  .change-pill { flex-shrink: 0; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; height: fit-content; }
+  .change-added { background: #ecfdf5; color: #059669; }
+  .change-amended { background: #fffbeb; color: #b45309; }
+  .change-deprecated { background: #fef2f2; color: #dc2626; }
+  .changelog-text .title { font-weight: 600; margin-bottom: 1px; }
+  .changelog-text .meta { color: #9ca3af; font-size: 11px; }
+  .tab-bar { display: flex; border-bottom: 1px solid #e5e7eb; margin-bottom: 18px; }
+  .tab-btn { background: none; border: none; padding: 9px 2px; margin-right: 22px; font-size: 13.5px; font-weight: 600; color: #9ca3af; cursor: pointer; border-bottom: 2px solid transparent; }
+  .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+  .tab-btn:hover { color: #374151; }
+  #viewReports { display: none; }
+  .report-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .report-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+  .report-sub { font-size: 11.5px; color: #9ca3af; }
+  .download-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .report-summary { font-size: 12.5px; color: #374151; line-height: 1.7; margin-bottom: 10px; }
+  .report-cat-block { margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px dashed #e5e7eb; }
+  .report-cat-block:last-child { border-bottom: none; }
+  .report-cat-block h3 { font-size: 14px; margin: 0 0 2px; }
+  .report-cat-block .cat-meta { font-size: 11.5px; color: #9ca3af; margin-bottom: 8px; }
+  .report-desc { font-size: 11px; color: #6b7280; font-style: italic; padding: 2px 0 9px; }
+  .glossary-desc { color: #6b7280; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="mark">O2</div>
+      <div>
+        <h1>Orbit2</h1>
+        <div class="sub">Communardo Partner Performance — Alliance view</div>
+      </div>
+    </div>
+    <div class="controls">
+      <select id="vendorSelect"></select>
+      <button class="btn-primary" id="generateReportBtn" onclick="switchView('reports')">View Report</button>
+    </div>
+  </header>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabDashboard" onclick="switchView('dashboard')">Dashboard</button>
+    <button class="tab-btn" id="tabReports" onclick="switchView('reports')">Reports</button>
+  </div>
+
+  <div id="viewDashboard">
+  <div class="top-grid">
+    <div class="card score-card">
+      <div class="score-label">Overall Score</div>
+      <div class="score-big" id="overallScore">–</div>
+      <div class="score-band" id="overallBand">–</div>
+      <div class="score-meta" id="overallMeta">Quarter · Last updated</div>
+    </div>
+    <div class="card">
+      <canvas id="radar"></canvas>
+    </div>
+  </div>
+
+  <section class="block">
+    <h2>Category breakdown <span class="toggle-hint">— click a card to see how the score was calculated</span></h2>
+    <div class="cat-grid" id="catGrid"></div>
+  </section>
+
+  <section class="block card" id="verticalsBlock" style="display:none;">
+    <h2>Solution verticals <span class="toggle-hint">breakdown behind the Solutions category's vertical coverage sub-metric</span></h2>
+    <table class="data-table" id="verticalsTable"></table>
+  </section>
+
+  <section class="block card">
+    <h2>Market visibility & sentiment feed <span class="toggle-hint">refreshed every 12h by the automated news scan</span></h2>
+    <div id="newsFeed"></div>
+  </section>
+
+  <section class="block card">
+    <h2>Manage Metrics <span class="toggle-hint">edit weights/targets, add or retire sub-metrics when Atlassian (or another vendor) changes their program — changes are staged here, then applied by Claude and logged to the changelog below</span></h2>
+    <div class="manage-layout">
+      <div>
+        <div style="margin-bottom:10px;">
+          <button class="btn-secondary" onclick="addCategoryPrompt()">+ Add new category</button>
+        </div>
+        <div id="manageGrid"></div>
+        <button class="btn-primary" style="margin-top:8px;" onclick="submitManageChanges()">Submit changes to Claude</button>
+      </div>
+      <div>
+        <div class="dropzone" id="dropzoneSchema">
+          <div class="icon">⬆</div>
+          <div><strong>Import vendor program update</strong></div>
+          <div style="margin-top:4px;">drag a program guide, terms sheet, or metric spec here</div>
+          <input type="file" id="fileInputSchema" multiple>
+        </div>
+        <div id="fileChipsSchema"></div>
+        <textarea class="dz-context" id="dzContextSchema" placeholder="Optional: add context (e.g. &quot;this replaces the Q3 partner guide&quot;)"></textarea>
+        <button class="btn-primary dz-submit" id="dzSubmitSchema" onclick="submitSchemaFiles()" disabled>Submit for review</button>
+        <div class="dz-empty-hint" id="dzHintSchema">Drop or choose a file above, then click Submit — nothing is sent until you do.</div>
+        <div class="dz-note">
+          This is for documents that describe <strong>changes to the metrics themselves</strong>
+          (a vendor renaming/adding/retiring a program) — not evidence for an existing metric's score
+          (use the Evidence Library box above for that). Claude will read it, propose what should
+          change, and confirm with you before touching weights.json or any CSV.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block card">
+    <h2>Metric Changelog <span class="toggle-hint">full history of every metric added, amended, or retired, and why</span></h2>
+    <div id="changelogFeed"></div>
+  </section>
+
+  <section class="block card">
+    <h2>Evidence Library <span class="toggle-hint">every screenshot, export, and document behind a score, with automatic dedupe — newest evidence for a metric supersedes the old, nothing is silently averaged or double-counted. Submitted files are processed automatically: extracted, scored, and filed without a confirmation round-trip — the only thing that stops a file is Claude judging it isn't actually relevant to Communardo's vendor performance.</span></h2>
+    <div class="evidence-layout">
+      <div>
+        <input type="search" class="dz-context" id="evidenceSearch" placeholder="Search evidence — filename, category, sub-metric, quarter, status…" style="margin-bottom:8px;">
+        <table class="data-table" id="evidenceTable"></table>
+        <div class="dz-empty-hint" id="evidenceSearchHint"></div>
+      </div>
+      <div>
+        <div class="dropzone" id="dropzone">
+          <div class="icon">⬆</div>
+          <div><strong>Drag & drop</strong> a file here</div>
+          <div style="margin-top:4px;">or click to choose one</div>
+          <input type="file" id="fileInput" multiple>
+        </div>
+        <div id="fileChips"></div>
+        <textarea class="dz-context" id="dzContextEvidence" placeholder="Optional: add context (e.g. &quot;Q3 marketplace screenshot&quot;)"></textarea>
+        <button class="btn-primary dz-submit" id="dzSubmitEvidence" onclick="submitEvidenceFiles()" disabled>Submit for analysis</button>
+        <div class="dz-empty-hint" id="dzHintEvidence">Drop or choose a file above, then click Submit — nothing is sent until you do.</div>
+        <div class="dz-note">
+          Once submitted, processing is automatic: extracted, scored, and filed with no confirmation
+          step — the only reason a file gets rejected is if it isn't actually relevant to Communardo's
+          vendor performance. Works fully in-page for CSV / text files. For screenshots, PDFs or Office
+          docs, also attach the actual file in your chat message (or drop it in
+          <code>evidence_library/inbox/</code>) since this sandboxed view can't transmit binary files on its own.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block card">
+    <h2>What Orbit2 does that Salesforce PRM / Impartner don't</h2>
+    <div class="missing-list">
+      <strong>1. Partner-side self-scorecard.</strong> Salesforce PRM and Impartner are built for vendors to manage their partners top-down. Orbit2 is built for the partner (Communardo) to score itself against what the vendor expects — nobody else builds this direction.<br>
+      <strong>2. One transparent composite score.</strong> Vendor PRM tools show raw metrics; none blend them into a single weighted, fully-traceable performance number.<br>
+      <strong>3. External sentiment monitoring built in.</strong> Press/market mentions of Communardo, auto-classified positive/negative, feeding directly into the visibility score — normally a separate media-monitoring tool.<br>
+      <strong>4. Evidence Library with dedupe.</strong> Screenshots, exports, and docs are the source of truth, and re-uploading a newer file for the same metric/quarter automatically supersedes the old one — no vendor PRM tool tracks provenance like this.<br>
+      <strong>5. Multi-vendor side-by-side view.</strong> Atlassian, AWS, Google, GSIs in one scorecard — vendor tools are single-tenant by design.
+    </div>
+  </section>
+
+  <div class="footer-note" id="footerNote"></div>
+  </div>
+
+  <div id="viewReports">
+    <section class="block card">
+      <div class="report-header">
+        <div>
+          <div class="report-title" id="reportTitle">Performance Report</div>
+          <div class="report-sub" id="reportSub">Quarter · generated on demand</div>
+        </div>
+        <div class="download-row">
+          <button class="btn-primary" id="downloadWordBtn" onclick="downloadReport('word')">Download Word (.docx)</button>
+          <button class="btn-primary" id="downloadPdfBtn" onclick="downloadReport('pdf')">Download PDF</button>
+          <button class="btn-primary" id="downloadPptxBtn" onclick="downloadReport('pptx')">Download PowerPoint</button>
+        </div>
+      </div>
+      <div class="report-summary" id="reportSummary"></div>
+    </section>
+
+    <section class="block card">
+      <h2>Category detail <span class="toggle-hint">every sub-metric, its actual vs. target, weight, score, and what it measures</span></h2>
+      <div id="reportCatDetail"></div>
+    </section>
+
+    <section class="block card">
+      <h2>Key deals <span class="toggle-hint">company, deal value, products/services sold, vertical, and Atlassian tier</span></h2>
+      <table class="data-table" id="reportDealsTable"></table>
+      <div class="report-desc" id="reportDealsTotals"></div>
+    </section>
+
+    <section class="block card">
+      <h2>Appendix: full metric glossary <span class="toggle-hint">every category and sub-metric in the scorecard, in one place</span></h2>
+      <table class="data-table" id="reportGlossaryTable"></table>
+    </section>
+
+    <div class="footer-note">This page mirrors the content of a generated report. Use the buttons above to export it as a Word, PDF, or PowerPoint file — Claude regenerates the file from the current data each time so it's never stale.</div>
+  </div>
+</div>
+
+<script>
+const SNAPSHOT = __SNAPSHOT_JSON__;
+// Pre-built report files (docx/pdf/pptx), base64-encoded, per vendor — generated ahead of time by
+// scripts/build_dashboard.py so downloads are instant and fully local: no chat round-trip.
+const REPORT_FILES = __REPORT_FILES_JSON__;
+
+function bandFor(score) {
+  if (score === null || score === undefined) return { cls: 'band-neutral', label: 'No data' };
+  if (score >= 85) return { cls: 'band-green', label: 'Strong' };
+  if (score >= 70) return { cls: 'band-amber', label: 'On track' };
+  return { cls: 'band-red', label: 'Needs attention' };
+}
+function barColor(score) {
+  if (score === null || score === undefined) return '#e5e7eb';
+  if (score >= 85) return '#059669';
+  if (score >= 70) return '#d97706';
+  return '#dc2626';
+}
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+let radarChart = null;
+let allEvidence = [];
+
+function renderEvidenceTable(query) {
+  const evTable = document.getElementById('evidenceTable');
+  const hint = document.getElementById('evidenceSearchHint');
+  const q = (query || '').trim().toLowerCase();
+  let rows = allEvidence.slice();
+  if (q) {
+    rows = rows.filter(e => [e.filename, e.category, e.sub_metric, e.quarter, e.status, e.description, e.source_type, e.vendor]
+      .some(f => (f || '').toLowerCase().includes(q)));
+  }
+  rows.sort((a, b) => (b.date_added || '').localeCompare(a.date_added || ''));
+
+  if (!allEvidence.length) {
+    evTable.innerHTML = '<tr><td class="empty">No evidence filed yet.</td></tr>';
+    hint.textContent = '';
+    return;
+  }
+  if (!rows.length) {
+    evTable.innerHTML = '<tr><td class="empty">No evidence matches that search.</td></tr>';
+    hint.textContent = `0 of ${allEvidence.length} evidence items match "${query}"`;
+    return;
+  }
+  evTable.innerHTML = `
+    <tr><th>Date</th><th>Category</th><th>Sub-metric</th><th>Quarter</th><th>File</th><th>Status</th></tr>
+    ${rows.map(e => `<tr>
+      <td>${esc(e.date_added)}</td>
+      <td>${esc(e.category)}</td>
+      <td>${esc(e.sub_metric)}</td>
+      <td>${esc(e.quarter)}</td>
+      <td title="${esc(e.description)}">${esc(e.filename)}</td>
+      <td><span class="status-pill status-${e.status === 'active' ? 'active' : 'superseded'}">${esc(e.status)}</span></td>
+    </tr>`).join('')}`;
+  hint.textContent = q ? `${rows.length} of ${allEvidence.length} evidence items match "${query}"` : `${allEvidence.length} evidence items total (active + superseded)`;
+}
+
+function render(vendorName) {
+  const v = SNAPSHOT.vendors[vendorName];
+  if (!v) return;
+
+  const band = bandFor(v.overall_score);
+  document.getElementById('overallScore').textContent = v.overall_score ?? '—';
+  document.getElementById('overallBand').textContent = band.label;
+  document.getElementById('overallBand').className = 'score-band ' + band.cls;
+
+  const cats = Object.entries(v.categories);
+  const quarters = [...new Set(cats.map(([,c]) => c.quarter).filter(Boolean))];
+  document.getElementById('overallMeta').textContent =
+    (quarters[0] || 'No quarter set') + ' · weight check ' + v.weight_check + '/100';
+
+  // category cards
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = '';
+  cats.forEach(([key, c]) => {
+    const color = barColor(c.category_score);
+    const div = document.createElement('div');
+    div.className = 'card cat-card';
+    const subRows = (c.sub_metrics || []).map(s => `
+      <div class="sub-row">
+        <div class="name">${esc(s.sub_metric)}</div>
+        <div class="detail">
+          <span>${esc(s.actual)} / ${esc(s.target)} ${esc(s.unit)} · weight ${esc(s.weight_pct_in_category)}%</span>
+          <span>${s.score ?? '—'}</span>
+        </div>
+      </div>`).join('') || '<div class="empty">No data entered yet — add rows to this category\'s CSV.</div>';
+    div.innerHTML = `
+      <div class="head">
+        <h3>${esc(c.label)}</h3>
+        <div class="cat-score" style="color:${color}">${c.category_score ?? '—'}</div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${c.category_score || 0}%;background:${color}"></div></div>
+      <div class="weight-tag">${esc(c.quarter) || 'no quarter'}</div>
+      <div class="sub-list">${subRows}</div>
+      <div class="toggle-hint">click for methodology</div>`;
+    div.addEventListener('click', () => div.classList.toggle('open'));
+    grid.appendChild(div);
+  });
+
+  // radar chart
+  const ctx = document.getElementById('radar').getContext('2d');
+  if (radarChart) radarChart.destroy();
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: cats.map(([,c]) => c.label.replace(' / ', '/').split(' ').slice(0,3).join(' ')),
+      datasets: [{
+        label: vendorName + ' — category scores',
+        data: cats.map(([,c]) => c.category_score ?? 0),
+        backgroundColor: 'rgba(37,99,235,0.15)',
+        borderColor: '#2563eb',
+        pointBackgroundColor: '#2563eb'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, backdropColor: 'transparent' } } },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // solution verticals
+  const verticals = v.solution_verticals || [];
+  const vBlock = document.getElementById('verticalsBlock');
+  if (verticals.length) {
+    vBlock.style.display = '';
+    document.getElementById('verticalsTable').innerHTML = `
+      <tr><th>Vertical</th><th>Solutions built</th><th>Solutions sold</th><th>Revenue</th></tr>
+      ${verticals.map(r => `<tr>
+        <td>${esc(r.vertical)}</td><td>${esc(r.solutions_count)}</td>
+        <td>${esc(r.solutions_sold)}</td><td>${esc(r.revenue)}</td>
+      </tr>`).join('')}`;
+  } else {
+    vBlock.style.display = 'none';
+  }
+
+  // news feed
+  const feed = document.getElementById('newsFeed');
+  const news = SNAPSHOT.news || [];
+  if (!news.length) {
+    feed.innerHTML = '<div class="empty">No news items logged yet. The 12h scheduled scan will populate this automatically.</div>';
+  } else {
+    feed.innerHTML = news.slice().reverse().map(n => `
+      <div class="news-item">
+        <span class="sent-badge sent-${esc(n.sentiment)}">${esc(n.sentiment)}</span>
+        <div class="news-text">
+          <div class="headline">${esc(n.headline)}</div>
+          <div class="meta">${esc(n.date_found)} · ${esc(n.summary || '')}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  // evidence library
+  allEvidence = SNAPSHOT.evidence || [];
+  renderEvidenceTable(document.getElementById('evidenceSearch') ? document.getElementById('evidenceSearch').value : '');
+
+  // manage metrics
+  renderManageGrid(vendorName, v);
+
+  // changelog
+  const changelog = SNAPSHOT.changelog || [];
+  const clFeed = document.getElementById('changelogFeed');
+  if (!changelog.length) {
+    clFeed.innerHTML = '<div class="empty">No metric changes logged yet.</div>';
+  } else {
+    const sorted = changelog.slice().sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+    clFeed.innerHTML = sorted.map(c => `
+      <div class="changelog-item">
+        <span class="change-pill change-${esc(c.change_type)}">${esc(c.change_type)}</span>
+        <div class="changelog-text">
+          <div class="title">${esc(c.category)}${c.sub_metric ? ' — ' + esc(c.sub_metric) : ''}</div>
+          <div class="meta">${esc(c.date)} · ${esc(c.old_value)} → ${esc(c.new_value)} · ${esc(c.reason)} ${c.source ? '(' + esc(c.source) + ')' : ''}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  document.getElementById('footerNote').textContent =
+    'Snapshot generated from data/scores_snapshot.json. To refresh: update the CSVs in your project folder, ' +
+    'then ask Claude to re-run the scoring engine and update this dashboard. ' + SNAPSHOT.generated_note;
+
+  // reports page (separate view, same data)
+  renderReportsView(vendorName, v);
+}
+
+// --- Tab switching ---
+function switchView(view) {
+  const isReports = view === 'reports';
+  document.getElementById('viewDashboard').style.display = isReports ? 'none' : '';
+  document.getElementById('viewReports').style.display = isReports ? '' : 'none';
+  document.getElementById('tabDashboard').classList.toggle('active', !isReports);
+  document.getElementById('tabReports').classList.toggle('active', isReports);
+}
+
+// --- Reports page (renders the same content a generated report contains) ---
+function money(v, currency) {
+  const n = parseFloat(v);
+  if (isNaN(n) || n === 0) return '—';
+  const symbol = { USD: '$', EUR: '€', GBP: '£' }[(currency || '').toUpperCase()] || '';
+  return symbol + n.toLocaleString();
+}
+
+function renderReportsView(vendorName, v) {
+  const cats = Object.entries(v.categories);
+  const quarters = [...new Set(cats.map(([,c]) => c.quarter).filter(Boolean))];
+  const quarter = quarters[0] || 'no quarter set';
+
+  document.getElementById('reportTitle').textContent = `${vendorName} Performance Report`;
+  document.getElementById('reportSub').textContent = `${quarter} · overall score ${v.overall_score ?? '—'} · generated ${new Date().toISOString().slice(0,10)}`;
+
+  const band = bandFor(v.overall_score);
+  document.getElementById('reportSummary').innerHTML =
+    `Overall score <strong>${v.overall_score ?? '—'}</strong> (<span style="color:${barColor(v.overall_score)}">${esc(band.label)}</span>), ` +
+    `weight check ${v.weight_check}/100, across ${cats.length} weighted categories. ` +
+    `Band key: 85+ Strong · 70–84 On track · below 70 Needs attention.`;
+
+  // category detail
+  const detail = document.getElementById('reportCatDetail');
+  detail.innerHTML = cats.map(([key, c]) => {
+    const rows = (c.sub_metrics || []).map(s => `
+      <tr>
+        <td>${esc(s.sub_metric)}</td>
+        <td>${esc(s.actual)} / ${esc(s.target)} ${esc(s.unit)}</td>
+        <td>${esc(s.weight_pct_in_category)}%</td>
+        <td>${s.score ?? '—'}</td>
+        <td>${esc(s.source)}</td>
+      </tr>
+      <tr><td colspan="5" class="report-desc">${esc(s.description) || 'No description on file for this sub-metric yet.'}</td></tr>`).join('')
+      || `<tr><td colspan="5" class="empty">No data entered yet for this category.</td></tr>`;
+    return `
+      <div class="report-cat-block">
+        <h3>${esc(c.label)} — <span style="color:${barColor(c.category_score)}">${c.category_score ?? '—'}</span></h3>
+        <div class="cat-meta">${esc(c.quarter) || 'no quarter'} · category weight ${esc(c.weight_pct)}% of overall score</div>
+        <table class="data-table">
+          <tr><th>Sub-metric</th><th>Actual / Target</th><th>Weight</th><th>Score</th><th>Source</th></tr>
+          ${rows}
+        </table>
+      </div>`;
+  }).join('');
+
+  // key deals
+  const deals = v.deals || [];
+  const dealsTable = document.getElementById('reportDealsTable');
+  if (!deals.length) {
+    dealsTable.innerHTML = '<tr><td class="empty">No deals logged yet. Add rows to data/deals.csv or submit deal evidence via the Evidence Library.</td></tr>';
+    document.getElementById('reportDealsTotals').textContent = '';
+  } else {
+    dealsTable.innerHTML = `
+      <tr><th>Company</th><th>Closed</th><th>TCV / ACV</th><th>Products sold</th><th>Services sold</th><th>Vertical</th><th>Atlassian category</th></tr>
+      ${deals.map(d => `<tr>
+        <td>${esc(d.company_name)}</td>
+        <td>${esc(d.close_date)}</td>
+        <td>${money(d.tcv, d.currency)} / ${money(d.acv, d.currency)}</td>
+        <td>${esc(d.products_sold)}</td>
+        <td>${esc(d.services_sold)}</td>
+        <td>${esc(d.vertical)}</td>
+        <td>${esc(d.atlassian_category)}</td>
+      </tr>`).join('')}`;
+    const totalTcv = deals.reduce((sum, d) => sum + (parseFloat(d.tcv) || 0), 0);
+    const totalAcv = deals.reduce((sum, d) => sum + (parseFloat(d.acv) || 0), 0);
+    document.getElementById('reportDealsTotals').textContent =
+      `${deals.length} deal(s) on file · total TCV ${money(totalTcv, deals[0].currency)} · total ACV ${money(totalAcv, deals[0].currency)}`;
+  }
+
+  // glossary
+  const glossary = document.getElementById('reportGlossaryTable');
+  const glossRows = cats.flatMap(([key, c]) => (c.sub_metrics || []).map(s => `
+    <tr><td>${esc(c.label)}</td><td>${esc(s.sub_metric)}</td><td class="glossary-desc">${esc(s.description) || '—'}</td></tr>`));
+  glossary.innerHTML = `<tr><th>Category</th><th>Sub-metric</th><th>What it measures</th></tr>${glossRows.join('') || '<tr><td class="empty" colspan="3">No sub-metrics defined yet.</td></tr>'}`;
+}
+
+// --- Manage Metrics ---
+let currentVendor = null;
+const pendingChanges = {}; // key: "category|sub_metric" -> {action, category, sub_metric, weight, target, actual, unit}
+
+function renderManageGrid(vendorName, v) {
+  currentVendor = vendorName;
+  const grid = document.getElementById('manageGrid');
+  grid.innerHTML = '';
+  Object.entries(v.categories).forEach(([key, c]) => {
+    const row = document.createElement('div');
+    row.className = 'manage-row';
+    const head = document.createElement('div');
+    head.className = 'manage-row-head';
+    head.innerHTML = `
+      <div>
+        <div class="name">${esc(c.label)}</div>
+        <div class="meta">${(c.sub_metrics || []).length} sub-metrics · score ${c.category_score ?? '—'} · weight
+          <input class="cat-weight-input" type="number" placeholder="${esc(c.weight_pct)}%" data-cat="${key}" onclick="event.stopPropagation()" />
+        </div>
+      </div>
+      <div class="meta">click to edit ▾</div>`;
+    const body = document.createElement('div');
+    body.className = 'manage-row-body';
+    const fieldLabels = `<div class="field-label-row"><div>Sub-metric</div><div>Weight%</div><div>Target</div><div>Actual</div><div>Unit</div><div></div></div>`;
+    const lines = (c.sub_metrics || []).map((s, i) => editLine(key, s.sub_metric, s.weight_pct_in_category, s.target, s.actual, s.unit)).join('');
+    body.innerHTML = `${fieldLabels}<div id="lines-${key}">${lines}</div>
+      <button class="btn-secondary" style="margin-top:4px;" onclick="event.stopPropagation(); addLine('${key}')">+ Add sub-metric</button>`;
+    head.addEventListener('click', () => row.classList.toggle('open'));
+    row.appendChild(head);
+    row.appendChild(body);
+    grid.appendChild(row);
+  });
+}
+
+function editLine(category, name, weight, target, actual, unit) {
+  const id = Math.random().toString(36).slice(2, 9);
+  return `<div class="edit-line" data-id="${id}" data-category="${esc(category)}" data-original="${esc(name)}">
+    <input class="f-name" value="${esc(name)}">
+    <input class="f-weight" value="${esc(weight)}">
+    <input class="f-target" value="${esc(target)}">
+    <input class="f-actual" value="${esc(actual)}">
+    <input class="f-unit" value="${esc(unit)}">
+    <button class="rm-btn" title="Remove" onclick="removeLine(this)">✕</button>
+  </div>`;
+}
+
+function addLine(category) {
+  const container = document.getElementById('lines-' + category);
+  const div = document.createElement('div');
+  div.innerHTML = editLine(category, '', '', '', '', '');
+  container.appendChild(div.firstElementChild);
+}
+
+function removeLine(btn) {
+  const line = btn.closest('.edit-line');
+  line.dataset.removed = '1';
+  line.style.opacity = '0.4';
+  line.querySelectorAll('input').forEach(i => i.disabled = true);
+}
+
+function submitManageChanges() {
+  const lines = document.querySelectorAll('.edit-line');
+  const changes = [];
+  lines.forEach(line => {
+    const category = line.dataset.category;
+    const original = line.dataset.original;
+    const name = line.querySelector('.f-name').value.trim();
+    const weight = line.querySelector('.f-weight').value.trim();
+    const target = line.querySelector('.f-target').value.trim();
+    const actual = line.querySelector('.f-actual').value.trim();
+    const unit = line.querySelector('.f-unit').value.trim();
+    if (line.dataset.removed === '1' && original) {
+      changes.push(`- DEPRECATE in "${category}": "${original}" (vendor no longer has this metric)`);
+    } else if (!original && name) {
+      changes.push(`- ADD to "${category}": "${name}" — weight ${weight}%, target ${target} ${unit}, actual ${actual}`);
+    } else if (original && name && (name !== original)) {
+      changes.push(`- RENAME in "${category}": "${original}" -> "${name}" — weight ${weight}%, target ${target} ${unit}, actual ${actual}`);
+    } else if (original) {
+      changes.push(`- possible AMEND in "${category}": "${original}" — weight ${weight}%, target ${target} ${unit}, actual ${actual} (only apply if these actually differ from current values)`);
+    }
+  });
+  const catWeightInputs = document.querySelectorAll('.cat-weight-input');
+  catWeightInputs.forEach(inp => {
+    if (inp.value.trim()) changes.push(`- set category weight for "${inp.dataset.cat}": ${inp.value.trim()}%`);
+  });
+
+  if (!changes.length) {
+    sendPrompt('I opened Manage Metrics on the Orbit2 dashboard but didn\'t change anything — just checking in, no action needed.');
+    return;
+  }
+  sendPrompt(
+    `I've staged changes to the Orbit2 metric schema for ${currentVendor} on the dashboard's Manage Metrics panel. ` +
+    `Please apply these using scripts/metric_manager.py (asking me for a one-line reason for each if I haven't given one), ` +
+    `then re-run scripts/scoring.py and refresh the dashboard:\n\n` + changes.join('\n')
+  );
+}
+
+function addCategoryPrompt() {
+  sendPrompt(
+    `I want to add a brand-new category to Orbit2 for ${currentVendor || 'the current vendor'}. ` +
+    `Please ask me for: a short key, a display label, its weight (and how the other categories' weights should adjust), ` +
+    `and the sub-metrics it should track — then use scripts/metric_manager.py add-category and add-submetric to set it up.`
+  );
+}
+
+function setupVendorSelect() {
+  const sel = document.getElementById('vendorSelect');
+  Object.keys(SNAPSHOT.vendors).forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v; opt.textContent = v;
+    sel.appendChild(opt);
+  });
+  const addOpt = document.createElement('option');
+  addOpt.value = '__add__'; addOpt.textContent = '+ Add vendor…';
+  sel.appendChild(addOpt);
+  sel.addEventListener('change', () => {
+    if (sel.value === '__add__') {
+      sel.value = Object.keys(SNAPSHOT.vendors)[0];
+      sendPrompt('I want to add a new vendor to Orbit2 (e.g. AWS, Google, or a GSI) with its own category weights and metrics.');
+      return;
+    }
+    render(sel.value);
+  });
+  render(sel.value);
+}
+
+// Downloads are fully local and instant — no chat round-trip, no confirmation step.
+// The actual docx/pdf/pptx bytes are pre-baked and embedded in REPORT_FILES by
+// scripts/build_dashboard.py every time the dashboard is rebuilt (after any data change).
+function base64ToBlob(b64, mime) {
+  const byteChars = atob(b64);
+  const byteNumbers = new Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+  return new Blob([new Uint8Array(byteNumbers)], { type: mime });
+}
+
+function downloadReport(format) {
+  const btnId = { word: 'downloadWordBtn', pdf: 'downloadPdfBtn', pptx: 'downloadPptxBtn' }[format];
+  const btn = document.getElementById(btnId);
+  const vendor = currentVendor || 'Atlassian';
+  const key = format === 'word' ? 'docx' : format;
+  const mimeMap = {
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    pdf: 'application/pdf',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  };
+  const files = REPORT_FILES[vendor];
+  const file = files ? files[key] : null;
+  if (!file) {
+    const original = btn.textContent;
+    btn.textContent = 'Not built yet for this vendor';
+    setTimeout(() => { btn.textContent = original; }, 2500);
+    return;
+  }
+  const blob = base64ToBlob(file.data, mimeMap[key]);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+// --- Drag & drop staging (Evidence Library + Manage Metrics import) ---
+// Files are staged on drop/select and only sent to Claude when the Submit button is clicked —
+// nothing is actioned automatically.
+const TEXT_EXTENSIONS = ['csv', 'txt', 'tsv', 'json', 'md'];
+
+function extOf(name) {
+  const parts = name.split('.');
+  return parts.length > 1 ? parts.pop().toLowerCase() : '';
+}
+
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
+
+function makeDropStager(opts) {
+  // opts: { staged: [], chipsEl, submitBtnEl, hintEl }
+  const state = { files: [] };
+
+  function render() {
+    opts.chipsEl.innerHTML = '';
+    state.files.forEach((file, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'file-chip';
+      chip.innerHTML = `${esc(file.name)} (${Math.round(file.size/1024)} KB) <span class="chip-rm" data-i="${i}">✕</span>`;
+      chip.querySelector('.chip-rm').addEventListener('click', () => {
+        state.files.splice(i, 1);
+        render();
+      });
+      opts.chipsEl.appendChild(chip);
+    });
+    opts.submitBtnEl.disabled = state.files.length === 0;
+    opts.hintEl.style.display = state.files.length === 0 ? '' : 'none';
+  }
+
+  function add(files) {
+    [...files].forEach(f => state.files.push(f));
+    render();
+  }
+
+  function clear() {
+    state.files = [];
+    render();
+  }
+
+  return { state, add, clear, render };
+}
+
+const evidenceStager = makeDropStager({
+  chipsEl: document.getElementById('fileChips'),
+  submitBtnEl: document.getElementById('dzSubmitEvidence'),
+  hintEl: document.getElementById('dzHintEvidence'),
+});
+
+const schemaStager = makeDropStager({
+  chipsEl: document.getElementById('fileChipsSchema'),
+  submitBtnEl: document.getElementById('dzSubmitSchema'),
+  hintEl: document.getElementById('dzHintSchema'),
+});
+
+function setupDropzone() {
+  const dz = document.getElementById('dropzone');
+  const input = document.getElementById('fileInput');
+  dz.addEventListener('click', () => input.click());
+  input.addEventListener('change', e => { evidenceStager.add(e.target.files); input.value = ''; });
+  ['dragenter', 'dragover'].forEach(evt => dz.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover');
+  }));
+  ['dragleave', 'drop'].forEach(evt => dz.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover');
+  }));
+  dz.addEventListener('drop', e => evidenceStager.add(e.dataTransfer.files));
+}
+
+function setupDropzoneSchema() {
+  const dz = document.getElementById('dropzoneSchema');
+  const input = document.getElementById('fileInputSchema');
+  dz.addEventListener('click', () => input.click());
+  input.addEventListener('change', e => { schemaStager.add(e.target.files); input.value = ''; });
+  ['dragenter', 'dragover'].forEach(evt => dz.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover');
+  }));
+  ['dragleave', 'drop'].forEach(evt => dz.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover');
+  }));
+  dz.addEventListener('drop', e => schemaStager.add(e.dataTransfer.files));
+}
+
+async function buildFileBlock(file) {
+  const ext = extOf(file.name);
+  if (TEXT_EXTENSIONS.includes(ext) && file.size < 200000) {
+    const content = await readFileAsText(file);
+    return `Filename: ${file.name} (readable text — contents below)\n--- file contents ---\n${content}`;
+  }
+  return `Filename: "${file.name}" (${ext ? ext.toUpperCase() : 'unknown'} file, ${Math.round(file.size/1024)} KB) — ` +
+    `this dashboard can't transmit binary files, so I'll attach it directly in this chat message right after this, ` +
+    `or it's sitting in evidence_library/inbox/ / dropped alongside — please look for it there.`;
+}
+
+async function submitEvidenceFiles() {
+  const files = evidenceStager.state.files;
+  if (!files.length) return;
+  const btn = document.getElementById('dzSubmitEvidence');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+  const context = document.getElementById('dzContextEvidence').value.trim();
+  const blocks = await Promise.all(files.map(buildFileBlock));
+  sendPrompt(
+    `I'm submitting ${files.length} file(s) to the Orbit2 Evidence Library. Process this automatically — ` +
+    `don't pause to ask me clarifying questions, just make your best judgment call and act:\n` +
+    `1. RELEVANCE CHECK first: is this actually about Communardo's performance as ${currentVendor || 'the current vendor'}'s partner (sales, marketing, visibility, AI adoption, business planning/QBRs, registrations, 3rd party/co-selling, solutions, or services)? ` +
+    `If not relevant — e.g. unrelated content, a different company, spam, or a file you can't make sense of — REJECT it: don't touch any CSV or the evidence index, and just tell me why in your reply.\n` +
+    `2. If relevant: extract the actual number(s), identify the best-fit category/sub-metric/quarter, update that CSV's "actual" value directly, ` +
+    `and file the source with scripts/evidence_ingest.py (which automatically supersedes any older evidence already on file for the same metric and quarter — so newest always wins, nothing gets double-counted).\n` +
+    `3. Re-run scripts/scoring.py and refresh the dashboard artifact so the change is visible immediately.\n` +
+    `4. Only ask me a follow-up question if a file is genuinely ambiguous between two categories — otherwise just proceed and summarize what you did.\n` +
+    (context ? `\nContext I've added: ${context}\n` : '') +
+    `\n` + blocks.map((b, i) => `[File ${i + 1}]\n${b}`).join('\n\n')
+  );
+  evidenceStager.clear();
+  document.getElementById('dzContextEvidence').value = '';
+  btn.textContent = 'Submit for analysis';
+}
+
+async function submitSchemaFiles() {
+  const files = schemaStager.state.files;
+  if (!files.length) return;
+  const btn = document.getElementById('dzSubmitSchema');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+  const context = document.getElementById('dzContextSchema').value.trim();
+  const blocks = await Promise.all(files.map(buildFileBlock));
+  sendPrompt(
+    `I'm submitting ${files.length} vendor program document(s) to Orbit2 for ${currentVendor || 'the current vendor'} — ` +
+    `this may mean metrics were added, renamed, retargeted, or retired. Process this automatically — don't pause ` +
+    `to ask me clarifying questions unless something is genuinely ambiguous:\n` +
+    `1. RELEVANCE CHECK first: is this actually a ${currentVendor || 'vendor'} partner program document (terms, metric definitions, registration/incentive rules, etc.)? ` +
+    `If not relevant, REJECT it — don't touch categories.json, weights.json, or any CSV, just tell me why.\n` +
+    `2. If relevant: work out exactly what changed (added/renamed/retargeted/retired metrics or weights) and apply it directly with scripts/metric_manager.py ` +
+    `(use diff-quarter if you've entered a new quarter's rows, or the add/amend/deprecate commands otherwise).\n` +
+    `3. Clearly call out in your summary anything that changed a CATEGORY WEIGHT specifically, since that has the biggest effect on the overall score — ` +
+    `but don't block on it, just flag it prominently.\n` +
+    `4. Re-run scripts/scoring.py and refresh the dashboard.\n` +
+    (context ? `\nContext I've added: ${context}\n` : '') +
+    `\n` + blocks.map((b, i) => `[File ${i + 1}]\n${b}`).join('\n\n')
+  );
+  schemaStager.clear();
+  document.getElementById('dzContextSchema').value = '';
+  btn.textContent = 'Submit for review';
+}
+
+function setupEvidenceSearch() {
+  const input = document.getElementById('evidenceSearch');
+  input.addEventListener('input', () => renderEvidenceTable(input.value));
+}
+
+setupVendorSelect();
+setupDropzone();
+setupDropzoneSchema();
+setupEvidenceSearch();
+</script>
+</body>
+</html>

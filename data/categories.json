@@ -1,0 +1,12 @@
+{
+  "_comment": "Registry of all scorecard categories. 'file' is the CSV filename (without .csv) in /data holding that category's sub-metric rows. Add a brand-new category by adding an entry here, creating the matching CSV (same columns as any existing one), and adding its weight in weights.json — no code changes needed.",
+  "sales_performance": { "label": "Sales Performance", "file": "sales_performance" },
+  "marketing": { "label": "Marketing", "file": "marketing" },
+  "market_visibility": { "label": "Market Visibility", "file": "market_visibility" },
+  "ai_adoption": { "label": "AI Adoption", "file": "ai_adoption" },
+  "business_planning_qbr": { "label": "Business Planning & QBRs", "file": "business_planning_qbr" },
+  "registrations": { "label": "Registrations (Deal Reg / PVR / Service Reg)", "file": "registrations" },
+  "third_party_coselling": { "label": "3rd Party Vendors & Co-selling (AWS, Google, GSIs)", "file": "third_party_coselling" },
+  "solutions": { "label": "Solutions", "file": "solutions" },
+  "services": { "label": "Services", "file": "services" }
+}

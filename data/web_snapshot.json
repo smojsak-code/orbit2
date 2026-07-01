@@ -1,0 +1,568 @@
+{
+  "generated_note": "Run scripts/scoring.py after updating any CSV in /data to refresh this file.",
+  "vendors": {
+    "Atlassian": {
+      "vendor": "Atlassian",
+      "overall_score": 0.3,
+      "weight_check": 100.0,
+      "categories": {
+        "sales_performance": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "Pipeline growth QoQ",
+              "target": "500000",
+              "actual": "0",
+              "unit": "EUR",
+              "weight_pct_in_category": 35.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Net new pipeline value created this quarter vs last, sourced from CRM. Signals whether top-of-funnel demand generation is keeping pace with targets."
+            },
+            {
+              "sub_metric": "Bookings/revenue attainment vs quota",
+              "target": "1200000",
+              "actual": "0",
+              "unit": "EUR",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Closed-won bookings this quarter against the quota set with Atlassian/leadership. The single clearest signal of commercial performance."
+            },
+            {
+              "sub_metric": "Win rate on registered deals",
+              "target": "35",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 25.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Percentage of Deal-Registered opportunities that closed won. Reflects how effectively registered pipeline converts to revenue."
+            }
+          ],
+          "label": "Sales Performance",
+          "weight_pct": 18
+        },
+        "marketing": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "Co-marketing campaigns executed vs planned",
+              "target": "6",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Joint marketing activities (webinars, content, events) delivered against the quarter's plan with Atlassian."
+            },
+            {
+              "sub_metric": "MDF utilization rate",
+              "target": "100",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Share of allocated Market Development Funds actually drawn down and spent. Low utilization risks funds being reclaimed or programs being deprioritized."
+            },
+            {
+              "sub_metric": "Marketing-sourced leads",
+              "target": "40",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Leads generated directly from marketing activity, feeding the sales pipeline."
+            }
+          ],
+          "label": "Marketing",
+          "weight_pct": 8
+        },
+        "market_visibility": {
+          "quarter": "2026-Q3",
+          "category_score": 4.2,
+          "weight_check": 100.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "Marketplace app rating",
+              "target": "4.5",
+              "actual": "0",
+              "unit": "stars",
+              "weight_pct_in_category": 25.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Average star rating of Communardo's apps on the Atlassian Marketplace \u2014 a public signal of product quality visible to Atlassian and prospects."
+            },
+            {
+              "sub_metric": "Partner directory profile completeness",
+              "target": "100",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "How complete and up to date Communardo's public profile is on the Atlassian Partner Directory."
+            },
+            {
+              "sub_metric": "Press/analyst mentions volume",
+              "target": "12",
+              "actual": "2",
+              "unit": "count",
+              "weight_pct_in_category": 25.0,
+              "score": 16.7,
+              "source": "data/news_log.csv (live count)",
+              "notes": "LIVE \u2014 driven by the automated 12h web scan for Communardo mentions; this is the only non-zero sub-metric in the whole reset",
+              "description": " by design"
+            },
+            {
+              "sub_metric": "Case studies/success stories published",
+              "target": "4",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Customer success stories published and available to share with Atlassian and prospects."
+            }
+          ],
+          "label": "Market Visibility",
+          "weight_pct": 8
+        },
+        "ai_adoption": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "Internal AI tool adoption rate (e.g. Rovo)",
+              "target": "100",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Share of relevant staff actively using Atlassian's AI tooling (e.g. Rovo) internally \u2014 a leading indicator Atlassian evaluates for AI-forward partners."
+            },
+            {
+              "sub_metric": "AI-related customer engagements delivered",
+              "target": "8",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Number of customer engagements this quarter that specifically involved AI capability (Rovo, AI-powered workflows, etc.)."
+            },
+            {
+              "sub_metric": "AI enablement certifications completed",
+              "target": "15",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Staff certifications completed in Atlassian's AI-related enablement tracks."
+            }
+          ],
+          "label": "AI Adoption",
+          "weight_pct": 8
+        },
+        "business_planning_qbr": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "QBR cadence adherence",
+              "target": "4",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Number of Quarterly Business Reviews actually held with Atlassian against the expected cadence."
+            },
+            {
+              "sub_metric": "Joint business plan goal attainment",
+              "target": "100",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Progress against the goals set out in the joint business plan agreed with Atlassian."
+            },
+            {
+              "sub_metric": "QBR action item closure rate",
+              "target": "100",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Share of action items from prior QBRs that were actually closed out \u2014 a proxy for how seriously the partnership follows through."
+            }
+          ],
+          "label": "Business Planning & QBRs",
+          "weight_pct": 12
+        },
+        "registrations": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "Deal Registration volume & approval rate",
+              "target": "30",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Number of deals registered with Atlassian and approved, protecting margin and signaling active pipeline to the vendor."
+            },
+            {
+              "sub_metric": "PVR (Partner Value Registration) volume/approval",
+              "target": "15",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data; confirm with Atlassian whether PVR is still an active program before re-entering data",
+              "description": "Registrations under Atlassian's Partner Value Registration program, recognizing partner-sourced value beyond a single deal."
+            },
+            {
+              "sub_metric": "Service Registration volume/approval",
+              "target": "10",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Registered services engagements, recognizing services-attach as part of the partner value delivered."
+            }
+          ],
+          "label": "Registrations (Deal Reg / PVR / Service Reg)",
+          "weight_pct": 12
+        },
+        "third_party_coselling": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "Active joint engagements with SIs/ISVs",
+              "target": "8",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Count of active joint engagements with other system integrators or ISV partners."
+            },
+            {
+              "sub_metric": "Revenue influenced via 3rd-party referrals",
+              "target": "300000",
+              "actual": "0",
+              "unit": "EUR",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Revenue where a third-party vendor or partner referral was a material factor."
+            },
+            {
+              "sub_metric": "AWS co-sell deals (ACE) registered",
+              "target": "10",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Deals registered in AWS's ACE (APN Customer Engagements) co-sell program."
+            },
+            {
+              "sub_metric": "Google co-sell engagements",
+              "target": "6",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Joint engagements run through Google's partner co-sell motion."
+            },
+            {
+              "sub_metric": "GSI joint pipeline value",
+              "target": "400000",
+              "actual": "0",
+              "unit": "EUR",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Pipeline value being jointly pursued with Global System Integrators."
+            }
+          ],
+          "label": "3rd Party Vendors & Co-selling (AWS, Google, GSIs)",
+          "weight_pct": 12
+        },
+        "solutions": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "Number of solutions created",
+              "target": "6",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 25.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Distinct packaged solutions built this quarter (repeatable offerings, not one-off custom work)."
+            },
+            {
+              "sub_metric": "Number of solutions sold",
+              "target": "15",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Instances of a packaged solution actually sold to a client."
+            },
+            {
+              "sub_metric": "Revenue generated from solutions",
+              "target": "400000",
+              "actual": "0",
+              "unit": "EUR",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Revenue directly attributable to packaged solution sales."
+            },
+            {
+              "sub_metric": "Solution vertical coverage",
+              "target": "5",
+              "actual": "0",
+              "unit": "verticals",
+              "weight_pct_in_category": 15.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data; see solution_verticals.csv",
+              "description": "Number of industry verticals with at least one packaged solution, out of the target range \u2014 breadth of the solution portfolio."
+            }
+          ],
+          "label": "Solutions",
+          "weight_pct": 12
+        },
+        "services": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "Services revenue sold to clients",
+              "target": "600000",
+              "actual": "0",
+              "unit": "EUR",
+              "weight_pct_in_category": 60.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Total services revenue (implementation, consulting, managed services) sold this quarter."
+            },
+            {
+              "sub_metric": "Number of clients who purchased services",
+              "target": "25",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Distinct clients who purchased any services this quarter \u2014 breadth of services attach."
+            }
+          ],
+          "label": "Services",
+          "weight_pct": 10
+        }
+      },
+      "solution_verticals": [
+        {
+          "vendor": "Atlassian",
+          "quarter": "2026-Q3",
+          "vertical": "Finance",
+          "solutions_count": "0",
+          "solutions_sold": "0",
+          "revenue": "0",
+          "source": "",
+          "notes": "RESET 2026-07-01 \u2014 awaiting real data"
+        },
+        {
+          "vendor": "Atlassian",
+          "quarter": "2026-Q3",
+          "vertical": "Automotive",
+          "solutions_count": "0",
+          "solutions_sold": "0",
+          "revenue": "0",
+          "source": "",
+          "notes": "RESET 2026-07-01 \u2014 awaiting real data"
+        },
+        {
+          "vendor": "Atlassian",
+          "quarter": "2026-Q3",
+          "vertical": "Pharmaceutical",
+          "solutions_count": "0",
+          "solutions_sold": "0",
+          "revenue": "0",
+          "source": "",
+          "notes": "RESET 2026-07-01 \u2014 awaiting real data"
+        }
+      ],
+      "deals": []
+    }
+  },
+  "evidence": [],
+  "changelog": [
+    {
+      "date": "2026-07-01",
+      "vendor": "Atlassian",
+      "category": "third_party_coselling",
+      "sub_metric": "(category merge)",
+      "change_type": "amended",
+      "old_value": "third_party_vendors (10%) + coselling (10%) as separate categories",
+      "new_value": "merged into third_party_coselling (12%)",
+      "reason": "Both categories measured revenue/pipeline generated with another party rather than solo \u2014 combined per Steve's request to avoid double-counting the same kind of activity",
+      "source": "Steve Mojsak"
+    },
+    {
+      "date": "2026-07-01",
+      "vendor": "Atlassian",
+      "category": "solutions",
+      "sub_metric": "(new category)",
+      "change_type": "added",
+      "old_value": "",
+      "new_value": "Number of solutions created / sold, revenue generated, vertical coverage (12%)",
+      "reason": "New category requested to track packaged solution output separately from generic sales pipeline",
+      "source": "Steve Mojsak"
+    },
+    {
+      "date": "2026-07-01",
+      "vendor": "Atlassian",
+      "category": "services",
+      "sub_metric": "(new category)",
+      "change_type": "added",
+      "old_value": "",
+      "new_value": "Services revenue sold, number of clients purchasing services (10%)",
+      "reason": "New category requested to track services attach separately from solutions and core sales",
+      "source": "Steve Mojsak"
+    },
+    {
+      "date": "2026-07-01",
+      "vendor": "Atlassian",
+      "category": "all",
+      "sub_metric": "(full reset)",
+      "change_type": "amended",
+      "old_value": "sample data populating all categories (overall ~77)",
+      "new_value": "all sub-metrics reset to actual=0 for 2026-Q3; only the Market Visibility 'Press/analyst mentions volume' sub-metric reflects real data, sourced from the live news scan",
+      "reason": "Steve requested all sample scores cleared and reset to zero, keeping only real Communardo web-mention data \u2014 the earlier PVR-retirement scenario was illustrative demo data and has been reverted",
+      "source": "Steve Mojsak"
+    }
+  ],
+  "category_registry": {
+    "sales_performance": {
+      "label": "Sales Performance",
+      "file": "sales_performance"
+    },
+    "marketing": {
+      "label": "Marketing",
+      "file": "marketing"
+    },
+    "market_visibility": {
+      "label": "Market Visibility",
+      "file": "market_visibility"
+    },
+    "ai_adoption": {
+      "label": "AI Adoption",
+      "file": "ai_adoption"
+    },
+    "business_planning_qbr": {
+      "label": "Business Planning & QBRs",
+      "file": "business_planning_qbr"
+    },
+    "registrations": {
+      "label": "Registrations (Deal Reg / PVR / Service Reg)",
+      "file": "registrations"
+    },
+    "third_party_coselling": {
+      "label": "3rd Party Vendors & Co-selling (AWS, Google, GSIs)",
+      "file": "third_party_coselling"
+    },
+    "solutions": {
+      "label": "Solutions",
+      "file": "solutions"
+    },
+    "services": {
+      "label": "Services",
+      "file": "services"
+    }
+  },
+  "news": [
+    {
+      "date_found": "2026-06-28",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo strengthens European presence with expansion into the Benelux region",
+      "source_url": "https://www.bu-partners.com/news/communardo-strengthens-european-presence-with-expansion-into-the-benelux-region-by-acquiring-dutch-atlassian-platinum-partner-prepend/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Acquisition of Dutch Atlassian Platinum partner Prepend, expanding Communardo's European footprint."
+    },
+    {
+      "date_found": "2026-06-15",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo scales as an Atlassian & Microsoft platform across Europe",
+      "source_url": "https://www.bu-partners.com/news/how-communardo-is-scaling-across-europe-as-an-atlassian-platinum-solution-partner-atlassian-marketplace-vendor-and-microsoft-solutions-partner/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Coverage of Communardo's growth as Atlassian Platinum Solution Partner and Marketplace vendor."
+    }
+  ],
+  "report_files": {
+    "Atlassian": {
+      "docx": "Orbit2_Report_Atlassian_2026-Q3.docx",
+      "pdf": "Orbit2_Report_Atlassian_2026-Q3.pdf",
+      "pptx": "Orbit2_Deck_Atlassian_2026-Q3.pptx"
+    }
+  }
+}

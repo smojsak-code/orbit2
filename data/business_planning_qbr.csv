@@ -1,0 +1,4 @@
+vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
+Atlassian,2026-Q3,QBR cadence adherence,40,4,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Number of Quarterly Business Reviews actually held with Atlassian against the expected cadence."
+Atlassian,2026-Q3,Joint business plan goal attainment,40,100,0,%,ratio,,RESET 2026-07-01 — awaiting real data,"Progress against the goals set out in the joint business plan agreed with Atlassian."
+Atlassian,2026-Q3,QBR action item closure rate,20,100,0,%,ratio,,RESET 2026-07-01 — awaiting real data,"Share of action items from prior QBRs that were actually closed out — a proxy for how seriously the partnership follows through."

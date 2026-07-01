@@ -1,0 +1,5 @@
+vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
+Atlassian,2026-Q3,Marketplace app rating,25,4.5,0,stars,ratio,,RESET 2026-07-01 — awaiting real data,"Average star rating of Communardo's apps on the Atlassian Marketplace — a public signal of product quality visible to Atlassian and prospects."
+Atlassian,2026-Q3,Partner directory profile completeness,20,100,0,%,ratio,,RESET 2026-07-01 — awaiting real data,"How complete and up to date Communardo's public profile is on the Atlassian Partner Directory."
+Atlassian,2026-Q3,Press/analyst mentions volume,25,12,2,count,ratio,data/news_log.csv (live count),LIVE — driven by the automated 12h web scan for Communardo mentions; this is the only non-zero sub-metric in the whole reset, by design,"Count of public mentions of Communardo found by the automated web scan — the only metric in this scorecard driven entirely by live, automated data rather than manual entry."
+Atlassian,2026-Q3,Case studies/success stories published,30,4,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Customer success stories published and available to share with Atlassian and prospects."
