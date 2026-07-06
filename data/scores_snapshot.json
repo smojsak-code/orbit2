@@ -451,9 +451,295 @@
         }
       ],
       "deals": []
+    },
+    "catworkx DE (TEST DATA)": {
+      "vendor": "catworkx DE (TEST DATA)",
+      "overall_score": 52.1,
+      "weight_check": 42.0,
+      "categories": {
+        "sales_performance": {
+          "quarter": "2026-Q3",
+          "category_score": 75.0,
+          "weight_check": 100.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "Pipeline growth QoQ",
+              "target": "12700000",
+              "actual": "14900000",
+              "unit": "USD",
+              "weight_pct_in_category": 35.0,
+              "score": 100.0,
+              "source": "Partner Value Scorecard screenshot (TEST)",
+              "notes": "TEST DATA \u2014 pipeline validation only",
+              "description": "Mapped from the scorecard's 'Sourced Net New ACV Pipegen' row (Target $12.7M / Actuals $14.9M)."
+            },
+            {
+              "sub_metric": "Bookings/revenue attainment vs quota",
+              "target": "31000000",
+              "actual": "44100000",
+              "unit": "USD",
+              "weight_pct_in_category": 40.0,
+              "score": 100.0,
+              "source": "Partner Value Scorecard screenshot (TEST)",
+              "notes": "TEST DATA \u2014 pipeline validation only",
+              "description": "Mapped from the scorecard's 'Contributed Net New ACV' row (Target $31.0M / Actuals $44.1M)."
+            },
+            {
+              "sub_metric": "Win rate on registered deals",
+              "target": "35",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 25.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "TEST DATA \u2014 pipeline validation only; no matching figure on the scorecard",
+              "description": "No corresponding figure on the source scorecard, left at 0 for this test vendor."
+            }
+          ],
+          "label": "Sales Performance",
+          "weight_pct": 18
+        },
+        "marketing": {
+          "quarter": null,
+          "category_score": null,
+          "weight_check": 0.0,
+          "sub_metrics": [],
+          "label": "Marketing",
+          "weight_pct": 8
+        },
+        "market_visibility": {
+          "quarter": null,
+          "category_score": null,
+          "weight_check": 0.0,
+          "sub_metrics": [],
+          "label": "Market Visibility",
+          "weight_pct": 8
+        },
+        "ai_adoption": {
+          "quarter": null,
+          "category_score": null,
+          "weight_check": 0.0,
+          "sub_metrics": [],
+          "label": "AI Adoption",
+          "weight_pct": 8
+        },
+        "business_planning_qbr": {
+          "quarter": null,
+          "category_score": null,
+          "weight_check": 0.0,
+          "sub_metrics": [],
+          "label": "Business Planning & QBRs",
+          "weight_pct": 12
+        },
+        "registrations": {
+          "quarter": "2026-Q3",
+          "category_score": 50.0,
+          "weight_check": 60.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "Deal Registration volume & approval rate",
+              "target": "0",
+              "actual": "13200000",
+              "unit": "USD",
+              "weight_pct_in_category": 40.0,
+              "score": null,
+              "source": "",
+              "notes": "TEST DATA \u2014 pipeline validation only",
+              "description": "Mapped from the scorecard's 'Sourced Bookings Net New ACV' row (Target $0.0M / Actuals $13.2M). Target of 0 on the source scorecard means this sub-metric is left unscored (no attainment percentage possible against a zero target), matching how scoring.py already handles a zero target."
+            },
+            {
+              "sub_metric": "PVR (Partner Value Registration) volume/approval",
+              "target": "116000",
+              "actual": "266300",
+              "unit": "seats",
+              "weight_pct_in_category": 30.0,
+              "score": 100.0,
+              "source": "Partner Value Scorecard screenshot (TEST)",
+              "notes": "TEST DATA \u2014 pipeline validation only",
+              "description": "Mapped from the scorecard's 'Teamed Migrated Seats' row (Target 116K / Actuals 266.3K) \u2014 this scorecard's Contributed/Teamed/Sourced framework looks like the modern replacement for the older PVR program; worth confirming with Atlassian before assuming PVR itself is dead."
+            },
+            {
+              "sub_metric": "Service Registration volume/approval",
+              "target": "10",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "TEST DATA \u2014 pipeline validation only; no matching figure on the scorecard",
+              "description": "No corresponding figure on the source scorecard, left at 0 for this test vendor."
+            }
+          ],
+          "label": "Registrations (Deal Reg / PVR / Service Reg)",
+          "weight_pct": 12
+        },
+        "third_party_coselling": {
+          "quarter": "2026-Q3",
+          "category_score": 20.0,
+          "weight_check": 100.0,
+          "sub_metrics": [
+            {
+              "sub_metric": "Active joint engagements with SIs/ISVs",
+              "target": "8",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "TEST DATA \u2014 pipeline validation only; no matching figure on the scorecard",
+              "description": "No corresponding figure on the source scorecard, left at 0 for this test vendor."
+            },
+            {
+              "sub_metric": "Revenue influenced via 3rd-party referrals",
+              "target": "300000",
+              "actual": "0",
+              "unit": "EUR",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "TEST DATA \u2014 pipeline validation only; no matching figure on the scorecard",
+              "description": "No corresponding figure on the source scorecard, left at 0 for this test vendor."
+            },
+            {
+              "sub_metric": "AWS co-sell deals (ACE) registered",
+              "target": "10",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "TEST DATA \u2014 pipeline validation only; no matching figure on the scorecard",
+              "description": "No corresponding figure on the source scorecard, left at 0 for this test vendor."
+            },
+            {
+              "sub_metric": "Google co-sell engagements",
+              "target": "6",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "source": "",
+              "notes": "TEST DATA \u2014 pipeline validation only; no matching figure on the scorecard",
+              "description": "No corresponding figure on the source scorecard, left at 0 for this test vendor."
+            },
+            {
+              "sub_metric": "GSI joint pipeline value",
+              "target": "21700000",
+              "actual": "39100000",
+              "unit": "USD",
+              "weight_pct_in_category": 20.0,
+              "score": 100.0,
+              "source": "Partner Value Scorecard screenshot (TEST)",
+              "notes": "TEST DATA \u2014 pipeline validation only",
+              "description": "Mapped from the scorecard's 'Teamed Net New ACV' row (Target $21.7M / Actuals $39.1M) \u2014 closest conceptual fit to 'jointly pursued pipeline value'."
+            }
+          ],
+          "label": "3rd Party Vendors & Co-selling (AWS, Google, GSIs)",
+          "weight_pct": 12
+        },
+        "solutions": {
+          "quarter": null,
+          "category_score": null,
+          "weight_check": 0.0,
+          "sub_metrics": [],
+          "label": "Solutions",
+          "weight_pct": 12
+        },
+        "services": {
+          "quarter": null,
+          "category_score": null,
+          "weight_check": 0.0,
+          "sub_metrics": [],
+          "label": "Services",
+          "weight_pct": 10
+        }
+      },
+      "solution_verticals": [],
+      "deals": []
     }
   },
-  "evidence": [],
+  "evidence": [
+    {
+      "evidence_id": "EVD-0001",
+      "date_added": "2026-07-06",
+      "vendor": "catworkx DE (TEST DATA)",
+      "category": "sales_performance",
+      "sub_metric": "Pipeline growth QoQ",
+      "quarter": "2026-Q3",
+      "filename": "EVD-0001_transcript_1.txt",
+      "description": "TEST: Sourced Net New ACV Pipegen from Partner Value Scorecard screenshot (catworkx DE)",
+      "dedupe_key": "catworkx DE (TEST DATA)|sales_performance|Pipeline growth QoQ|2026-Q3",
+      "status": "active",
+      "superseded_by": "",
+      "source_type": "screenshot",
+      "removed_date": "",
+      "removed_reason": ""
+    },
+    {
+      "evidence_id": "EVD-0002",
+      "date_added": "2026-07-06",
+      "vendor": "catworkx DE (TEST DATA)",
+      "category": "sales_performance",
+      "sub_metric": "Bookings/revenue attainment vs quota",
+      "quarter": "2026-Q3",
+      "filename": "EVD-0002_transcript_2.txt",
+      "description": "TEST: Contributed Net New ACV from Partner Value Scorecard screenshot (catworkx DE)",
+      "dedupe_key": "catworkx DE (TEST DATA)|sales_performance|Bookings/revenue attainment vs quota|2026-Q3",
+      "status": "active",
+      "superseded_by": "",
+      "source_type": "screenshot",
+      "removed_date": "",
+      "removed_reason": ""
+    },
+    {
+      "evidence_id": "EVD-0003",
+      "date_added": "2026-07-06",
+      "vendor": "catworkx DE (TEST DATA)",
+      "category": "third_party_coselling",
+      "sub_metric": "GSI joint pipeline value",
+      "quarter": "2026-Q3",
+      "filename": "EVD-0003_transcript_3.txt",
+      "description": "TEST: Teamed Net New ACV from Partner Value Scorecard screenshot (catworkx DE)",
+      "dedupe_key": "catworkx DE (TEST DATA)|third_party_coselling|GSI joint pipeline value|2026-Q3",
+      "status": "active",
+      "superseded_by": "",
+      "source_type": "screenshot",
+      "removed_date": "",
+      "removed_reason": ""
+    },
+    {
+      "evidence_id": "EVD-0004",
+      "date_added": "2026-07-06",
+      "vendor": "catworkx DE (TEST DATA)",
+      "category": "registrations",
+      "sub_metric": "Deal Registration volume & approval rate",
+      "quarter": "2026-Q3",
+      "filename": "EVD-0004_transcript_4.txt",
+      "description": "TEST: Sourced Bookings Net New ACV from Partner Value Scorecard screenshot (catworkx DE)",
+      "dedupe_key": "catworkx DE (TEST DATA)|registrations|Deal Registration volume & approval rate|2026-Q3",
+      "status": "active",
+      "superseded_by": "",
+      "source_type": "screenshot",
+      "removed_date": "",
+      "removed_reason": ""
+    },
+    {
+      "evidence_id": "EVD-0005",
+      "date_added": "2026-07-06",
+      "vendor": "catworkx DE (TEST DATA)",
+      "category": "registrations",
+      "sub_metric": "PVR (Partner Value Registration) volume/approval",
+      "quarter": "2026-Q3",
+      "filename": "EVD-0005_transcript_5.txt",
+      "description": "TEST: Teamed Migrated Seats from Partner Value Scorecard screenshot (catworkx DE)",
+      "dedupe_key": "catworkx DE (TEST DATA)|registrations|PVR (Partner Value Registration) volume/approval|2026-Q3",
+      "status": "active",
+      "superseded_by": "",
+      "source_type": "screenshot",
+      "removed_date": "",
+      "removed_reason": ""
+    }
+  ],
   "changelog": [
     {
       "date": "2026-07-01",
@@ -497,6 +783,17 @@
       "old_value": "sample data populating all categories (overall ~77)",
       "new_value": "all sub-metrics reset to actual=0 for 2026-Q3; only the Market Visibility 'Press/analyst mentions volume' sub-metric reflects real data, sourced from the live news scan",
       "reason": "Steve requested all sample scores cleared and reset to zero, keeping only real Communardo web-mention data \u2014 the earlier PVR-retirement scenario was illustrative demo data and has been reverted",
+      "source": "Steve Mojsak"
+    },
+    {
+      "date": "2026-07-06",
+      "vendor": "catworkx DE (TEST DATA)",
+      "category": "all",
+      "sub_metric": "(new test vendor)",
+      "change_type": "added",
+      "old_value": "",
+      "new_value": "Added 'catworkx DE (TEST DATA)' vendor with 5 sub-metric values mapped from a Partner Value Scorecard screenshot (Contributed/Teamed/Sourced Net New ACV, Migrated Seats)",
+      "reason": "Steve provided a screenshot of catworkx DE's (a different Atlassian partner) scorecard to test whether the evidence-to-dashboard pipeline updates correctly end to end \u2014 not Communardo's own performance, does not affect the Atlassian vendor's real scorecard",
       "source": "Steve Mojsak"
     }
   ],

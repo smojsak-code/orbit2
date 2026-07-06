@@ -10,5 +10,17 @@
     "third_party_coselling": 12,
     "solutions": 12,
     "services": 10
+  },
+  "catworkx DE (TEST DATA)": {
+    "_comment": "NOT a real vendor program — a test entry using catworkx DE's Partner Value Scorecard screenshot to verify the evidence-to-dashboard pipeline end to end. Safe to remove any time; does not affect Communardo's Atlassian scorecard.",
+    "sales_performance": 18,
+    "marketing": 8,
+    "market_visibility": 8,
+    "ai_adoption": 8,
+    "business_planning_qbr": 12,
+    "registrations": 12,
+    "third_party_coselling": 12,
+    "solutions": 12,
+    "services": 10
   }
 }
