@@ -1,14 +1,1 @@
-Partner Value Scorecard (ESPA) — screenshot transcript
-Filters: Partner Brand = catworkx DE, Target Level = 0.7 Target, Region Leader = Christian Dreyer
-Provided by Steve Mojsak as TEST DATA to validate the Orbit2 evidence pipeline — NOT Communardo's own performance.
-
-Partner Contributed
-  Contributed Net New ACV — Target $31.0M, Actuals $44.1M, Attainment 142.6%, Pipeline $1.0M, Outlook $44.1M
-
-Partner Teamed
-  Teamed Net New ACV — Target $21.7M, Actuals $39.1M, Attainment 180.7%, Pipeline $0.9M, Outlook $39.1M
-  Teamed Migrated Seats — Target 116K, Actuals 266.3K, Attainment 230.1%, Pipeline 0.3K, Outlook 266.3K
-
-Partner Sourced
-  Sourced Net New ACV Pipegen — Target $12.7M, Actuals $14.9M, Attainment 117.1%, Outlook $14.9M
-  Sourced Bookings Net New ACV — Target $0.0M, Actuals $13.2M, Pipeline $0.7M, Outlook $13.2M
+[Orphaned file] This evidence entry was removed as part of a test-data cleanup on 2026-07-06. It was originally added to validate the evidence-to-dashboard pipeline using a screenshot from a different Atlassian partner (catworkx DE), not Communardo's own data. This file is no longer referenced by evidence_index.csv.
