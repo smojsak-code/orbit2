@@ -28,6 +28,8 @@ changes when a title, name, or quarter changes:
 | `news_log.csv` | `record_id` | `NEWS-` | Own file |
 | `evidence_index.csv` | `evidence_id` | `EVD-` | Own file (pre-existing, unchanged by this migration) |
 | `deals.csv` | `deal_id` | `DEAL-` | Own file (pre-existing column; no rows populated yet) |
+| `value_journal.jsonl` | `activity_id` | `ACT-` | Own file (R1-T03) |
+| `actions.csv` | `action_id` | `ACTN-` | Own file (R1-T05) — deliberately distinct from `ACT-` so the journal and actions registers are never visually confused |
 
 IDs are assigned once and never reused or renumbered, including by
 migrations run more than once (`scripts/migrations/migration_001_add_record_ids.py`
@@ -227,6 +229,76 @@ script/markup injection (`<script`, `javascript:`, `on*=` handlers,
 `<iframe`) — see `scripts/journal.py`'s `_check_no_executable_content()`.
 `import-all` files processed requests (created or duplicate) into
 `change_requests/processed/`, leaving malformed ones in place for review.
+
+### `actions.csv` (Actions & commitments register, R1-T05)
+Follow-ups arising from activities, meetings, performance gaps and support
+requests — one plain CSV row per action (unlike the journal, no field here is
+nested/multi-value, so CSV was the natural fit rather than JSONL).
+`scripts/actions.py` is the only writer; the Cowork dashboard's Actions tab
+and the public site's read-only mirror both render straight from the
+`actions` array injected into the snapshot by
+`scripts/build_dashboard.py`/`build_web.py` (see "Generated files" below).
+
+Stable ID: `action_id`, `ACTN-` prefix, own namespace (deliberately distinct
+from the journal's `ACT-` prefix so the two are never visually confused).
+
+Status vocabulary (`data/action_statuses.json`): `open` (default), `blocked`,
+`deferred`, `completed`, `cancelled`. `completed`/`cancelled` are terminal —
+excluded from overdue/due-soon calculation and from the default `list`/UI
+filter (`open_all`). Direct `edit` can only move an action between
+`open`/`blocked`; every other transition goes through its own command
+(`complete`/`cancel`/`defer`) so the required side effects (timestamp,
+reason, or note) always happen — see `scripts/actions.py`'s
+`EDITABLE_STATUSES`.
+
+Key fields: `description`, `owner` (defaults to `app_config.json`'s
+`user_display_name`), `source_activity` (an `ACT-` id, optional — set
+automatically when an action is created as a linked follow-up, see below),
+`related_metric` (a `MET-` id, optional), `related_opportunity` (reserved,
+free text until R3-T03's opportunities register exists), `due_date`,
+`original_due_date` (set once at creation, never overwritten except that
+`defer` copies the pre-defer `due_date` into it if it was still blank —
+this is what lets a completed action "retain its original due date" even
+after being deferred one or more times before completion), `priority`
+(`low`/`medium`/`high`/`critical`), `expected_impact`, `dependency` (free
+text — who/what this is blocked on), `evidence_required` (boolean; if true,
+`complete` refuses without a `completion_note` or `completion_evidence`),
+`completion_note`/`completion_evidence`/`completed_at`,
+`cancelled_reason`/`cancelled_at`, `deferred_reason`/`deferred_at`, `vendor`
+(defaults to `app_config.json`'s `default_vendor`), `visibility`, plus the
+canonical `created_at`/`updated_at`/`created_by`/`updated_by`/`notes`.
+
+**Overdue / due-soon are calculated, not stored.** `scripts/actions.py`'s
+`is_overdue()`/`is_due_soon()` compare `due_date` against "today" in the
+**Europe/London** timezone specifically — hardcoded, independent of whatever
+`app_config.json`'s own `timezone` field is set to — per R1-T05's acceptance
+criterion that these states be "calculated consistently from Europe/London
+dates." `scripts/build_dashboard.py`/`build_web.py` compute both flags once
+at build time and inject them into each action row as `is_overdue`/
+`is_due_soon` so the Cowork dashboard and the public site never disagree
+about which actions are overdue.
+
+**Opt-in linked-action creation (R1-T05 instruction #31 — "automatic action
+generation only when explicitly selected").** The Add Activity modal (both
+`dashboard.html` and `web/index_template.html`) has an unchecked-by-default
+"Also create a follow-up action" box. Only when checked does the submitted
+change request gain an `action` object alongside `activity`:
+
+```json
+{
+  "request_id": "CR-<opaque>",
+  "type": "activity_create",
+  "activity": { "...": "..." },
+  "action": { "description": "...", "due_date": "...", "priority": "...", "evidence_required": false }
+}
+```
+
+`scripts/journal.py`'s `_import_one_request()` creates the journal entry
+first, then — only if `action` is present — calls
+`scripts/actions.py`'s `create_from_fields()` with `source_activity` set to
+the new `activity_id`, so the two registers are linked from creation. There
+is no other path that creates an action without this explicit opt-in; a
+plain activity submission never generates one implicitly.
 
 ### Generated files (not sources of truth — do not hand-edit)
 - `scores_snapshot.json` — output of `scripts/scoring.py`, consumed by the Cowork dashboard artifact.
