@@ -639,6 +639,14 @@ function populateActivityFormLists() {
     o.value = key; o.textContent = meta.label || key;
     contribSel.appendChild(o);
   });
+  // Clear an error state as soon as the field has content again, rather than
+  // leaving a red border + message stuck until the next submit attempt.
+  document.getElementById('actTitle').addEventListener('input', e => {
+    if (e.target.value.trim()) document.getElementById('fieldTitle').classList.remove('error');
+  });
+  document.getElementById('actOutcome').addEventListener('input', e => {
+    if (e.target.value.trim()) document.getElementById('fieldOutcome').classList.remove('error');
+  });
   activityFormListsPopulated = true;
 }
 

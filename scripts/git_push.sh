@@ -29,13 +29,24 @@ git clone --quiet "https://x-access-token:${TOKEN}@github.com/${REPO}.git" "$WOR
 rsync -a --exclude 'node_modules' --exclude '.git' --exclude '.github_token' --exclude '.git-credentials' \
   --exclude 'reports/_qa_tmp' --exclude 'reports/*.tmp' --exclude 'reports/slide-*.jpg' \
   --exclude 'data/embedded_snapshot.json' \
+  --exclude '.~lock.*' --exclude '.fuse_hidden*' \
   "$BASE_DIR/" "$WORKDIR/"
 
 # rsync --exclude only stops NEW copies of these paths — if they were committed by an earlier
 # push, they need to be actively removed from the clone too, since the clone starts from
 # whatever's already on GitHub.
+# LibreOffice lock files (.~lock.*#) and fuse_hidden files are transient app/filesystem
+# artifacts that should never be version controlled — remove wherever they appear, not just
+# in reports/, since soffice drops them next to whatever file it's converting.
+find "$WORKDIR" -name '.~lock.*' -o -name '.fuse_hidden*' | xargs -r rm -f
 rm -rf "$WORKDIR/reports/_qa_tmp" "$WORKDIR"/reports/*.tmp "$WORKDIR"/reports/slide-*.jpg \
   "$WORKDIR/data/embedded_snapshot.json" 2>/dev/null || true
+
+# One-time cleanup: "catworkx DE (TEST DATA)" was a throwaway test vendor used earlier in the
+# project and was never a real weights.json entry — its report files got committed by an
+# earlier push before the vendor was removed from weights.json. Strip any leftovers so the
+# public site doesn't keep serving reports for a vendor that no longer exists.
+rm -f "$WORKDIR"/reports/*"catworkx DE (TEST DATA)"* 2>/dev/null || true
 
 cd "$WORKDIR"
 git config user.email "smojsak@gmail.com"
