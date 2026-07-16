@@ -588,5 +588,89 @@
     "user_display_name": "Steve Mojsak",
     "company": "Communardo",
     "default_vendor": "Atlassian"
+  },
+  "activity_types": {
+    "qbr": {
+      "label": "QBR",
+      "description": "Quarterly Business Review with Atlassian or a joint QBR involving a customer."
+    },
+    "meeting": {
+      "label": "Meeting",
+      "description": "General meeting or call with an Atlassian contact, customer, or ecosystem partner."
+    },
+    "enablement": {
+      "label": "Enablement",
+      "description": "Training, certification, or enablement session \u2014 given or received."
+    },
+    "co_sell": {
+      "label": "Co-sell activity",
+      "description": "Joint selling activity with Atlassian, AWS, Google, or a GSI."
+    },
+    "workshop": {
+      "label": "Workshop",
+      "description": "Workshop or working session with a customer or Atlassian."
+    },
+    "escalation_support": {
+      "label": "Escalation support",
+      "description": "Supporting or resolving a customer or partner escalation."
+    },
+    "marketplace_activity": {
+      "label": "Marketplace activity",
+      "description": "Work on an Atlassian Marketplace app, listing, or submission."
+    },
+    "executive_briefing": {
+      "label": "Executive briefing",
+      "description": "Executive-level briefing or relationship-building conversation."
+    },
+    "campaign": {
+      "label": "Campaign",
+      "description": "Marketing or co-marketing campaign activity."
+    },
+    "deal_support": {
+      "label": "Deal support",
+      "description": "Direct support on a specific deal or opportunity."
+    },
+    "program_admin": {
+      "label": "Program administration",
+      "description": "Partner program administration \u2014 registrations, renewals, compliance."
+    },
+    "other": {
+      "label": "Other",
+      "description": "Anything not covered above \u2014 explain in the notes field."
+    }
+  },
+  "contribution_types": {
+    "initiated": {
+      "label": "Initiated",
+      "description": "You started this \u2014 it wouldn't have happened without you raising it."
+    },
+    "led": {
+      "label": "Led",
+      "description": "You owned and drove this activity end to end."
+    },
+    "influenced": {
+      "label": "Influenced",
+      "description": "You shaped the outcome without owning the activity outright."
+    },
+    "supported": {
+      "label": "Supported",
+      "description": "You contributed to someone else's activity."
+    },
+    "connected": {
+      "label": "Connected",
+      "description": "You made an introduction or connection that enabled this."
+    },
+    "accelerated": {
+      "label": "Accelerated",
+      "description": "You sped up something already in motion."
+    },
+    "protected": {
+      "label": "Protected",
+      "description": "You prevented a loss, churn, or negative outcome."
+    },
+    "other": {
+      "label": "Other",
+      "description": "Anything not covered above \u2014 explain in the notes field."
+    }
   }
 }

@@ -197,6 +197,37 @@ removal precedent), `archived_at`, `archived_reason`, plus the canonical
 `created_at`/`updated_at`/`created_by`/`updated_by`/`source_type`/
 `confidence`/`notes` fields.
 
+### `change_requests/` (change-request files, R1-T04)
+Not a register itself — a drop zone. The "+ Add Activity" quick-capture
+modal exists on both `dashboard.html` (Cowork) and `web/index_template.html`
+(public site), but only the public site needs this folder: it has no
+backend, so its modal downloads a JSON file here instead of writing to
+`value_journal.jsonl` directly. The Cowork modal applies the identical JSON
+shape immediately via chat (`sendPrompt`), skipping the file round-trip
+entirely, since Cowork can talk to Claude directly.
+
+Change-request shape (`type: "activity_create"`):
+
+```json
+{
+  "request_id": "CR-<opaque>",
+  "created_at": "<ISO 8601>",
+  "type": "activity_create",
+  "activity": { "date": "...", "type": "...", "title": "...", "outcome": "...", "...": "any value_journal.jsonl field" }
+}
+```
+
+`request_id` is generated client-side and is what makes re-importing the
+same request a safe no-op — `scripts/journal.py import-request`/`import-all`
+check every existing journal entry's `source_request_id` before creating
+anything. Applying a request never modifies `value_journal.jsonl` unless
+`activity.title` and `activity.outcome` are both present, `request_id` is
+present, and no field anywhere in the file matches a pattern that looks like
+script/markup injection (`<script`, `javascript:`, `on*=` handlers,
+`<iframe`) — see `scripts/journal.py`'s `_check_no_executable_content()`.
+`import-all` files processed requests (created or duplicate) into
+`change_requests/processed/`, leaving malformed ones in place for review.
+
 ### Generated files (not sources of truth — do not hand-edit)
 - `scores_snapshot.json` — output of `scripts/scoring.py`, consumed by the Cowork dashboard artifact.
 - `web_snapshot.json` — output of `scripts/build_web.py`, fetched at runtime by the public GitHub Pages site.

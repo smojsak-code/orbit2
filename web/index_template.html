@@ -106,6 +106,27 @@
   .settings-flag { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: #f0f1f3; color: #374151; }
   .settings-flag.on { background: #ecfdf5; color: #047857; }
   .settings-flag.off { background: #f9fafb; color: #9ca3af; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+  .modal-overlay.open { display: flex; }
+  .modal-card { background: #fff; border-radius: 12px; padding: 24px; width: 560px; max-width: 92vw; max-height: 88vh; overflow-y: auto; }
+  .modal-card h2 { margin: 0 0 4px; font-size: 18px; }
+  .modal-sub { font-size: 13px; color: #6b7280; margin-bottom: 16px; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+  .modal-field input, .modal-field textarea, .modal-field select { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; }
+  .modal-field textarea { min-height: 60px; resize: vertical; }
+  .modal-error { color: #dc2626; font-size: 12px; margin-top: 4px; display: none; }
+  .modal-field.error input, .modal-field.error textarea { border-color: #dc2626; }
+  .modal-field.error .modal-error { display: block; }
+  .modal-more { margin: 16px 0; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; }
+  .modal-more summary { cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; }
+  .modal-more-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  .modal-success { display: none; }
+  .modal-success.show { display: block; }
+  .modal-success textarea { width: 100%; min-height: 90px; font-family: monospace; font-size: 11px; margin-top: 8px; }
+  @media (max-width: 480px) { .modal-more-grid { grid-template-columns: 1fr; } .modal-card { padding: 18px; } }
   .report-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
   .report-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
   .report-sub { font-size: 11.5px; color: #9ca3af; }
@@ -136,6 +157,7 @@
       </div>
     </div>
     <div class="controls">
+      <button class="btn-primary" id="addActivityBtn" onclick="openActivityModal()">+ Add Activity</button>
       <select id="vendorSelect"></select>
     </div>
   </header>
@@ -256,6 +278,115 @@
         config file that tries to store one.
       </div>
     </section>
+  </div>
+</div>
+
+<div class="modal-overlay" id="activityModalOverlay" role="dialog" aria-modal="true" aria-labelledby="activityModalTitle">
+  <div class="modal-card">
+    <h2 id="activityModalTitle">Add Activity</h2>
+    <div class="modal-sub" id="activityModalIntro">Capture what happened — takes under a minute. Add more detail later any time.</div>
+
+    <form id="activityForm" onsubmit="return submitActivityForm(event)">
+      <div class="modal-field" id="fieldTitle">
+        <label for="actTitle">What happened? *</label>
+        <input type="text" id="actTitle" name="title" maxlength="200" placeholder="e.g. QBR with Atlassian partner team">
+        <div class="modal-error">Please describe what happened.</div>
+      </div>
+      <div class="modal-field">
+        <label for="actParticipants">Who was involved?</label>
+        <input type="text" id="actParticipants" name="participants" placeholder="comma-separated names">
+      </div>
+      <div class="modal-field" id="fieldOutcome">
+        <label for="actOutcome">Outcome *</label>
+        <textarea id="actOutcome" name="outcome" placeholder="What resulted from this? (&quot;no material outcome yet&quot; is fine)"></textarea>
+        <div class="modal-error">Please note the outcome.</div>
+      </div>
+      <div class="modal-field">
+        <label for="actNextAction">Next step</label>
+        <input type="text" id="actNextAction" name="next_action" placeholder="optional">
+      </div>
+
+      <details class="modal-more">
+        <summary>More options (type, value, links, visibility…)</summary>
+        <div class="modal-more-grid">
+          <div class="modal-field">
+            <label for="actDate">Date</label>
+            <input type="date" id="actDate" name="date">
+          </div>
+          <div class="modal-field">
+            <label for="actType">Type</label>
+            <select id="actType" name="type"></select>
+          </div>
+          <div class="modal-field">
+            <label for="actContribution">Your contribution</label>
+            <select id="actContribution" name="contribution_type"><option value="">—</option></select>
+          </div>
+          <div class="modal-field">
+            <label for="actOrganisation">Organisation</label>
+            <input type="text" id="actOrganisation" name="organisation" placeholder="e.g. Atlassian, or a customer name">
+          </div>
+          <div class="modal-field">
+            <label for="actValueAmount">Value amount</label>
+            <input type="number" id="actValueAmount" name="value_amount" step="0.01" min="0">
+          </div>
+          <div class="modal-field">
+            <label for="actValueCurrency">Value currency</label>
+            <select id="actValueCurrency" name="value_currency">
+              <option value="">—</option><option>EUR</option><option>USD</option><option>GBP</option>
+              <option>CHF</option><option>SEK</option><option>NOK</option><option>DKK</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label for="actValueStatus">Value status</label>
+            <select id="actValueStatus" name="value_status">
+              <option value="">—</option><option value="confirmed">confirmed</option>
+              <option value="estimated">estimated</option><option value="protected">protected</option>
+              <option value="potential">potential</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label for="actVisibility">Visibility</label>
+            <select id="actVisibility" name="visibility">
+              <option value="personal_only">Personal only</option>
+              <option value="communardo_internal">Communardo internal</option>
+              <option value="communardo_management">Communardo management</option>
+              <option value="atlassian_shareable">Atlassian shareable</option>
+              <option value="customer_approved">Customer approved</option>
+              <option value="anonymised">Anonymised</option>
+              <option value="public">Public</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label for="actMetricLinks">Metric links</label>
+            <input type="text" id="actMetricLinks" name="metric_links" placeholder="comma-separated, e.g. MET-0007">
+          </div>
+          <div class="modal-field">
+            <label for="actEvidenceLinks">Evidence links</label>
+            <input type="text" id="actEvidenceLinks" name="evidence_links" placeholder="comma-separated, e.g. EVD-0001">
+          </div>
+        </div>
+      </details>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeActivityModal()">Cancel</button>
+        <button type="submit" class="btn-primary">Save Activity</button>
+      </div>
+    </form>
+
+    <div class="modal-success" id="activitySuccess">
+      <div class="report-desc">
+        <strong>Downloaded.</strong> This site can't save data directly (no backend), so it downloaded a
+        change-request file instead. To apply it: open the Orbit2 workspace in Cowork and tell Claude
+        "import my downloaded activity change request" — or drag the file into your project folder's
+        <code>data/change_requests/</code> folder and ask Claude to run
+        <code>python3 scripts/journal.py import-all</code>. You can also just copy the JSON below and
+        paste it into the Cowork chat.
+      </div>
+      <textarea id="activitySuccessJson" readonly onclick="this.select()"></textarea>
+      <div class="modal-actions">
+        <button type="button" class="btn-primary" onclick="closeActivityModal()">Done</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -483,6 +614,120 @@ function renderSettingsView() {
         `<span class="settings-flag ${v ? 'on' : 'off'}">${esc(k)}: ${v ? 'on' : 'off'}</span>`
       ).join('') || '—'
     }</div></td></tr>`;
+}
+
+// --- Add Activity (R1-T04 rapid activity capture) ---
+// This site has no backend, so instead of applying the change directly it
+// downloads a small JSON change-request file — see data/change_requests/README.md
+// and scripts/journal.py's import-request/import-all commands for the other
+// half of this flow. The Cowork dashboard's own Add Activity modal builds the
+// identical activity_create JSON shape but applies it immediately via chat,
+// since Cowork can talk to Claude directly and doesn't need this round-trip.
+let activityFormListsPopulated = false;
+
+function populateActivityFormLists() {
+  if (activityFormListsPopulated) return;
+  const typeSel = document.getElementById('actType');
+  const contribSel = document.getElementById('actContribution');
+  Object.entries((SNAPSHOT && SNAPSHOT.activity_types) || {}).forEach(([key, meta]) => {
+    const o = document.createElement('option');
+    o.value = key; o.textContent = meta.label || key;
+    typeSel.appendChild(o);
+  });
+  Object.entries((SNAPSHOT && SNAPSHOT.contribution_types) || {}).forEach(([key, meta]) => {
+    const o = document.createElement('option');
+    o.value = key; o.textContent = meta.label || key;
+    contribSel.appendChild(o);
+  });
+  activityFormListsPopulated = true;
+}
+
+function openActivityModal() {
+  populateActivityFormLists();
+  document.getElementById('actDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('activityForm').style.display = '';
+  document.getElementById('activitySuccess').classList.remove('show');
+  document.getElementById('activityModalOverlay').classList.add('open');
+  document.querySelector('.wrap').setAttribute('inert', '');
+  document.addEventListener('keydown', activityModalKeydown);
+  document.getElementById('actTitle').focus();
+}
+
+function closeActivityModal() {
+  document.getElementById('activityModalOverlay').classList.remove('open');
+  document.querySelector('.wrap').removeAttribute('inert');
+  document.removeEventListener('keydown', activityModalKeydown);
+  document.getElementById('activityForm').reset();
+  document.getElementById('activityForm').style.display = '';
+  document.getElementById('activitySuccess').classList.remove('show');
+  document.getElementById('fieldTitle').classList.remove('error');
+  document.getElementById('fieldOutcome').classList.remove('error');
+  document.getElementById('addActivityBtn').focus();
+}
+
+function activityModalKeydown(e) {
+  if (e.key === 'Escape') closeActivityModal();
+}
+
+function _splitCommaList(value) {
+  return (value || '').split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function collectActivityFields() {
+  return {
+    date: document.getElementById('actDate').value || new Date().toISOString().slice(0, 10),
+    type: document.getElementById('actType').value || 'other',
+    title: document.getElementById('actTitle').value.trim(),
+    participants: _splitCommaList(document.getElementById('actParticipants').value),
+    outcome: document.getElementById('actOutcome').value.trim(),
+    next_action: document.getElementById('actNextAction').value.trim(),
+    organisation: document.getElementById('actOrganisation').value.trim(),
+    contribution_type: document.getElementById('actContribution').value,
+    value: {
+      amount: document.getElementById('actValueAmount').value ? parseFloat(document.getElementById('actValueAmount').value) : null,
+      currency: document.getElementById('actValueCurrency').value || null,
+      status: document.getElementById('actValueStatus').value || null,
+    },
+    visibility: document.getElementById('actVisibility').value,
+    metric_links: _splitCommaList(document.getElementById('actMetricLinks').value),
+    evidence_links: _splitCommaList(document.getElementById('actEvidenceLinks').value),
+  };
+}
+
+function submitActivityForm(evt) {
+  evt.preventDefault();
+  const title = document.getElementById('actTitle').value.trim();
+  const outcome = document.getElementById('actOutcome').value.trim();
+  let hasError = false;
+  document.getElementById('fieldTitle').classList.toggle('error', !title);
+  document.getElementById('fieldOutcome').classList.toggle('error', !outcome);
+  if (!title) hasError = true;
+  if (!outcome) hasError = true;
+  if (hasError) {
+    document.getElementById(title ? 'actOutcome' : 'actTitle').focus();
+    return false;
+  }
+
+  const activity = collectActivityFields();
+  const requestId = 'CR-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+  const changeRequest = { request_id: requestId, created_at: new Date().toISOString(), type: 'activity_create', activity };
+  const json = JSON.stringify(changeRequest, null, 2);
+
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `activity-${requestId}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+  document.getElementById('activityForm').style.display = 'none';
+  document.getElementById('activitySuccessJson').value = json;
+  document.getElementById('activitySuccess').classList.add('show');
+  document.getElementById('activitySuccess').querySelector('.btn-primary').focus();
+  return false;
 }
 
 function money(v, currency) {

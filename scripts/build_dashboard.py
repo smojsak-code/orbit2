@@ -190,6 +190,17 @@ def main():
             print(f"  [ERROR] {e}")
     snapshot["app_config"] = config
 
+    # activity_types.json / contribution_types.json (R1-T04) — populate the
+    # Add Activity form's "type" and "your contribution" dropdowns without
+    # hard-coding the controlled lists into the template.
+    for fname, key in [("activity_types.json", "activity_types"), ("contribution_types.json", "contribution_types")]:
+        fpath = os.path.join(DATA_DIR, fname)
+        if os.path.exists(fpath):
+            with open(fpath) as f:
+                snapshot[key] = json.load(f).get("types", {})
+        else:
+            snapshot[key] = {}
+
     # 4. Render dashboard.html -> dashboard_rendered.html
     template_path = os.path.join(BASE_DIR, "dashboard.html")
     with open(template_path) as f:

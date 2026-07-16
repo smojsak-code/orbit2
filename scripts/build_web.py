@@ -74,6 +74,15 @@ def main():
             print(f"  [ERROR] {e}")
     snapshot["app_config"] = config
 
+    # activity_types.json / contribution_types.json (R1-T04) — same as build_dashboard.py.
+    for fname, key in [("activity_types.json", "activity_types"), ("contribution_types.json", "contribution_types")]:
+        fpath = os.path.join(DATA_DIR, fname)
+        if os.path.exists(fpath):
+            with open(fpath) as f:
+                snapshot[key] = json.load(f).get("types", {})
+        else:
+            snapshot[key] = {}
+
     out_path = os.path.join(DATA_DIR, "web_snapshot.json")
     with open(out_path, "w") as f:
         json.dump(snapshot, f, indent=2)
