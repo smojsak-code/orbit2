@@ -26,7 +26,6 @@ import json
 import os
 import shutil
 import sys
-from datetime import timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -36,6 +35,7 @@ sys.path.insert(0, SCRIPTS_DIR)
 import build_dashboard as bd  # reuses run() + build_vendor_reports() — same generation logic
 import journal as journal_mod  # scripts/journal.py — read_journal(), reused for R1-T06's homepage
 import actions as actions_mod  # scripts/actions.py — today_london(), reused for period math
+import impact as impact_mod  # scripts/impact.py — compute_impact_aggregates() (R1-T07)
 
 # --- R1-T06: Daily Alliance Manager homepage aggregation ---
 #
@@ -92,19 +92,6 @@ def _slim_journal(entry):
         "value_status": value.get("status"),
         "recognition_status": entry.get("recognition_status"),
     }
-
-
-def _period_start(period, today):
-    if period == "week":
-        return today - timedelta(days=today.weekday())  # Monday of this week
-    if period == "month":
-        return today.replace(day=1)
-    if period == "quarter":
-        q_start_month = ((today.month - 1) // 3) * 3 + 1
-        return today.replace(month=q_start_month, day=1)
-    if period == "year":
-        return today.replace(month=1, day=1)
-    raise ValueError(f"unknown period: {period}")
 
 
 def compute_homepage_aggregates(scores_snapshot, action_rows, journal_entries, evidence_rows):
@@ -178,7 +165,7 @@ def compute_homepage_aggregates(scores_snapshot, action_rows, journal_entries, e
     # ever shipping the slim/curated shape (instruction #39).
     by_period = {}
     for period in ("week", "month", "quarter", "year"):
-        start = _period_start(period, today)
+        start = actions_mod.period_start(period, today)
         in_period = [e for e in public_journal if (e.get("date") or "9999-99-99") >= start.isoformat()]
         in_period.sort(key=lambda e: e.get("date") or "", reverse=True)
         unrecognised = [
@@ -260,6 +247,10 @@ def main():
     journal_entries = journal_mod.read_journal()
     evidence_rows = snapshot.get("evidence") or []
     snapshot["homepage"] = compute_homepage_aggregates(snapshot, action_rows, journal_entries, evidence_rows)
+
+    # My Impact dashboard (R1-T07) — same journal_entries as the homepage
+    # above; see scripts/impact.py module docstring for the full design.
+    snapshot["impact"] = impact_mod.compute_impact_aggregates(journal_entries)
 
     out_path = os.path.join(DATA_DIR, "web_snapshot.json")
     with open(out_path, "w") as f:

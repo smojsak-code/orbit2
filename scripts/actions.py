@@ -112,6 +112,25 @@ def today_london():
     return datetime.now().date()  # fallback if zoneinfo's tz database is unavailable
 
 
+def period_start(period, today=None):
+    """Start date (inclusive) of the given rolling period — 'week' (Monday of
+    the current week), 'month', 'quarter', or 'year' (all calendar-based, not
+    a rolling N-day window). Shared by build_web.py's homepage aggregation
+    (R1-T06) and impact.py's My Impact aggregation (R1-T07) so the period
+    selector means exactly the same thing everywhere it appears."""
+    today = today or today_london()
+    if period == "week":
+        return today - timedelta(days=today.weekday())  # Monday of this week
+    if period == "month":
+        return today.replace(day=1)
+    if period == "quarter":
+        q_start_month = ((today.month - 1) // 3) * 3 + 1
+        return today.replace(month=q_start_month, day=1)
+    if period == "year":
+        return today.replace(month=1, day=1)
+    raise ValueError(f"unknown period: {period}")
+
+
 def is_overdue(row, today=None):
     """True if this action's due date has passed and it's still in a
     non-terminal, non-deferred-away state. Deferred actions are judged

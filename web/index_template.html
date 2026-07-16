@@ -6,6 +6,7 @@
 <title>Orbit2 — Communardo Partner Performance</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <script src="web/assets/home.js" defer></script>
+<script src="web/assets/impact.js" defer></script>
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
@@ -102,6 +103,7 @@
   #viewReports { display: none; }
   #viewActions { display: none; }
   #viewSettings { display: none; }
+  #viewImpact { display: none; }
   .action-checkbox-row { display: flex; align-items: center; gap: 8px; margin: 4px 0 12px; font-size: 13px; color: #374151; }
   .action-checkbox-row input { width: auto; }
   .action-subfields { display: none; }
@@ -150,6 +152,29 @@
   .home-empty { font-size: 12px; color: #6b7280; padding: 10px 0; line-height: 1.6; }
   .home-notice { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #1e3a8a; margin-top: 8px; display: none; }
   .home-notice.show { display: block; }
+
+  /* --- My Impact (R1-T07) --- */
+  .impact-narrative { font-size: 13.5px; line-height: 1.7; color: #1c1f24; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; }
+  .impact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 16px; }
+  @media (max-width: 820px) { .impact-grid { grid-template-columns: 1fr; } }
+  .impact-cat-card h3 { font-size: 14px; margin: 0 0 4px; display: flex; align-items: center; justify-content: space-between; }
+  .impact-cat-meta { font-size: 11px; color: #9ca3af; margin-bottom: 8px; }
+  .impact-breakdown-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .impact-chip { font-size: 10.5px; padding: 2px 9px; border-radius: 999px; background: #f3f4f6; color: #374151; }
+  .impact-financial-card { grid-column: 1 / -1; }
+  .impact-fin-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+  .impact-fin-row:last-child { border-bottom: none; }
+  .impact-fin-label { color: #6b7280; }
+  .impact-fin-amount { font-weight: 700; color: #1c1f24; }
+  .impact-fin-note { font-size: 11px; color: #9ca3af; margin-top: 6px; line-height: 1.6; }
+  .impact-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  @media print {
+    header, .tab-bar, .home-toolbar, .primary-actions, .home-notice, .impact-toolbar .btn-secondary,
+    #viewHome, #viewDashboard, #viewActions, #viewReports, #viewSettings, .footer-note { display: none !important; }
+    #viewImpact { display: block !important; }
+    body { background: #fff; padding: 0; }
+    .impact-cat-card, .impact-financial-card, .impact-narrative, .card { break-inside: avoid; }
+  }
 
   .modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
   .modal-overlay.open { display: flex; }
@@ -208,6 +233,7 @@
 
   <div class="tab-bar">
     <button class="tab-btn active" id="tabHome" onclick="switchView('home')">Home</button>
+    <button class="tab-btn" id="tabImpact" onclick="switchView('impact')">My Impact</button>
     <button class="tab-btn" id="tabDashboard" onclick="switchView('dashboard')">Dashboard</button>
     <button class="tab-btn" id="tabActions" onclick="switchView('actions')">Actions</button>
     <button class="tab-btn" id="tabReports" onclick="switchView('reports')">Reports</button>
@@ -269,6 +295,66 @@
       <div class="card home-card" style="grid-column:1/-1;">
         <h3>Follow-ups due <span class="toggle-hint" style="font-weight:400;">activities with a next step noted but no action tracked yet</span><span class="count-badge" id="homeFollowupsBadge">0</span></h3>
         <div id="homeFollowupsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="viewImpact">
+    <div class="sync-note">
+      <strong>Your personal contribution record, evidence-backed.</strong> Every figure here is drawn
+      straight from the Partner Value Journal — nothing is estimated or invented. Use it for reviews,
+      recognition conversations, or your own record of what you've driven.
+    </div>
+
+    <div class="impact-toolbar">
+      <div>
+        <label for="impactPeriod" style="font-size:12px;color:#6b7280;margin-right:6px;">Showing impact for:</label>
+        <select id="impactPeriod" class="period-select">
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+          <option value="quarter" selected>This quarter</option>
+          <option value="year">This year</option>
+        </select>
+      </div>
+      <button class="btn-secondary" onclick="window.print()">Print / save as PDF</button>
+    </div>
+
+    <div class="impact-narrative" id="impactNarrative"></div>
+
+    <div class="impact-grid">
+      <div class="card impact-cat-card" id="impactCat-relationship">
+        <h3>Relationship <span class="count-badge" id="impactBadge-relationship">0</span></h3>
+        <div class="impact-cat-meta">QBRs, meetings, executive briefings</div>
+        <div class="impact-breakdown-row" id="impactBreakdown-relationship"></div>
+        <div id="impactList-relationship"></div>
+      </div>
+      <div class="card impact-cat-card" id="impactCat-commercial">
+        <h3>Commercial <span class="count-badge" id="impactBadge-commercial">0</span></h3>
+        <div class="impact-cat-meta">Deal support, co-sell, marketplace activity</div>
+        <div class="impact-breakdown-row" id="impactBreakdown-commercial"></div>
+        <div id="impactList-commercial"></div>
+      </div>
+      <div class="card impact-cat-card" id="impactCat-strategic">
+        <h3>Strategic <span class="count-badge" id="impactBadge-strategic">0</span></h3>
+        <div class="impact-cat-meta">Campaigns, workshops</div>
+        <div class="impact-breakdown-row" id="impactBreakdown-strategic"></div>
+        <div id="impactList-strategic"></div>
+      </div>
+      <div class="card impact-cat-card" id="impactCat-operational">
+        <h3>Operational <span class="count-badge" id="impactBadge-operational">0</span></h3>
+        <div class="impact-cat-meta">Enablement, escalation support, program admin</div>
+        <div class="impact-breakdown-row" id="impactBreakdown-operational"></div>
+        <div id="impactList-operational"></div>
+      </div>
+      <div class="card impact-cat-card" style="grid-column:1/-1;" id="impactCat-recognition">
+        <h3>Recognition <span class="toggle-hint" style="font-weight:400;">same contributions, grouped by whether they've been acknowledged</span></h3>
+        <div class="impact-breakdown-row" id="impactBreakdown-recognition"></div>
+        <div id="impactList-recognition"></div>
+      </div>
+      <div class="card impact-financial-card">
+        <h3>Financial value <span class="toggle-hint" style="font-weight:400;">never combined across status or currency</span></h3>
+        <div id="impactFinancialRows"></div>
+        <div class="impact-fin-note" id="impactFinancialNote"></div>
       </div>
     </div>
   </div>
@@ -831,7 +917,7 @@ function render(vendorName) {
 // Note: #viewReports and #viewSettings both have a hard `display: none` in the stylesheet, so
 // showing one needs an explicit 'block' — setting style.display = '' just falls back to that CSS
 // rule and leaves it hidden even though nothing errors.
-const VIEWS = ['home', 'dashboard', 'actions', 'reports', 'settings'];
+const VIEWS = ['home', 'impact', 'dashboard', 'actions', 'reports', 'settings'];
 function switchView(view) {
   VIEWS.forEach(v => {
     const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
@@ -1215,6 +1301,8 @@ fetch('data/web_snapshot.json', { cache: 'no-store' })
     setupEvidenceSearch();
     renderHomeView();
     setupHomeControls();
+    renderImpactView();
+    setupImpactControls();
   })
   .catch(err => {
     document.getElementById('loadingState').style.display = 'none';

@@ -300,9 +300,143 @@ the new `activity_id`, so the two registers are linked from creation. There
 is no other path that creates an action without this explicit opt-in; a
 plain activity submission never generates one implicitly.
 
+### `web_snapshot.json`'s `homepage` key (Daily Alliance Manager homepage, R1-T06)
+Public-site-only — this key does not exist in the Cowork dashboard's own
+`scores_snapshot.json`/embedded snapshot, since R1-T06's own "Primary
+files/components" list scopes the feature to the public site. Computed by
+`scripts/build_web.py`'s `compute_homepage_aggregates()` at every build, from
+`actions.csv`, `value_journal.jsonl`, and `evidence_index.csv` — never
+hand-edited, never a source of truth itself.
+
+Shape:
+
+```
+homepage: {
+  generated_at_london: "YYYY-MM-DD",
+  overdue_actions: [ {action_id, description, owner, due_date, priority, status, vendor}, ... ],
+  due_soon_actions: [ same slim shape ],
+  followups_due: [ slim journal entries whose next_action has no linked action yet ],
+  per_vendor: { "<vendor>": { metrics_at_risk: [...], missing_evidence: [...] }, ... },
+  by_period: {
+    week|month|quarter|year: {
+      period_start: "YYYY-MM-DD",
+      recent_journal: [ up to 8 slim journal entries ],
+      recent_journal_total: int,
+      unrecognised_value: [ slim journal entries with value.amount and recognition_status=="unrecognised" ],
+    }
+  }
+}
+```
+
+Design notes:
+- Only `personal_only`-visibility rows are excluded (`_visible_for_homepage()`)
+  — the rest of the `visibility` scale is a Release 2 enforcement concern
+  (see the canonical-fields note above); this is a deliberately narrow,
+  literal reading of R1-T06's own acceptance criteria, not full visibility
+  support.
+- "Metrics at risk" requires a sub-metric to have `actual != 0` (something
+  measured) *and* `score < 70` — a merely unstarted sub-metric is not "at
+  risk," it just hasn't begun, and treating it as such flooded this section
+  with noise on a freshly-reset scorecard.
+- `week`/`month`/`quarter`/`year` are calendar-based (Monday-of-week,
+  1st-of-month, etc.), computed by `scripts/actions.py`'s `period_start()` —
+  the same function `impact`'s period buckets below use, so the period
+  selector means exactly the same date range everywhere it appears on the
+  site.
+- Pre-bucketed for all four periods at build time (not just the default) so
+  the client-side period selector is a lookup, not a re-fetch — see R1-T06
+  instruction #39 ("publish only the calculated view data needed by the
+  page").
+
+### `web_snapshot.json`'s `impact` key (My Impact dashboard, R1-T07)
+Also public-site-only, same literal-scope reasoning as `homepage` above.
+Computed by `scripts/impact.py`'s `compute_impact_aggregates()`, called from
+`scripts/build_web.py`'s `main()`, from `value_journal.jsonl` alone —
+deliberately never `actions.csv`. An activity and its optional linked
+follow-up action describe the same underlying event; counting both as
+separate "contributions" would double-count, so `actions.csv` is treated
+purely as a follow-up-tracking register here, never a source of impact
+figures.
+
+Shape:
+
+```
+impact: {
+  generated_at_london: "YYYY-MM-DD",
+  by_period: {
+    week|month|quarter|year: {
+      period_start: "YYYY-MM-DD",
+      total_contributions: int,
+      organisations: [ "...", ... ],
+      distinct_participants: int,
+      categories: {
+        relationship|commercial|strategic|operational: {
+          count: int,
+          evidence_coverage_pct: float,
+          contribution_type_counts: { "led": n, "supported": n, ... },
+          confidence_counts: { "verified": n, "unverified": n, ... },
+          organisations: [ "...", ... ],
+          entries: [ slim journal entries, newest first ],
+        }
+      },
+      financial: {
+        by_status: { confirmed: {currency: amount}, estimated: {...}, protected: {...}, potential: {...} },
+        counts_by_status: { confirmed: n, estimated: n, protected: n, potential: n },
+        awaiting_validation: { currency: amount },
+        awaiting_validation_count: int,
+      },
+      recognition: {
+        by_status: { unrecognised: {count, entries}, logged: {...}, shared: {...}, acknowledged: {...} }
+      },
+      narrative: "plain-language paragraph, generated deterministically",
+    }
+  }
+}
+```
+
+Design decisions worth calling out explicitly, since none of them are
+obvious from the schema alone:
+
+- **Category mapping is a fixed partition, not a tag.** Every journal
+  `type` maps to exactly one of `relationship` (`qbr`, `meeting`,
+  `executive_briefing`), `commercial` (`deal_support`, `co_sell`,
+  `marketplace_activity`), `strategic` (`campaign`, `workshop`), or
+  `operational` (`enablement`, `escalation_support`, `program_admin`,
+  `other`) via `ACTIVITY_TYPE_TO_IMPACT_CATEGORY` in `scripts/impact.py` —
+  so the four category counts always sum to `total_contributions`, with no
+  double-counting or gaps. `Recognition` is a fifth, orthogonal section:
+  the same entries re-grouped by `recognition_status` instead.
+- **"Awaiting validation" reuses the existing `confidence` field**, not a
+  new one. It is the total `value.amount` across entries where the
+  journal's own `confidence` field (already part of the R1-T03 schema) is
+  `"unverified"` — cutting across whichever `value.status` the entry was
+  filed under. This was chosen over inventing a new field because
+  `confidence` already exists and already means "how sure are we this
+  claim is right," which is exactly what "awaiting validation" needs to
+  express.
+- **Financial totals are never combined** — not across `value.status`
+  (confirmed/estimated/protected/potential stay in separate buckets, per
+  R1-T07's acceptance criterion) and not across currency (each status
+  bucket is itself a `{currency: amount}` map, summed only when the
+  currency matches). The UI (`web/assets/impact.js`) renders one row per
+  status × currency combination and never sums across rows.
+- **The narrative is template-generated, not AI-generated** — see
+  `generate_narrative()` in `scripts/impact.py`. It only ever states figures
+  already present in the same period's aggregate, so every sentence is
+  traceable back to a field the UI also renders directly.
+- **Joint contributions never read as sole ownership.** `contribution_type`
+  values `influenced`/`supported`/`connected`/`accelerated`/`protected` are
+  phrased as "contributed to" in the narrative; only `initiated`/`led` use
+  "drove." `distinct_participants` (count of unique named participants
+  across in-period entries) is surfaced directly in the narrative whenever
+  non-zero, specifically so a solo-sounding sentence doesn't imply solo work
+  when others were logged as involved.
+- Same `personal_only` exclusion and calendar-based `period_start()` sharing
+  as `homepage` above.
+
 ### Generated files (not sources of truth — do not hand-edit)
 - `scores_snapshot.json` — output of `scripts/scoring.py`, consumed by the Cowork dashboard artifact.
-- `web_snapshot.json` — output of `scripts/build_web.py`, fetched at runtime by the public GitHub Pages site.
+- `web_snapshot.json` — output of `scripts/build_web.py`, fetched at runtime by the public GitHub Pages site. Includes the `homepage` (R1-T06) and `impact` (R1-T07) keys documented above.
 - `embedded_snapshot.json` — orphaned/stale artifact from an earlier build approach, no longer read by any script. Excluded from `git push` (`scripts/git_push.sh`). Left in place because the sandbox cannot delete files; safe to ignore.
 
 ### Deprecated/orphaned files

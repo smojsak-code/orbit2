@@ -756,5 +756,318 @@
         "unrecognised_value": []
       }
     }
+  },
+  "impact": {
+    "generated_at_london": "2026-07-16",
+    "by_period": {
+      "week": {
+        "period_start": "2026-07-13",
+        "total_contributions": 0,
+        "organisations": [],
+        "distinct_participants": 0,
+        "categories": {
+          "relationship": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "commercial": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "strategic": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "operational": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          }
+        },
+        "financial": {
+          "by_status": {
+            "confirmed": {},
+            "estimated": {},
+            "protected": {},
+            "potential": {}
+          },
+          "counts_by_status": {
+            "confirmed": 0,
+            "estimated": 0,
+            "protected": 0,
+            "potential": 0
+          },
+          "awaiting_validation": {},
+          "awaiting_validation_count": 0
+        },
+        "recognition": {
+          "by_status": {
+            "unrecognised": {
+              "count": 0,
+              "entries": []
+            },
+            "logged": {
+              "count": 0,
+              "entries": []
+            },
+            "shared": {
+              "count": 0,
+              "entries": []
+            },
+            "acknowledged": {
+              "count": 0,
+              "entries": []
+            }
+          }
+        },
+        "narrative": "Nothing logged this week yet. Use \"+ Add Activity\" on the Home tab to start building this picture \u2014 it takes under a minute per entry."
+      },
+      "month": {
+        "period_start": "2026-07-01",
+        "total_contributions": 0,
+        "organisations": [],
+        "distinct_participants": 0,
+        "categories": {
+          "relationship": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "commercial": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "strategic": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "operational": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          }
+        },
+        "financial": {
+          "by_status": {
+            "confirmed": {},
+            "estimated": {},
+            "protected": {},
+            "potential": {}
+          },
+          "counts_by_status": {
+            "confirmed": 0,
+            "estimated": 0,
+            "protected": 0,
+            "potential": 0
+          },
+          "awaiting_validation": {},
+          "awaiting_validation_count": 0
+        },
+        "recognition": {
+          "by_status": {
+            "unrecognised": {
+              "count": 0,
+              "entries": []
+            },
+            "logged": {
+              "count": 0,
+              "entries": []
+            },
+            "shared": {
+              "count": 0,
+              "entries": []
+            },
+            "acknowledged": {
+              "count": 0,
+              "entries": []
+            }
+          }
+        },
+        "narrative": "Nothing logged this month yet. Use \"+ Add Activity\" on the Home tab to start building this picture \u2014 it takes under a minute per entry."
+      },
+      "quarter": {
+        "period_start": "2026-07-01",
+        "total_contributions": 0,
+        "organisations": [],
+        "distinct_participants": 0,
+        "categories": {
+          "relationship": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "commercial": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "strategic": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "operational": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          }
+        },
+        "financial": {
+          "by_status": {
+            "confirmed": {},
+            "estimated": {},
+            "protected": {},
+            "potential": {}
+          },
+          "counts_by_status": {
+            "confirmed": 0,
+            "estimated": 0,
+            "protected": 0,
+            "potential": 0
+          },
+          "awaiting_validation": {},
+          "awaiting_validation_count": 0
+        },
+        "recognition": {
+          "by_status": {
+            "unrecognised": {
+              "count": 0,
+              "entries": []
+            },
+            "logged": {
+              "count": 0,
+              "entries": []
+            },
+            "shared": {
+              "count": 0,
+              "entries": []
+            },
+            "acknowledged": {
+              "count": 0,
+              "entries": []
+            }
+          }
+        },
+        "narrative": "Nothing logged this quarter yet. Use \"+ Add Activity\" on the Home tab to start building this picture \u2014 it takes under a minute per entry."
+      },
+      "year": {
+        "period_start": "2026-01-01",
+        "total_contributions": 0,
+        "organisations": [],
+        "distinct_participants": 0,
+        "categories": {
+          "relationship": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "commercial": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "strategic": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "operational": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          }
+        },
+        "financial": {
+          "by_status": {
+            "confirmed": {},
+            "estimated": {},
+            "protected": {},
+            "potential": {}
+          },
+          "counts_by_status": {
+            "confirmed": 0,
+            "estimated": 0,
+            "protected": 0,
+            "potential": 0
+          },
+          "awaiting_validation": {},
+          "awaiting_validation_count": 0
+        },
+        "recognition": {
+          "by_status": {
+            "unrecognised": {
+              "count": 0,
+              "entries": []
+            },
+            "logged": {
+              "count": 0,
+              "entries": []
+            },
+            "shared": {
+              "count": 0,
+              "entries": []
+            },
+            "acknowledged": {
+              "count": 0,
+              "entries": []
+            }
+          }
+        },
+        "narrative": "Nothing logged this year yet. Use \"+ Add Activity\" on the Home tab to start building this picture \u2014 it takes under a minute per entry."
+      }
+    }
   }
 }
