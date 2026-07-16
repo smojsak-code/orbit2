@@ -1,4 +1,4 @@
-vendor,quarter,vertical,solutions_count,solutions_sold,revenue,source,notes
-Atlassian,2026-Q3,Finance,0,0,0,,RESET 2026-07-01 — awaiting real data
-Atlassian,2026-Q3,Automotive,0,0,0,,RESET 2026-07-01 — awaiting real data
-Atlassian,2026-Q3,Pharmaceutical,0,0,0,,RESET 2026-07-01 — awaiting real data
+record_id,vendor,quarter,vertical,solutions_count,solutions_sold,revenue,source,notes
+SV-0001,Atlassian,2026-Q3,Finance,0,0,0,,RESET 2026-07-01 — awaiting real data
+SV-0002,Atlassian,2026-Q3,Automotive,0,0,0,,RESET 2026-07-01 — awaiting real data
+SV-0003,Atlassian,2026-Q3,Pharmaceutical,0,0,0,,RESET 2026-07-01 — awaiting real data

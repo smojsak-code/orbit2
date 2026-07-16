@@ -34,8 +34,39 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 CATEGORIES_PATH = os.path.join(DATA_DIR, "categories.json")
 WEIGHTS_PATH = os.path.join(DATA_DIR, "weights.json")
 CHANGELOG_PATH = os.path.join(DATA_DIR, "metric_changelog.csv")
-CHANGELOG_FIELDS = ["date", "vendor", "category", "sub_metric", "change_type", "old_value", "new_value", "reason", "source"]
-SUBMETRIC_FIELDS = ["vendor", "quarter", "sub_metric", "weight_pct_in_category", "target", "actual", "unit", "score_method", "source", "notes", "description"]
+CHANGELOG_FIELDS = ["record_id", "date", "vendor", "category", "sub_metric", "change_type", "old_value", "new_value", "reason", "source"]
+SUBMETRIC_FIELDS = ["record_id", "vendor", "quarter", "sub_metric", "weight_pct_in_category", "target", "actual", "unit", "score_method", "source", "notes", "description"]
+
+# Category CSVs that share the "MET-" record_id namespace (see
+# docs/data_dictionary.md and scripts/migrations/migration_001_add_record_ids.py —
+# every row across these files is the same logical entity, a scorecard
+# sub-metric result, just partitioned by category into separate files).
+CATEGORY_RECORD_ID_FILES = [
+    "sales_performance", "marketing", "market_visibility", "ai_adoption",
+    "business_planning_qbr", "registrations", "third_party_coselling",
+    "solutions", "services",
+]
+
+
+def next_shared_id(prefix, filenames):
+    """Scan the given data/<file>.csv files for the highest existing
+    record_id under `prefix` and return the next one. Shared across files so
+    e.g. all 9 category CSVs draw from one MET- counter, matching the
+    migration that first assigned these IDs."""
+    max_num = 0
+    for fname in filenames:
+        path = os.path.join(DATA_DIR, f"{fname}.csv")
+        if not os.path.exists(path):
+            continue
+        with open(path, newline="") as f:
+            for r in csv.DictReader(f):
+                rid = (r.get("record_id") or "").strip()
+                if rid.startswith(prefix):
+                    try:
+                        max_num = max(max_num, int(rid[len(prefix):]))
+                    except ValueError:
+                        pass
+    return f"{prefix}{max_num + 1:04d}"
 
 
 def load_json(path):
@@ -53,7 +84,16 @@ def log_change(vendor, category, sub_metric, change_type, old_value, new_value, 
     if os.path.exists(CHANGELOG_PATH):
         with open(CHANGELOG_PATH, newline="") as f:
             rows = list(csv.DictReader(f))
+    max_num = 0
+    for r in rows:
+        rid = (r.get("record_id") or "").strip()
+        if rid.startswith("CHG-"):
+            try:
+                max_num = max(max_num, int(rid[4:]))
+            except ValueError:
+                pass
     rows.append({
+        "record_id": f"CHG-{max_num + 1:04d}",
         "date": date.today().isoformat(), "vendor": vendor, "category": category,
         "sub_metric": sub_metric, "change_type": change_type,
         "old_value": old_value, "new_value": new_value, "reason": reason, "source": source,
@@ -136,6 +176,7 @@ def cmd_add_submetric(args):
         print(f"'{args.sub_metric}' already exists for {args.vendor} {args.quarter} in this category — use amend-submetric instead.")
         return
     rows.append({
+        "record_id": next_shared_id("MET-", CATEGORY_RECORD_ID_FILES),
         "vendor": args.vendor, "quarter": args.quarter, "sub_metric": args.sub_metric,
         "weight_pct_in_category": args.weight, "target": args.target, "actual": args.actual,
         "unit": args.unit, "score_method": args.score_method, "source": args.source_field, "notes": args.notes,

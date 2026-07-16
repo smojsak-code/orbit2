@@ -1,4 +1,4 @@
-vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
-Atlassian,2026-Q3,Pipeline growth QoQ,35,500000,0,EUR,ratio,,RESET 2026-07-01 — awaiting real data,"Net new pipeline value created this quarter vs last, sourced from CRM. Signals whether top-of-funnel demand generation is keeping pace with targets."
-Atlassian,2026-Q3,Bookings/revenue attainment vs quota,40,1200000,0,EUR,ratio,,RESET 2026-07-01 — awaiting real data,Closed-won bookings this quarter against the quota set with Atlassian/leadership. The single clearest signal of commercial performance.
-Atlassian,2026-Q3,Win rate on registered deals,25,35,0,%,ratio,,RESET 2026-07-01 — awaiting real data,Percentage of Deal-Registered opportunities that closed won. Reflects how effectively registered pipeline converts to revenue.
+record_id,vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
+MET-0001,Atlassian,2026-Q3,Pipeline growth QoQ,35,500000,0,EUR,ratio,,RESET 2026-07-01 — awaiting real data,"Net new pipeline value created this quarter vs last, sourced from CRM. Signals whether top-of-funnel demand generation is keeping pace with targets."
+MET-0002,Atlassian,2026-Q3,Bookings/revenue attainment vs quota,40,1200000,0,EUR,ratio,,RESET 2026-07-01 — awaiting real data,Closed-won bookings this quarter against the quota set with Atlassian/leadership. The single clearest signal of commercial performance.
+MET-0003,Atlassian,2026-Q3,Win rate on registered deals,25,35,0,%,ratio,,RESET 2026-07-01 — awaiting real data,Percentage of Deal-Registered opportunities that closed won. Reflects how effectively registered pipeline converts to revenue.

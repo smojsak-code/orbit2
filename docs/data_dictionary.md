@@ -1,0 +1,134 @@
+# Orbit2 Data Dictionary
+
+This document is the canonical description of every file in `data/`: what it
+holds, what its stable ID is, and what values controlled fields are allowed
+to take. It is maintained as part of the schema/migration framework
+(`data/schema_version.json`, `scripts/migrations/`, `scripts/validate_data.py`)
+introduced in R1-T01 of the technical roadmap. Update this file whenever a
+migration changes a register's shape.
+
+## Schema versioning
+
+The current schema version and the history of applied migrations live in
+`data/schema_version.json`, managed by `scripts/migrations/run_migrations.py`
+(never hand-edit that file). Run `python3 scripts/validate_data.py` any time
+you want to confirm every register still matches this dictionary.
+
+## Stable record IDs
+
+Every row in a register that can be referenced from elsewhere (an evidence
+link, a report, a future journal entry) carries a stable ID that never
+changes when a title, name, or quarter changes:
+
+| Register | ID field | Prefix | Namespace |
+|---|---|---|---|
+| The 9 category sub-metric CSVs (see below) | `record_id` | `MET-` | Shared across all 9 files — one counter, since every row is the same kind of entity (a sub-metric result) just partitioned by category |
+| `metric_changelog.csv` | `record_id` | `CHG-` | Own file |
+| `solution_verticals.csv` | `record_id` | `SV-` | Own file |
+| `news_log.csv` | `record_id` | `NEWS-` | Own file |
+| `evidence_index.csv` | `evidence_id` | `EVD-` | Own file (pre-existing, unchanged by this migration) |
+| `deals.csv` | `deal_id` | `DEAL-` | Own file (pre-existing column; no rows populated yet) |
+
+IDs are assigned once and never reused or renumbered, including by
+migrations run more than once (`scripts/migrations/migration_001_add_record_ids.py`
+only backfills rows missing an ID; `scripts/metric_manager.py` computes the
+next free ID per namespace before writing).
+
+## Canonical common fields (target shape for new registers)
+
+Not every existing file has all of these yet — see each file's entry below
+for what actually applies today. New registers created for Release 1 and
+later should include, where applicable:
+
+- `record_id` — stable identifier, never reused.
+- `created_at` / `updated_at` — ISO 8601 timestamps.
+- `created_by` / `updated_by` — defaults to the named user for the personal edition (Steve Mojsak).
+- `status` — controlled value appropriate to the record type.
+- `visibility` — one of `personal_only`, `communardo_internal`, `communardo_management`, `atlassian_shareable`, `customer_approved`, `anonymised`, `public`. Not yet enforced anywhere in the current schema (this is a Release 2 concern, R2-T04) — listed here so future registers use consistent values from day one.
+- `source_type` — one of `manual`, `import`, `evidence_extraction`, `calculated`, `migrated`.
+- `confidence` — one of `confirmed`, `supported`, `estimated`, `unverified`.
+- `notes` — optional plain-language context.
+
+## Files in `data/`
+
+### The 9 category sub-metric CSVs
+`sales_performance.csv`, `marketing.csv`, `market_visibility.csv`,
+`ai_adoption.csv`, `business_planning_qbr.csv`, `registrations.csv`,
+`third_party_coselling.csv`, `solutions.csv`, `services.csv`
+
+One row per sub-metric, per vendor, per quarter. Read by `scripts/scoring.py`
+(only the latest quarter per vendor is scored) and written by
+`scripts/metric_manager.py`.
+
+Columns: `record_id, vendor, quarter, sub_metric, weight_pct_in_category, target, actual, unit, score_method, source, notes, description`
+
+- `score_method`: `ratio` (higher actual is better) or `inverse` (lower actual is better).
+- `weight_pct_in_category`: must sum to 100 across all rows for one vendor+quarter within a file.
+- `source`: free text — where the actual value came from (evidence ID, verbal update, etc.). Not yet a structured reference.
+
+### `categories.json`
+Config, not a register. Registry of category keys → `{label, file}`. Adding
+a category here (plus a matching CSV and a weight in `weights.json`)
+requires no code changes.
+
+### `weights.json`
+Config, not a register. `{"<vendor>": {"<category_key>": weight_pct, ...}}`.
+Category weights must sum to 100 per vendor. `validate_data.py` checks this.
+
+### `evidence_index.csv`
+One row per uploaded evidence file. Read/written by `scripts/evidence_ingest.py`.
+
+Columns: `evidence_id, date_added, vendor, category, sub_metric, quarter, filename, description, dedupe_key, status, superseded_by, source_type, removed_date, removed_reason`
+
+- `status`: `active`, `superseded`, or `removed`.
+- Removing evidence resets the linked metric's `actual` to 0 rather than
+  silently keeping a stale value (see `docs/methodology.md`, "Evidence
+  Library"). R2-T06 of the roadmap proposes changing this to a
+  flag-for-review model instead — noted here as a known future decision
+  point, not yet made.
+
+### `metric_changelog.csv`
+Append-only audit log of category/sub-metric additions, amendments and
+deprecations. Written by `scripts/metric_manager.py`.
+
+Columns: `record_id, date, vendor, category, sub_metric, change_type, old_value, new_value, reason, source`
+
+- `change_type`: `added`, `amended`, or `deprecated`.
+- `category` is sometimes a real category key and sometimes a special marker
+  (`all`, `(new category)`, `(category merge)`, `(full reset)`) for
+  whole-scorecard events — `validate_data.py` does not enforce category
+  existence on this file for that reason.
+
+### `solution_verticals.csv`
+Solution count/revenue breakdown by industry vertical, per vendor/quarter.
+Supporting detail for reports — not part of the weighted score.
+
+Columns: `record_id, vendor, quarter, vertical, solutions_count, solutions_sold, revenue, source, notes`
+
+### `deals.csv`
+Key deals register — supporting detail for reports, not part of the
+weighted score. No rows populated yet.
+
+Columns: `deal_id, vendor, quarter, company_name, close_date, tcv, acv, currency, products_sold, services_sold, vertical, atlassian_category, deal_reg_type, source, notes`
+
+### `news_log.csv`
+Press/analyst mentions found by the scheduled news-monitoring task. Feeds
+the Market Visibility category's "Press/analyst mentions volume" sub-metric.
+
+Columns: `record_id, date_found, vendor_context, headline, source_url, sentiment, sentiment_confidence, summary`
+
+### Generated files (not sources of truth — do not hand-edit)
+- `scores_snapshot.json` — output of `scripts/scoring.py`, consumed by the Cowork dashboard artifact.
+- `web_snapshot.json` — output of `scripts/build_web.py`, fetched at runtime by the public GitHub Pages site.
+- `embedded_snapshot.json` — orphaned/stale artifact from an earlier build approach, no longer read by any script. Excluded from `git push` (`scripts/git_push.sh`). Left in place because the sandbox cannot delete files; safe to ignore.
+
+### Deprecated/orphaned files
+- `coselling.csv`, `third_party_vendors.csv` — merged into `third_party_coselling.csv`. Each file's only content is a one-line deprecation notice. Not read by any script. Left in place because the sandbox cannot delete files.
+
+## Backups
+
+`scripts/migrations/run_migrations.py` copies the entire `data/` directory to
+`backups/<timestamp>/` before applying any pending migration. `backups/` is
+git-ignored (see `.gitignore`) — it is a local safety net, not something
+pushed to GitHub, to keep the repository from accumulating full historical
+data snapshots on every schema change.

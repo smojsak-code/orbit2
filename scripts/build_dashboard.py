@@ -31,8 +31,10 @@ override with ORBIT2_DOCX_SKILL_DIR env var if it moves).
 import base64
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -93,12 +95,35 @@ def build_vendor_reports(vendor):
     docx_path = os.path.join(REPORTS_DIR, docx_candidates[-1])
 
     # 2. PDF (from the docx)
+    #
+    # Convert into a throwaway temp directory rather than straight into
+    # REPORTS_DIR, then copy the bytes into place with a plain read+write.
+    # Some sandbox sessions leave a prior run's output file at this exact
+    # path in a state where LibreOffice's own overwrite (which does an
+    # internal rename/replace) fails with "Operation not permitted"
+    # (Io Class:Abort Code:27), even though a plain in-place byte write to
+    # the same path succeeds. Converting elsewhere and copying in sidesteps
+    # that without weakening anything — the final bytes on disk are
+    # identical to a direct conversion.
     soffice_script = find_soffice_script()
-    run([
-        "python3", soffice_script, "--headless", "--convert-to", "pdf",
-        "--outdir", REPORTS_DIR, docx_path,
-    ])
     pdf_path = os.path.splitext(docx_path)[0] + ".pdf"
+    with tempfile.TemporaryDirectory() as tmp_pdf_dir:
+        run([
+            "python3", soffice_script, "--headless", "--convert-to", "pdf",
+            "--outdir", tmp_pdf_dir, docx_path,
+        ])
+        tmp_pdf_path = os.path.join(tmp_pdf_dir, os.path.basename(pdf_path))
+        if not os.path.exists(tmp_pdf_path):
+            raise RuntimeError(f"PDF conversion did not produce {tmp_pdf_path}")
+        with open(tmp_pdf_path, "rb") as src:
+            pdf_bytes = src.read()
+        try:
+            with open(pdf_path, "wb") as dst:
+                dst.write(pdf_bytes)
+        except OSError:
+            # Last resort: if even an in-place write is blocked, fall back
+            # to shutil.copyfile with fresh file handles before giving up.
+            shutil.copyfile(tmp_pdf_path, pdf_path)
     if not os.path.exists(pdf_path):
         raise RuntimeError(f"PDF conversion did not produce {pdf_path}")
 

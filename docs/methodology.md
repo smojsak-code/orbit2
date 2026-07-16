@@ -17,6 +17,31 @@ Vendors change their partner programs regularly: a registration type gets rename
 - **On the dashboard**, the "Manage Metrics" panel lets you view and edit every category's sub-metrics (weights, targets, add/remove rows) and stage the change; clicking "Submit changes to Claude" sends the exact diff to chat so Claude can apply it with `metric_manager.py` and confirm anything ambiguous with you first. A separate "Import vendor program update" drop zone is for documents that describe a *change to the metrics themselves* (a program guide, a partner terms update) — distinct from the Evidence Library drop zone, which is for evidence behind an *existing* metric's score.
 - **Weight sums are always checked, never silently allowed to drift.** `scripts/scoring.py` reports a `weight_check` per category and overall; if it isn't 100, that's flagged on the console and worth fixing before you trust the score.
 
+## Data schema, stable IDs and migrations
+
+Every register in `data/` (the category CSVs, evidence index, changelog,
+solution verticals, news log) is described in full in
+`docs/data_dictionary.md` — which fields exist, which ones are IDs, and what
+controlled values enum fields accept. That document is the source of truth;
+this section is just a pointer.
+
+- **Every referenceable row has a stable ID** (`record_id`, `evidence_id`, or
+  `deal_id` depending on the file) that never changes when a title, name or
+  quarter changes. See `docs/data_dictionary.md` for the exact prefix each
+  register uses.
+- **`data/schema_version.json`** tracks the current schema version and the
+  history of applied migrations. Never hand-edit it.
+- **`scripts/migrations/run_migrations.py`** applies pending schema changes.
+  It backs up the entire `data/` directory to `backups/<timestamp>/` before
+  touching anything, and is safe to run more than once — already-applied
+  migrations are skipped. Run `python3 scripts/migrations/run_migrations.py --status`
+  to see the current version without changing anything.
+- **`scripts/validate_data.py`** checks every register against the schema in
+  `docs/data_dictionary.md`: required columns, duplicate IDs, invalid enum
+  values, broken category references, malformed dates, and non-numeric
+  target/actual/weight values. It never modifies data, only reports. Exits
+  non-zero if any error was found — run it after any manual CSV edit.
+
 ## Category weights (Atlassian, default — edit in `data/weights.json`)
 
 | Category | Weight | What it captures |

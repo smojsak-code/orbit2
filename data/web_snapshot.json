@@ -125,8 +125,8 @@
               "weight_pct_in_category": 25.0,
               "score": 16.7,
               "source": "data/news_log.csv (live count)",
-              "notes": "LIVE \u2014 driven by the automated 12h web scan for Communardo mentions; this is the only non-zero sub-metric in the whole reset",
-              "description": " by design"
+              "notes": "LIVE \u2014 driven by the automated 12h web scan for Communardo mentions; this is the only non-zero sub-metric in the whole reset, by design",
+              "description": "Count of public mentions of Communardo found by the automated web scan \u2014 the only metric in this scorecard driven entirely by live, automated data rather than manual entry."
             },
             {
               "sub_metric": "Case studies/success stories published",
@@ -420,6 +420,7 @@
       },
       "solution_verticals": [
         {
+          "record_id": "SV-0001",
           "vendor": "Atlassian",
           "quarter": "2026-Q3",
           "vertical": "Finance",
@@ -430,6 +431,7 @@
           "notes": "RESET 2026-07-01 \u2014 awaiting real data"
         },
         {
+          "record_id": "SV-0002",
           "vendor": "Atlassian",
           "quarter": "2026-Q3",
           "vertical": "Automotive",
@@ -440,6 +442,7 @@
           "notes": "RESET 2026-07-01 \u2014 awaiting real data"
         },
         {
+          "record_id": "SV-0003",
           "vendor": "Atlassian",
           "quarter": "2026-Q3",
           "vertical": "Pharmaceutical",
@@ -456,6 +459,7 @@
   "evidence": [],
   "changelog": [
     {
+      "record_id": "CHG-0001",
       "date": "2026-07-01",
       "vendor": "Atlassian",
       "category": "third_party_coselling",
@@ -467,6 +471,7 @@
       "source": "Steve Mojsak"
     },
     {
+      "record_id": "CHG-0002",
       "date": "2026-07-01",
       "vendor": "Atlassian",
       "category": "solutions",
@@ -478,6 +483,7 @@
       "source": "Steve Mojsak"
     },
     {
+      "record_id": "CHG-0003",
       "date": "2026-07-01",
       "vendor": "Atlassian",
       "category": "services",
@@ -489,6 +495,7 @@
       "source": "Steve Mojsak"
     },
     {
+      "record_id": "CHG-0004",
       "date": "2026-07-01",
       "vendor": "Atlassian",
       "category": "all",
@@ -540,6 +547,7 @@
   },
   "news": [
     {
+      "record_id": "NEWS-0001",
       "date_found": "2026-06-28",
       "vendor_context": "Atlassian",
       "headline": "Communardo strengthens European presence with expansion into the Benelux region",
@@ -549,6 +557,7 @@
       "summary": "Acquisition of Dutch Atlassian Platinum partner Prepend, expanding Communardo's European footprint."
     },
     {
+      "record_id": "NEWS-0002",
       "date_found": "2026-06-15",
       "vendor_context": "Atlassian",
       "headline": "Communardo scales as an Atlassian & Microsoft platform across Europe",

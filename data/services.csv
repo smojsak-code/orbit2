@@ -1,3 +1,3 @@
-vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
-Atlassian,2026-Q3,Services revenue sold to clients,60,600000,0,EUR,ratio,,RESET 2026-07-01 — awaiting real data,"Total services revenue (implementation, consulting, managed services) sold this quarter."
-Atlassian,2026-Q3,Number of clients who purchased services,40,25,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Distinct clients who purchased any services this quarter — breadth of services attach."
+record_id,vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
+MET-0029,Atlassian,2026-Q3,Services revenue sold to clients,60,600000,0,EUR,ratio,,RESET 2026-07-01 — awaiting real data,"Total services revenue (implementation, consulting, managed services) sold this quarter."
+MET-0030,Atlassian,2026-Q3,Number of clients who purchased services,40,25,0,count,ratio,,RESET 2026-07-01 — awaiting real data,Distinct clients who purchased any services this quarter — breadth of services attach.

@@ -1,5 +1,5 @@
-vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
-Atlassian,2026-Q3,Number of solutions created,25,6,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Distinct packaged solutions built this quarter (repeatable offerings, not one-off custom work)."
-Atlassian,2026-Q3,Number of solutions sold,30,15,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Instances of a packaged solution actually sold to a client."
-Atlassian,2026-Q3,Revenue generated from solutions,30,400000,0,EUR,ratio,,RESET 2026-07-01 — awaiting real data,"Revenue directly attributable to packaged solution sales."
-Atlassian,2026-Q3,Solution vertical coverage,15,5,0,verticals,ratio,,RESET 2026-07-01 — awaiting real data; see solution_verticals.csv,"Number of industry verticals with at least one packaged solution, out of the target range — breadth of the solution portfolio."
+record_id,vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
+MET-0025,Atlassian,2026-Q3,Number of solutions created,25,6,0,count,ratio,,RESET 2026-07-01 — awaiting real data,"Distinct packaged solutions built this quarter (repeatable offerings, not one-off custom work)."
+MET-0026,Atlassian,2026-Q3,Number of solutions sold,30,15,0,count,ratio,,RESET 2026-07-01 — awaiting real data,Instances of a packaged solution actually sold to a client.
+MET-0027,Atlassian,2026-Q3,Revenue generated from solutions,30,400000,0,EUR,ratio,,RESET 2026-07-01 — awaiting real data,Revenue directly attributable to packaged solution sales.
+MET-0028,Atlassian,2026-Q3,Solution vertical coverage,15,5,0,verticals,ratio,,RESET 2026-07-01 — awaiting real data; see solution_verticals.csv,"Number of industry verticals with at least one packaged solution, out of the target range — breadth of the solution portfolio."
