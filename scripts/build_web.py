@@ -63,6 +63,17 @@ def main():
     snapshot["news"] = news
     snapshot["report_files"] = report_manifest
 
+    # app_config.json (R1-T02) — same config the Cowork dashboard embeds, so
+    # generated headings on the public site read the configured company/user
+    # instead of a hard-coded string.
+    config = bd.app_config.load_config()
+    config_errors = bd.app_config.validate(config)
+    if config_errors:
+        print("WARNING: data/app_config.json has validation errors (using it anyway, with defaults where possible):")
+        for e in config_errors:
+            print(f"  [ERROR] {e}")
+    snapshot["app_config"] = config
+
     out_path = os.path.join(DATA_DIR, "web_snapshot.json")
     with open(out_path, "w") as f:
         json.dump(snapshot, f, indent=2)

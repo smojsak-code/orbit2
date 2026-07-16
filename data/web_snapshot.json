@@ -573,5 +573,20 @@
       "pdf": "Orbit2_Report_Atlassian_2026-Q3.pdf",
       "pptx": "Orbit2_Deck_Atlassian_2026-Q3.pptx"
     }
+  },
+  "app_config": {
+    "job_title": "Atlassian Alliance Manager",
+    "timezone": "Europe/London",
+    "financial_currency": "EUR",
+    "reporting_year": 2026,
+    "feature_flags": {
+      "evidence_library": true,
+      "reports_tab": true,
+      "news_monitoring": true,
+      "ai_assisted_features": false
+    },
+    "user_display_name": "Steve Mojsak",
+    "company": "Communardo",
+    "default_vendor": "Atlassian"
   }
 }

@@ -23,6 +23,22 @@ if (!vendorData) {
   process.exit(1);
 }
 
+// R1-T02: app_config.json is the source of truth for who/what this deck is
+// "prepared for" — falls back to the pre-R1-T02 hard-coded values if the
+// file is missing or unreadable, so generation never breaks on this.
+function loadAppConfig() {
+  const fallback = { user_display_name: "Steve Mojsak", job_title: "Atlassian Alliance Manager", company: "Communardo" };
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "app_config.json"), "utf8"));
+    delete raw._comment;
+    return Object.assign({}, fallback, raw);
+  } catch (e) {
+    return fallback;
+  }
+}
+const appConfig = loadAppConfig();
+const preparedForLine = `Prepared for ${appConfig.user_display_name}${appConfig.job_title ? ", " + appConfig.job_title : ""}, ${appConfig.company}`;
+
 function parseCsv(text) {
   const lines = text.trim().split("\n");
   if (lines.length < 2) return [];
@@ -89,7 +105,7 @@ pres.title = `Orbit2 Performance Deck — ${vendor} ${quarter}`;
   slide.background = { color: NAVY };
   slide.addText("Orbit2", { x: 0.7, y: 2.0, w: 8, h: 1, fontSize: 44, bold: true, color: WHITE, fontFace: "Calibri" });
   slide.addText(`${vendor} Partner Performance — ${quarter}`, { x: 0.7, y: 2.9, w: 10, h: 0.7, fontSize: 24, color: ICE, fontFace: "Calibri" });
-  slide.addText(`Prepared for Steve Mojsak, Atlassian Alliance Manager, Communardo\nGenerated ${new Date().toISOString().slice(0, 10)}`,
+  slide.addText(`${preparedForLine}\nGenerated ${new Date().toISOString().slice(0, 10)}`,
     { x: 0.7, y: 6.4, w: 10, h: 0.7, fontSize: 13, color: ICE, fontFace: "Calibri" });
   slide.addShape(pres.shapes.OVAL, { x: 10.6, y: -1.2, w: 4, h: 4, fill: { color: "2C3A8C", transparency: 40 }, line: { type: "none" } });
   slide.addShape(pres.shapes.OVAL, { x: 11.8, y: 4.3, w: 2.6, h: 2.6, fill: { color: "2C3A8C", transparency: 40 }, line: { type: "none" } });

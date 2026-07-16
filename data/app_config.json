@@ -1,0 +1,16 @@
+{
+  "_comment": "Single source of truth for who's using this Orbit2 instance and how it should label itself. Loaded/validated by scripts/config.py — never store API keys, passwords, or connection credentials here (validate() rejects any field name that looks like a secret). See docs/data_dictionary.md.",
+  "user_display_name": "Steve Mojsak",
+  "job_title": "Atlassian Alliance Manager",
+  "company": "Communardo",
+  "default_vendor": "Atlassian",
+  "timezone": "Europe/London",
+  "financial_currency": "EUR",
+  "reporting_year": 2026,
+  "feature_flags": {
+    "evidence_library": true,
+    "reports_tab": true,
+    "news_monitoring": true,
+    "ai_assisted_features": false
+  }
+}

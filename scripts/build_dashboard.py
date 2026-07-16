@@ -41,6 +41,9 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 REPORTS_DIR = os.path.join(BASE_DIR, "reports")
 SCRIPTS_NODE_DIR = os.path.join(BASE_DIR, "scripts_node")
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import config as app_config  # scripts/config.py
+
 MIME = {
     "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "pdf": "application/pdf",
@@ -176,6 +179,16 @@ def main():
         with open(news_path, newline="") as f:
             news = list(csv.DictReader(f))
     snapshot["news"] = news
+
+    # app_config.json (R1-T02) — lets generated headings read the configured
+    # company/user/vendor instead of the dashboard template hard-coding them.
+    config = app_config.load_config()
+    config_errors = app_config.validate(config)
+    if config_errors:
+        print("WARNING: data/app_config.json has validation errors (using it anyway, with defaults where possible):")
+        for e in config_errors:
+            print(f"  [ERROR] {e}")
+    snapshot["app_config"] = config
 
     # 4. Render dashboard.html -> dashboard_rendered.html
     template_path = os.path.join(BASE_DIR, "dashboard.html")

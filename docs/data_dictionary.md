@@ -75,6 +75,34 @@ requires no code changes.
 Config, not a register. `{"<vendor>": {"<category_key>": weight_pct, ...}}`.
 Category weights must sum to 100 per vendor. `validate_data.py` checks this.
 
+### `app_config.json`
+Config, not a register. The single source of truth for who's using this
+Orbit2 instance and how generated views should label themselves. Loaded and
+validated by `scripts/config.py` (`load_config()` / `validate()`), and
+included as `app_config` in both `scores_snapshot.json`'s in-memory
+equivalent used by `build_dashboard.py`/`build_web.py` and therefore in
+`data/web_snapshot.json` and the Cowork dashboard's embedded `SNAPSHOT`. The
+dashboard's read-only Settings tab (both the Cowork artifact and the public
+site) renders straight from this.
+
+Fields:
+
+| Field | Required | Default if missing | Notes |
+|---|---|---|---|
+| `user_display_name` | yes | — | |
+| `job_title` | no | `""` | |
+| `company` | yes | — | Drives the page title and header sub-text everywhere |
+| `default_vendor` | yes | — | Must match a key in `weights.json` to be meaningful, but this isn't enforced by `config.py` itself |
+| `timezone` | no | `"Europe/London"` | Must be a valid IANA timezone name |
+| `financial_currency` | no | `"EUR"` | One of `EUR, USD, GBP, CHF, SEK, NOK, DKK` — extend the list in `scripts/config.py` as needed |
+| `reporting_year` | no | current calendar year | Integer, 2000-2100 |
+| `feature_flags` | no | `{}` | Object of `flag_name: true/false` |
+
+**No secrets.** `scripts/config.py`'s `validate()` rejects any field name
+(at any nesting level, including inside `feature_flags`) matching
+`api_key`, `secret`, `password`, `token`, or `credential` — this file must
+never hold connection credentials.
+
 ### `evidence_index.csv`
 One row per uploaded evidence file. Read/written by `scripts/evidence_ingest.py`.
 

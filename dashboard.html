@@ -121,6 +121,14 @@
   .changelog-text .title { font-weight: 600; margin-bottom: 1px; }
   .changelog-text .meta { color: #9ca3af; font-size: 11px; }
   .tab-bar { display: flex; border-bottom: 1px solid #e5e7eb; margin-bottom: 18px; }
+  #viewSettings { display: none; }
+  .settings-table { width: 100%; border-collapse: collapse; }
+  .settings-table td { padding: 8px 10px; border-bottom: 1px solid #f0f1f3; font-size: 14px; vertical-align: top; }
+  .settings-table td:first-child { color: #6b7280; width: 240px; }
+  .settings-flags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .settings-flag { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: #f0f1f3; color: #374151; }
+  .settings-flag.on { background: #ecfdf5; color: #047857; }
+  .settings-flag.off { background: #f9fafb; color: #9ca3af; }
   .tab-btn { background: none; border: none; padding: 9px 2px; margin-right: 22px; font-size: 13.5px; font-weight: 600; color: #9ca3af; cursor: pointer; border-bottom: 2px solid transparent; }
   .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
   .tab-btn:hover { color: #374151; }
@@ -146,7 +154,7 @@
       <div class="mark">O2</div>
       <div>
         <h1>Orbit2</h1>
-        <div class="sub">Communardo Partner Performance — Alliance view</div>
+        <div class="sub" id="headerSub">Communardo Partner Performance — Alliance view</div>
       </div>
     </div>
     <div class="controls">
@@ -158,6 +166,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" id="tabDashboard" onclick="switchView('dashboard')">Dashboard</button>
     <button class="tab-btn" id="tabReports" onclick="switchView('reports')">Reports</button>
+    <button class="tab-btn" id="tabSettings" onclick="switchView('settings')">Settings</button>
   </div>
 
   <div id="viewDashboard">
@@ -301,6 +310,20 @@
     </section>
 
     <div class="footer-note">This page mirrors the content of a generated report. Use the buttons above to export it as a Word, PDF, or PowerPoint file — Claude regenerates the file from the current data each time so it's never stale.</div>
+  </div>
+
+  <div id="viewSettings">
+    <section class="block card">
+      <h2>Application settings <span class="toggle-hint">read-only — this is the configuration every generated heading, report header, and default pulls from</span></h2>
+      <table class="settings-table" id="settingsTable"></table>
+      <div class="report-desc" style="margin-top:12px;">
+        This view is read-only by design. To change any of these values (e.g. update the reporting
+        year, switch the default vendor, or add your successor's name), just ask Claude in chat —
+        it edits <code>data/app_config.json</code> directly and rebuilds the dashboard. No field here
+        can ever hold an API key, password, or connection credential; <code>scripts/config.py</code>
+        refuses to load a config file that tries to store one.
+      </div>
+    </section>
   </div>
 </div>
 
@@ -539,15 +562,47 @@ function render(vendorName) {
 }
 
 // --- Tab switching ---
+// Note: #viewReports and #viewSettings both have a hard `display: none` in the stylesheet, so
+// showing one needs an explicit 'block' — setting style.display = '' just falls back to that CSS
+// rule and leaves it hidden even though nothing errors.
+const VIEWS = ['dashboard', 'reports', 'settings'];
 function switchView(view) {
-  // Note: #viewReports has a hard `display: none` in the stylesheet, so showing it needs an
-  // explicit 'block' — setting style.display = '' just falls back to that CSS rule and leaves
-  // it hidden even though nothing errors.
-  const isReports = view === 'reports';
-  document.getElementById('viewDashboard').style.display = isReports ? 'none' : 'block';
-  document.getElementById('viewReports').style.display = isReports ? 'block' : 'none';
-  document.getElementById('tabDashboard').classList.toggle('active', !isReports);
-  document.getElementById('tabReports').classList.toggle('active', isReports);
+  VIEWS.forEach(v => {
+    const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+    const tab = document.getElementById('tab' + v.charAt(0).toUpperCase() + v.slice(1));
+    if (el) el.style.display = (v === view) ? 'block' : 'none';
+    if (tab) tab.classList.toggle('active', v === view);
+  });
+}
+
+// --- Settings view (read-only, driven entirely by SNAPSHOT.app_config) ---
+function applyAppConfigHeader() {
+  const cfg = SNAPSHOT.app_config || {};
+  const company = cfg.company || 'Communardo';
+  document.title = `Orbit2 — ${company} Partner Performance`;
+  const sub = document.getElementById('headerSub');
+  if (sub) sub.textContent = `${company} Partner Performance — Alliance view`;
+}
+
+function renderSettingsView() {
+  const cfg = SNAPSHOT.app_config || {};
+  const rows = [
+    ['User', cfg.user_display_name || '—'],
+    ['Job title', cfg.job_title || '—'],
+    ['Company', cfg.company || '—'],
+    ['Default vendor', cfg.default_vendor || '—'],
+    ['Timezone', cfg.timezone || '—'],
+    ['Financial currency', cfg.financial_currency || '—'],
+    ['Reporting year', cfg.reporting_year || '—'],
+  ];
+  const table = document.getElementById('settingsTable');
+  if (!table) return;
+  table.innerHTML = rows.map(([label, value]) => `<tr><td>${esc(label)}</td><td>${esc(String(value))}</td></tr>`).join('') +
+    `<tr><td>Feature flags</td><td><div class="settings-flags">${
+      Object.entries(cfg.feature_flags || {}).map(([k, v]) =>
+        `<span class="settings-flag ${v ? 'on' : 'off'}">${esc(k)}: ${v ? 'on' : 'off'}</span>`
+      ).join('') || '—'
+    }</div></td></tr>`;
 }
 
 // --- Reports page (renders the same content a generated report contains) ---
@@ -952,6 +1007,8 @@ function setupEvidenceSearch() {
   input.addEventListener('input', () => renderEvidenceTable(input.value));
 }
 
+applyAppConfigHeader();
+renderSettingsView();
 setupVendorSelect();
 setupDropzone();
 setupDropzoneSchema();

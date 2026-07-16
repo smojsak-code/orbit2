@@ -35,6 +35,9 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import config as app_config  # scripts/config.py — validates data/app_config.json
+
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 QUARTER_RE = re.compile(r"^\d{4}-Q[1-4]$")
 
@@ -232,6 +235,13 @@ def validate_weights_and_categories(report):
     return categories
 
 
+def validate_app_config(report):
+    label = "data/app_config.json"
+    config = app_config.load_config()
+    for err in app_config.validate(config):
+        report.error(f"{label}: {err}")
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -248,6 +258,7 @@ def main():
     validate_category_files(report, categories)
     validate_evidence_index(report, categories)
     validate_changelog(report)
+    validate_app_config(report)
 
     print(f"Orbit2 data validation — {len(report.errors)} error(s), {len(report.warnings)} warning(s)\n")
     if report.errors:

@@ -25,6 +25,22 @@ if (!vendorData) {
   process.exit(1);
 }
 
+// R1-T02: app_config.json is the source of truth for who/what this report is
+// "prepared for" — falls back to the pre-R1-T02 hard-coded values if the
+// file is missing or unreadable, so report generation never breaks on this.
+function loadAppConfig() {
+  const fallback = { user_display_name: "Steve Mojsak", job_title: "Atlassian Alliance Manager", company: "Communardo" };
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "app_config.json"), "utf8"));
+    delete raw._comment;
+    return Object.assign({}, fallback, raw);
+  } catch (e) {
+    return fallback;
+  }
+}
+const appConfig = loadAppConfig();
+const preparedForLine = `Prepared for ${appConfig.user_display_name}${appConfig.job_title ? ", " + appConfig.job_title : ""}, ${appConfig.company}`;
+
 function parseCsv(text) {
   const lines = text.trim().split("\n");
   if (lines.length < 2) return [];
@@ -226,11 +242,11 @@ const doc = new Document({
     properties: {
       page: { size: { width: 12240, height: 15840 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } },
     },
-    headers: { default: new Header({ children: [new Paragraph({ children: [new TextRun({ text: "Orbit2 — Communardo Partner Performance Report", size: 16, color: "9CA3AF" })] })] }) },
+    headers: { default: new Header({ children: [new Paragraph({ children: [new TextRun({ text: `Orbit2 — ${appConfig.company} Partner Performance Report`, size: 16, color: "9CA3AF" })] })] }) },
     footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Page ", size: 16 }), new TextRun({ children: [PageNumber.CURRENT], size: 16 })] })] }) },
     children: [
       new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun(`Orbit2 Performance Report — ${vendor}`)] }),
-      new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: `Generated ${new Date().toISOString().slice(0,10)} · Prepared for Steve Mojsak, Atlassian Alliance Manager, Communardo`, size: 18, color: "6B7280" })] }),
+      new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: `Generated ${new Date().toISOString().slice(0,10)} · ${preparedForLine}`, size: 18, color: "6B7280" })] }),
 
       new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("Overall Score")] }),
       new Paragraph({ spacing: { after: 100 }, children: [
