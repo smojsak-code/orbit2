@@ -83,6 +83,11 @@ def main():
         else:
             snapshot[key] = {}
 
+    # actions.csv / action_statuses.json (R1-T05) — same as build_dashboard.py.
+    action_rows, action_statuses = bd.load_actions_snapshot()
+    snapshot["actions"] = action_rows
+    snapshot["action_statuses"] = action_statuses
+
     out_path = os.path.join(DATA_DIR, "web_snapshot.json")
     with open(out_path, "w") as f:
         json.dump(snapshot, f, indent=2)

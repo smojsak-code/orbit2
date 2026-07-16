@@ -45,6 +45,9 @@ JOURNAL_PATH = os.path.join(DATA_DIR, "value_journal.jsonl")
 ACTIVITY_TYPES_PATH = os.path.join(DATA_DIR, "activity_types.json")
 CONTRIBUTION_TYPES_PATH = os.path.join(DATA_DIR, "contribution_types.json")
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import actions as actions_mod  # scripts/actions.py — R1-T05 opt-in linked-action creation
+
 VALID_VISIBILITY = {
     "personal_only", "communardo_internal", "communardo_management",
     "atlassian_shareable", "customer_approved", "anonymised", "public",
@@ -239,11 +242,20 @@ def _build_entry_from_fields(fields, entries, source_type="manual", source_reque
     return entry
 
 
-def _import_one_request(data, entries):
+def _import_one_request(data, entries, action_rows=None):
     """Validate and apply one change-request dict. Returns (status, message)
-    where status is 'created', 'duplicate', or 'error'. Does not write to
-    disk — caller owns read_journal()/write_journal() so cmd_import_all can
-    batch multiple files into one read-modify-write cycle."""
+    where status is 'created', 'duplicate', or 'error'. Does not write
+    value_journal.jsonl — caller owns read_journal()/write_journal() so
+    cmd_import_all can batch multiple files into one read-modify-write cycle.
+
+    If the request also carries an "action" object (R1-T05 instruction #31:
+    "automatic action generation only when explicitly selected during
+    activity capture" — the Add Activity modal's opt-in "also create a
+    follow-up action" checkbox), a linked action is appended to
+    `action_rows` (also caller-owned, not written here) with
+    source_activity set to the new activity_id. The "action" key is only
+    ever present when the user explicitly opted in on the form — there is
+    no path that creates an action without it."""
     if not isinstance(data, dict) or data.get("type") != "activity_create":
         return "error", "not a recognised change request (expected {\"type\": \"activity_create\", ...})"
 
@@ -261,22 +273,37 @@ def _import_one_request(data, entries):
     if not (activity.get("outcome") or "").strip():
         return "error", "activity.outcome is required and was empty"
 
+    action = data.get("action")
+    if action is not None and not (action.get("description") or "").strip():
+        return "error", "action.description is required when 'action' is present and was empty"
+
     exec_problems = _check_no_executable_content(data)
     if exec_problems:
         return "error", f"refused: fields look like they contain executable content: {', '.join(exec_problems)}"
 
     entry = _build_entry_from_fields(activity, entries, source_type="import", source_request_id=request_id)
     entries.append(entry)
-    return "created", f"created {entry['activity_id']}: [{entry['type']}] {entry['title']}"
+    message = f"created {entry['activity_id']}: [{entry['type']}] {entry['title']}"
+
+    if action is not None and action_rows is not None:
+        action_row = actions_mod.create_from_fields(action, action_rows, source_activity=entry["activity_id"])
+        action_rows.append(action_row)
+        message += f"; linked follow-up action {action_row['action_id']}: {action_row['description']}"
+
+    return "created", message
 
 
 def cmd_import_request(args):
     with open(args.file) as f:
         data = json.load(f)
     entries = read_journal()
-    status, message = _import_one_request(data, entries)
+    action_rows = actions_mod.read_actions()
+    action_count_before = len(action_rows)
+    status, message = _import_one_request(data, entries, action_rows)
     if status == "created":
         write_journal(entries)
+        if len(action_rows) > action_count_before:
+            actions_mod.write_actions(action_rows)
     print(f"[{status}] {message}")
     if status == "error":
         sys.exit(1)
@@ -294,6 +321,8 @@ def cmd_import_all(args):
         return
 
     entries = read_journal()
+    action_rows = actions_mod.read_actions()
+    action_count_before = len(action_rows)
     created = duplicates = errors = 0
     for fname in files:
         path = os.path.join(CHANGE_REQUESTS_DIR, fname)
@@ -304,7 +333,7 @@ def cmd_import_all(args):
             print(f"[error] {fname}: not valid JSON ({e})")
             errors += 1
             continue
-        status, message = _import_one_request(data, entries)
+        status, message = _import_one_request(data, entries, action_rows)
         print(f"[{status}] {fname}: {message}")
         if status == "created":
             created += 1
@@ -320,6 +349,8 @@ def cmd_import_all(args):
 
     if created:
         write_journal(entries)
+        if len(action_rows) > action_count_before:
+            actions_mod.write_actions(action_rows)
     print(f"Done: {created} created, {duplicates} duplicate (skipped), {errors} error(s).")
 
 

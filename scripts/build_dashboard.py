@@ -43,6 +43,7 @@ SCRIPTS_NODE_DIR = os.path.join(BASE_DIR, "scripts_node")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config as app_config  # scripts/config.py
+import actions as actions_mod  # scripts/actions.py — R1-T05
 
 MIME = {
     "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -148,6 +149,29 @@ def build_vendor_reports(vendor):
     }
 
 
+def load_actions_snapshot():
+    """Read data/actions.csv and data/action_statuses.json and return
+    (action_rows, action_statuses) ready to embed in a snapshot. Each row
+    gets two calculated (not stored) fields added — is_overdue/is_due_soon —
+    computed against "today" in Europe/London specifically, per R1-T05's
+    acceptance criteria, regardless of the build machine's own timezone or
+    app_config.json's configured timezone. Shared by build_dashboard.py and
+    build_web.py so both surfaces always agree on which actions are overdue.
+    """
+    rows = actions_mod.read_actions()
+    today = actions_mod.today_london()
+    for r in rows:
+        r["is_overdue"] = actions_mod.is_overdue(r, today)
+        r["is_due_soon"] = actions_mod.is_due_soon(r, today)
+
+    statuses_path = os.path.join(DATA_DIR, "action_statuses.json")
+    statuses = {}
+    if os.path.exists(statuses_path):
+        with open(statuses_path) as f:
+            statuses = json.load(f).get("types", {})
+    return rows, statuses
+
+
 def main():
     # 1. Rescore
     print("Re-running scoring engine...")
@@ -200,6 +224,13 @@ def main():
                 snapshot[key] = json.load(f).get("types", {})
         else:
             snapshot[key] = {}
+
+    # actions.csv / action_statuses.json (R1-T05) — the Actions dashboard
+    # view and the Add Activity modal's opt-in "also create a follow-up
+    # action" fields both read this.
+    action_rows, action_statuses = load_actions_snapshot()
+    snapshot["actions"] = action_rows
+    snapshot["action_statuses"] = action_statuses
 
     # 4. Render dashboard.html -> dashboard_rendered.html
     template_path = os.path.join(BASE_DIR, "dashboard.html")

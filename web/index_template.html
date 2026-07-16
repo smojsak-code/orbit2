@@ -98,7 +98,29 @@
   .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
   .tab-btn:hover { color: #374151; }
   #viewReports { display: none; }
+  #viewActions { display: none; }
   #viewSettings { display: none; }
+  .action-checkbox-row { display: flex; align-items: center; gap: 8px; margin: 4px 0 12px; font-size: 13px; color: #374151; }
+  .action-checkbox-row input { width: auto; }
+  .action-subfields { display: none; }
+  .action-subfields.open { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; margin-bottom: 8px; background: #f8fafc; border-radius: 8px; }
+  @media (max-width: 480px) { .action-subfields.open { grid-template-columns: 1fr; } }
+  .actions-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .actions-filter-bar select, .actions-filter-bar input { padding: 6px 9px; border-radius: 6px; border: 1px solid #d1d5db; background: #fff; font-size: 12px; }
+  .action-badge { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: .02em; margin-left: 4px; }
+  .action-overdue { background: #fef2f2; color: #dc2626; }
+  .action-due-soon { background: #fffbeb; color: #b45309; }
+  .priority-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
+  .priority-critical { background: #fef2f2; color: #dc2626; }
+  .priority-high { background: #fffbeb; color: #b45309; }
+  .priority-medium { background: #eff6ff; color: #2563eb; }
+  .priority-low { background: #f3f4f6; color: #6b7280; }
+  .action-status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; background: #f3f4f6; color: #6b7280; }
+  .action-status-open { background: #eff6ff; color: #2563eb; }
+  .action-status-blocked { background: #fef2f2; color: #dc2626; }
+  .action-status-deferred { background: #fffbeb; color: #b45309; }
+  .action-status-completed { background: #ecfdf5; color: #059669; }
+  .action-status-cancelled { background: #f3f4f6; color: #9ca3af; }
   .settings-table { width: 100%; border-collapse: collapse; }
   .settings-table td { padding: 8px 10px; border-bottom: 1px solid #f0f1f3; font-size: 14px; vertical-align: top; }
   .settings-table td:first-child { color: #6b7280; width: 240px; }
@@ -164,6 +186,7 @@
 
   <div class="tab-bar">
     <button class="tab-btn active" id="tabDashboard" onclick="switchView('dashboard')">Dashboard</button>
+    <button class="tab-btn" id="tabActions" onclick="switchView('actions')">Actions</button>
     <button class="tab-btn" id="tabReports" onclick="switchView('reports')">Reports</button>
     <button class="tab-btn" id="tabSettings" onclick="switchView('settings')">Settings</button>
   </div>
@@ -266,6 +289,41 @@
     <div class="footer-note">Files download directly from this site's <code>reports/</code> folder — always whatever was last pushed, no chat or wait involved.</div>
   </div>
 
+  <div id="viewActions">
+    <section class="block card">
+      <h2>Actions & commitments <span class="toggle-hint">follow-ups from activities, meetings, performance gaps and support requests — view and filter only here; add, complete, cancel, or defer from Cowork</span></h2>
+      <div class="actions-filter-bar">
+        <select id="actFilterStatus">
+          <option value="open_all" selected>Open (not completed/cancelled)</option>
+          <option value="open">Open only</option>
+          <option value="blocked">Blocked only</option>
+          <option value="deferred">Deferred only</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="all">All statuses</option>
+        </select>
+        <select id="actFilterDuePeriod">
+          <option value="all" selected>Any due date</option>
+          <option value="overdue">Overdue</option>
+          <option value="due_soon">Due soon (next 7 days)</option>
+          <option value="this_week">This week</option>
+          <option value="this_month">This month</option>
+        </select>
+        <select id="actFilterPriority">
+          <option value="" selected>Any priority</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <input type="text" id="actFilterOwner" placeholder="Filter by owner…">
+        <input type="text" id="actFilterVendor" placeholder="Filter by vendor…">
+      </div>
+      <table class="data-table" id="actionsTable"></table>
+      <div class="dz-empty-hint" id="actionsHint" style="font-size:10.5px;color:#9ca3af;margin-top:6px;"></div>
+    </section>
+  </div>
+
   <div id="viewSettings">
     <section class="block card">
       <h2>Application settings <span class="toggle-hint">read-only — this is the configuration every generated heading and report header pulls from</span></h2>
@@ -366,6 +424,36 @@
           </div>
         </div>
       </details>
+
+      <div class="action-checkbox-row">
+        <input type="checkbox" id="actCreateAction" onchange="document.getElementById('actSubfields').classList.toggle('open', this.checked)">
+        <label for="actCreateAction" style="margin:0;font-weight:600;">Also create a follow-up action</label>
+      </div>
+      <div class="action-subfields" id="actSubfields">
+        <div class="modal-field" style="grid-column:1/-1;">
+          <label for="actFollowupDescription">Action description</label>
+          <input type="text" id="actFollowupDescription" placeholder="defaults to the next step above if left blank">
+        </div>
+        <div class="modal-field">
+          <label for="actFollowupDueDate">Due date</label>
+          <input type="date" id="actFollowupDueDate">
+        </div>
+        <div class="modal-field">
+          <label for="actFollowupPriority">Priority</label>
+          <select id="actFollowupPriority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <div class="modal-field" style="grid-column:1/-1;">
+          <label style="display:flex;align-items:center;gap:6px;font-weight:400;">
+            <input type="checkbox" id="actFollowupEvidenceRequired" style="width:auto;">
+            Require a completion note or evidence before this can be marked complete
+          </label>
+        </div>
+      </div>
 
       <div class="modal-actions">
         <button type="button" class="btn-secondary" onclick="closeActivityModal()">Cancel</button>
@@ -576,7 +664,7 @@ function render(vendorName) {
 // Note: #viewReports and #viewSettings both have a hard `display: none` in the stylesheet, so
 // showing one needs an explicit 'block' — setting style.display = '' just falls back to that CSS
 // rule and leaves it hidden even though nothing errors.
-const VIEWS = ['dashboard', 'reports', 'settings'];
+const VIEWS = ['dashboard', 'actions', 'reports', 'settings'];
 function switchView(view) {
   VIEWS.forEach(v => {
     const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
@@ -614,6 +702,79 @@ function renderSettingsView() {
         `<span class="settings-flag ${v ? 'on' : 'off'}">${esc(k)}: ${v ? 'on' : 'off'}</span>`
       ).join('') || '—'
     }</div></td></tr>`;
+}
+
+// --- Actions & commitments (R1-T05) — read-only mirror, filter only.
+// Creating, completing, cancelling, and deferring actions happens from
+// Cowork; this view just shows the current state of data/actions.csv as of
+// the last sync, same read-only pattern as the rest of this public mirror.
+function actionDuePeriodMatches(a, period) {
+  if (!period || period === 'all') return true;
+  if (period === 'overdue') return !!a.is_overdue;
+  if (period === 'due_soon') return !!a.is_due_soon;
+  if (!a.due_date) return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(a.due_date + 'T00:00:00');
+  if (period === 'this_week') {
+    const weekOut = new Date(today); weekOut.setDate(weekOut.getDate() + 7);
+    return due >= today && due <= weekOut;
+  }
+  if (period === 'this_month') {
+    return due.getFullYear() === today.getFullYear() && due.getMonth() === today.getMonth();
+  }
+  return true;
+}
+
+function renderActionsView() {
+  const all = (SNAPSHOT && SNAPSHOT.actions) || [];
+  const status = document.getElementById('actFilterStatus').value;
+  const duePeriod = document.getElementById('actFilterDuePeriod').value;
+  const priority = document.getElementById('actFilterPriority').value;
+  const owner = document.getElementById('actFilterOwner').value.trim().toLowerCase();
+  const vendor = document.getElementById('actFilterVendor').value.trim().toLowerCase();
+
+  const filtered = all.filter(a => {
+    if (status === 'open_all') { if (a.status === 'completed' || a.status === 'cancelled') return false; }
+    else if (status !== 'all' && a.status !== status) return false;
+    if (priority && a.priority !== priority) return false;
+    if (owner && !(a.owner || '').toLowerCase().includes(owner)) return false;
+    if (vendor && !(a.vendor || '').toLowerCase().includes(vendor)) return false;
+    if (!actionDuePeriodMatches(a, duePeriod)) return false;
+    return true;
+  }).sort((x, y) => (x.due_date || '9999-99-99').localeCompare(y.due_date || '9999-99-99'));
+
+  const table = document.getElementById('actionsTable');
+  const hint = document.getElementById('actionsHint');
+  if (!filtered.length) {
+    table.innerHTML = '<tr><td class="empty">No actions match those filters.</td></tr>';
+    hint.textContent = `0 of ${all.length} action(s) shown.`;
+    return;
+  }
+
+  table.innerHTML = `
+    <tr><th>Description</th><th>Owner</th><th>Due</th><th>Priority</th><th>Status</th><th>Vendor</th></tr>
+    ${filtered.map(a => {
+      let badge = '';
+      if (a.is_overdue) badge = '<span class="action-badge action-overdue">Overdue</span>';
+      else if (a.is_due_soon) badge = '<span class="action-badge action-due-soon">Due soon</span>';
+      return `<tr>
+        <td title="${esc(a.description)}">${esc(a.description)}${a.dependency ? `<div class="empty" style="padding:0;">depends on: ${esc(a.dependency)}</div>` : ''}</td>
+        <td>${esc(a.owner || '—')}</td>
+        <td>${esc(a.due_date || '—')}${badge}</td>
+        <td><span class="priority-pill priority-${esc(a.priority || 'medium')}">${esc(a.priority || 'medium')}</span></td>
+        <td><span class="action-status-pill action-status-${esc(a.status || 'open')}">${esc(a.status || 'open')}</span></td>
+        <td>${esc(a.vendor || '—')}</td>
+      </tr>`;
+    }).join('')}`;
+  hint.textContent = `${filtered.length} of ${all.length} action(s) shown` +
+    (status === 'open_all' ? ' (open, blocked, or deferred — completed/cancelled hidden)' : '') + '.';
+}
+
+function setupActionsFilters() {
+  ['actFilterStatus', 'actFilterDuePeriod', 'actFilterPriority'].forEach(id =>
+    document.getElementById(id).addEventListener('change', renderActionsView));
+  ['actFilterOwner', 'actFilterVendor'].forEach(id =>
+    document.getElementById(id).addEventListener('input', renderActionsView));
 }
 
 // --- Add Activity (R1-T04 rapid activity capture) ---
@@ -670,6 +831,7 @@ function closeActivityModal() {
   document.getElementById('activitySuccess').classList.remove('show');
   document.getElementById('fieldTitle').classList.remove('error');
   document.getElementById('fieldOutcome').classList.remove('error');
+  document.getElementById('actSubfields').classList.remove('open');
   document.getElementById('addActivityBtn').focus();
 }
 
@@ -719,6 +881,20 @@ function submitActivityForm(evt) {
   const activity = collectActivityFields();
   const requestId = 'CR-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
   const changeRequest = { request_id: requestId, created_at: new Date().toISOString(), type: 'activity_create', activity };
+
+  // R1-T05 instruction #31: action generation is opt-in only, never automatic —
+  // the "action" key only exists on the change request when this box was checked.
+  if (document.getElementById('actCreateAction').checked) {
+    const description = document.getElementById('actFollowupDescription').value.trim() || activity.next_action || activity.title;
+    changeRequest.action = {
+      description,
+      due_date: document.getElementById('actFollowupDueDate').value || null,
+      priority: document.getElementById('actFollowupPriority').value || 'medium',
+      evidence_required: document.getElementById('actFollowupEvidenceRequired').checked,
+      vendor: (SNAPSHOT && SNAPSHOT.app_config && SNAPSHOT.app_config.default_vendor) || undefined,
+    };
+  }
+
   const json = JSON.stringify(changeRequest, null, 2);
 
   const blob = new Blob([json], { type: 'application/json' });
@@ -866,6 +1042,8 @@ fetch('data/web_snapshot.json', { cache: 'no-store' })
     document.getElementById('app').style.display = '';
     applyAppConfigHeader();
     renderSettingsView();
+    renderActionsView();
+    setupActionsFilters();
     setupVendorSelect();
     setupEvidenceSearch();
   })

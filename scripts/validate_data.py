@@ -37,6 +37,7 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config as app_config  # scripts/config.py — validates data/app_config.json
+import actions as actions_mod  # scripts/actions.py — reuses its enums so validation never drifts from what the CLI accepts
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 QUARTER_RE = re.compile(r"^\d{4}-Q[1-4]$")
@@ -251,7 +252,7 @@ def validate_journal(report, metric_ids, evidence_ids):
     label = "data/value_journal.jsonl"
     if not os.path.exists(path):
         report.error(f"{label}: file is missing entirely")
-        return
+        return set()
 
     activity_types_path = os.path.join(DATA_DIR, "activity_types.json")
     contribution_types_path = os.path.join(DATA_DIR, "contribution_types.json")
@@ -329,6 +330,84 @@ def validate_journal(report, metric_ids, evidence_ids):
             # opportunity_links: no opportunities register exists yet (roadmap task R3-T03),
             # so there's nothing to check existence against — just note it's reserved.
 
+    return seen_ids
+
+
+ACTIONS_REQUIRED_COLUMNS = actions_mod.FIELDNAMES
+
+
+def validate_actions(report, activity_ids, metric_ids):
+    path = os.path.join(DATA_DIR, "actions.csv")
+    label = "data/actions.csv"
+    fieldnames, rows = read_csv(path)
+    check_columns(report, label, fieldnames, ACTIONS_REQUIRED_COLUMNS)
+    if fieldnames is None:
+        return
+
+    seen_ids = set()
+    for i, r in enumerate(rows, start=2):
+        aid = (r.get("action_id") or "").strip()
+        row_desc = f"row {i} ({aid or '?'})"
+        if not aid:
+            report.error(f"{label}: {row_desc} has no action_id")
+        elif aid in seen_ids:
+            report.error(f"{label}: duplicate action_id '{aid}'")
+        else:
+            seen_ids.add(aid)
+
+        if not (r.get("description") or "").strip():
+            report.error(f"{label}: {row_desc} is missing 'description'")
+
+        status = (r.get("status") or "").strip()
+        if status and status not in actions_mod.VALID_STATUS:
+            report.error(f"{label}: {row_desc} has an invalid status '{status}' (expected one of {sorted(actions_mod.VALID_STATUS)})")
+
+        priority = (r.get("priority") or "").strip()
+        if priority and priority not in actions_mod.VALID_PRIORITY:
+            report.error(f"{label}: {row_desc} has an invalid priority '{priority}' (expected one of {sorted(actions_mod.VALID_PRIORITY)})")
+
+        visibility = (r.get("visibility") or "").strip()
+        if visibility and visibility not in VALID_VISIBILITY:
+            report.error(f"{label}: {row_desc} has an invalid visibility '{visibility}' (expected one of {sorted(VALID_VISIBILITY)})")
+
+        evidence_required_raw = (r.get("evidence_required") or "").strip().lower()
+        if evidence_required_raw and evidence_required_raw not in {"true", "false"}:
+            report.error(f"{label}: {row_desc} has a non-boolean evidence_required value '{r.get('evidence_required')}' (expected 'true' or 'false')")
+
+        for field in ("due_date", "original_due_date"):
+            check_date(report, label, r.get(field), field, row_desc, required=False)
+        for field in ("completed_at", "cancelled_at", "deferred_at", "created_at", "updated_at"):
+            value = (r.get(field) or "").strip()
+            if value and not DATE_RE.match(value[:10]):
+                report.error(f"{label}: {row_desc} has a malformed '{field}' timestamp: {value!r}")
+
+        source_activity = (r.get("source_activity") or "").strip()
+        if source_activity and source_activity not in activity_ids:
+            report.error(f"{label}: {row_desc} references unknown source_activity '{source_activity}' (not in data/value_journal.jsonl)")
+
+        related_metric = (r.get("related_metric") or "").strip()
+        if related_metric and related_metric not in metric_ids:
+            report.error(f"{label}: {row_desc} references unknown related_metric '{related_metric}'")
+
+        # Status-consistency checks — mirror what scripts/actions.py's own
+        # commands enforce at write time, so a hand-edited or migrated row
+        # that bypassed the CLI still gets caught.
+        if status == "completed":
+            if not (r.get("completed_at") or "").strip():
+                report.error(f"{label}: {row_desc} has status 'completed' but no completed_at timestamp")
+            if evidence_required_raw == "true" and not (r.get("completion_note") or r.get("completion_evidence") or "").strip():
+                report.error(f"{label}: {row_desc} has evidence_required=true and status 'completed' but no completion_note or completion_evidence")
+        if status == "cancelled":
+            if not (r.get("cancelled_reason") or "").strip():
+                report.error(f"{label}: {row_desc} has status 'cancelled' but no cancelled_reason")
+            if not (r.get("cancelled_at") or "").strip():
+                report.error(f"{label}: {row_desc} has status 'cancelled' but no cancelled_at timestamp")
+        if status == "deferred":
+            if not (r.get("deferred_at") or "").strip():
+                report.error(f"{label}: {row_desc} has status 'deferred' but no deferred_at timestamp")
+            if not (r.get("original_due_date") or "").strip():
+                report.error(f"{label}: {row_desc} has status 'deferred' but no original_due_date on file")
+
 
 def validate_app_config(report):
     label = "data/app_config.json"
@@ -354,7 +433,8 @@ def main():
     evidence_ids = validate_evidence_index(report, categories) or set()
     validate_changelog(report)
     validate_app_config(report)
-    validate_journal(report, set(metric_ids), evidence_ids)
+    activity_ids = validate_journal(report, set(metric_ids), evidence_ids) or set()
+    validate_actions(report, activity_ids, set(metric_ids))
 
     print(f"Orbit2 data validation — {len(report.errors)} error(s), {len(report.warnings)} warning(s)\n")
     if report.errors:
