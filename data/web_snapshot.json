@@ -700,5 +700,61 @@
       "description": "No longer needed. Set only via the 'cancel' command, which requires a reason. Terminal: excluded from overdue/due-soon.",
       "terminal": true
     }
+  },
+  "homepage": {
+    "generated_at_london": "2026-07-16",
+    "overdue_actions": [],
+    "due_soon_actions": [],
+    "followups_due": [],
+    "per_vendor": {
+      "Atlassian": {
+        "metrics_at_risk": [
+          {
+            "category_key": "market_visibility",
+            "category_label": "Market Visibility",
+            "sub_metric": "Press/analyst mentions volume",
+            "score": 16.7,
+            "actual": "2",
+            "target": "12",
+            "unit": "count"
+          }
+        ],
+        "missing_evidence": [
+          {
+            "category_key": "market_visibility",
+            "category_label": "Market Visibility",
+            "sub_metric": "Press/analyst mentions volume",
+            "actual": "2",
+            "unit": "count"
+          }
+        ]
+      }
+    },
+    "by_period": {
+      "week": {
+        "period_start": "2026-07-13",
+        "recent_journal": [],
+        "recent_journal_total": 0,
+        "unrecognised_value": []
+      },
+      "month": {
+        "period_start": "2026-07-01",
+        "recent_journal": [],
+        "recent_journal_total": 0,
+        "unrecognised_value": []
+      },
+      "quarter": {
+        "period_start": "2026-07-01",
+        "recent_journal": [],
+        "recent_journal_total": 0,
+        "unrecognised_value": []
+      },
+      "year": {
+        "period_start": "2026-01-01",
+        "recent_journal": [],
+        "recent_journal_total": 0,
+        "unrecognised_value": []
+      }
+    }
   }
 }

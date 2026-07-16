@@ -242,22 +242,61 @@ def _build_entry_from_fields(fields, entries, source_type="manual", source_reque
     return entry
 
 
+def _import_one_action_request(data, action_rows):
+    """Handle a standalone {"type": "action_create", "action": {...}} change
+    request (R1-T06's "Add Action" homepage button) — no linked activity,
+    just an action on its own. Deduped against action_rows'
+    source_request_id the same way activity_create is deduped against
+    value_journal.jsonl's source_request_id. Returns (status, message);
+    does not write to disk."""
+    request_id = data.get("request_id")
+    if not request_id:
+        return "error", "change request has no request_id — cannot be safely de-duplicated, refusing to import"
+
+    for r in action_rows:
+        if r.get("source_request_id") == request_id:
+            return "duplicate", f"request_id '{request_id}' was already imported as {r['action_id']} — skipping, not creating a duplicate"
+
+    action = data.get("action") or {}
+    if not (action.get("description") or "").strip():
+        return "error", "action.description is required and was empty"
+
+    exec_problems = _check_no_executable_content(data)
+    if exec_problems:
+        return "error", f"refused: fields look like they contain executable content: {', '.join(exec_problems)}"
+
+    row = actions_mod.create_from_fields(action, action_rows, source_request_id=request_id)
+    action_rows.append(row)
+    return "created", f"created {row['action_id']}: {row['description']}"
+
+
 def _import_one_request(data, entries, action_rows=None):
     """Validate and apply one change-request dict. Returns (status, message)
     where status is 'created', 'duplicate', or 'error'. Does not write
     value_journal.jsonl — caller owns read_journal()/write_journal() so
     cmd_import_all can batch multiple files into one read-modify-write cycle.
 
-    If the request also carries an "action" object (R1-T05 instruction #31:
-    "automatic action generation only when explicitly selected during
-    activity capture" — the Add Activity modal's opt-in "also create a
-    follow-up action" checkbox), a linked action is appended to
-    `action_rows` (also caller-owned, not written here) with
-    source_activity set to the new activity_id. The "action" key is only
-    ever present when the user explicitly opted in on the form — there is
-    no path that creates an action without it."""
-    if not isinstance(data, dict) or data.get("type") != "activity_create":
-        return "error", "not a recognised change request (expected {\"type\": \"activity_create\", ...})"
+    Dispatches on data["type"]:
+    - "activity_create" (R1-T04): creates a journal entry. If it also
+      carries an "action" object (R1-T05 instruction #31: "automatic action
+      generation only when explicitly selected during activity capture" —
+      the Add Activity modal's opt-in "also create a follow-up action"
+      checkbox), a linked action is appended to `action_rows` with
+      source_activity set to the new activity_id.
+    - "action_create" (R1-T06): a standalone action with no linked
+      activity — delegated to _import_one_action_request().
+    Neither path ever creates an action implicitly; both require the
+    matching key/type to be explicitly present in the request."""
+    if not isinstance(data, dict):
+        return "error", "not a recognised change request (expected an object with a \"type\" field)"
+
+    if data.get("type") == "action_create":
+        if action_rows is None:
+            return "error", "action_create requests require an action_rows list — internal error"
+        return _import_one_action_request(data, action_rows)
+
+    if data.get("type") != "activity_create":
+        return "error", "not a recognised change request (expected type \"activity_create\" or \"action_create\")"
 
     request_id = data.get("request_id")
     if not request_id:

@@ -69,6 +69,7 @@ FIELDNAMES = [
     "deferred_reason", "deferred_at",
     "vendor", "visibility",
     "created_at", "updated_at", "created_by", "updated_by", "notes",
+    "source_request_id",
 ]
 
 VALID_STATUS = {"open", "blocked", "deferred", "completed", "cancelled"}
@@ -175,13 +176,18 @@ def next_id(rows):
     return f"ACTN-{n:04d}"
 
 
-def create_from_fields(fields, rows, source_activity=None):
+def create_from_fields(fields, rows, source_activity=None, source_request_id=None):
     """Build a fully-formed action row dict from a plain dict of field values
-    (already using canonical field names). Shared by cmd_create's CLI path
-    and journal.py's opt-in linked-action creation (R1-T05 instruction #31:
+    (already using canonical field names). Shared by cmd_create's CLI path,
+    journal.py's opt-in linked-action creation (R1-T05 instruction #31:
     'automatic action generation only when explicitly selected during
-    activity capture') so both produce identical, fully-validated rows.
-    Does not write to disk — caller owns read_actions()/write_actions()."""
+    activity capture'), and the standalone "Add Action" change-request path
+    (R1-T06) so all three produce identical, fully-validated rows. Does not
+    write to disk — caller owns read_actions()/write_actions().
+
+    source_request_id lets a standalone action_create change request be
+    de-duplicated the same way activity_create requests are against
+    value_journal.jsonl — see journal.py's _import_one_request()."""
     now = datetime.now().isoformat(timespec="seconds")
     user = _default_user()
     due_date = (fields.get("due_date") or "").strip()
@@ -213,6 +219,7 @@ def create_from_fields(fields, rows, source_activity=None):
         "created_by": user,
         "updated_by": user,
         "notes": fields.get("notes") or "",
+        "source_request_id": source_request_id or fields.get("source_request_id") or "",
     }
     return row
 
