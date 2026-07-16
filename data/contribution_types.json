@@ -1,0 +1,13 @@
+{
+  "_comment": "Controlled vocabulary for value_journal.jsonl's 'contribution_type' field — describes HOW you contributed to an activity's outcome, not what the activity was. Matches the vocabulary the roadmap's My Impact dashboard (R1-T07) expects. Optional on a journal entry; 'other' is an escape hatch.",
+  "types": {
+    "initiated": { "label": "Initiated", "description": "You started this — it wouldn't have happened without you raising it." },
+    "led": { "label": "Led", "description": "You owned and drove this activity end to end." },
+    "influenced": { "label": "Influenced", "description": "You shaped the outcome without owning the activity outright." },
+    "supported": { "label": "Supported", "description": "You contributed to someone else's activity." },
+    "connected": { "label": "Connected", "description": "You made an introduction or connection that enabled this." },
+    "accelerated": { "label": "Accelerated", "description": "You sped up something already in motion." },
+    "protected": { "label": "Protected", "description": "You prevented a loss, churn, or negative outcome." },
+    "other": { "label": "Other", "description": "Anything not covered above — explain in the notes field." }
+  }
+}

@@ -145,6 +145,58 @@ the Market Visibility category's "Press/analyst mentions volume" sub-metric.
 
 Columns: `record_id, date_found, vendor_context, headline, source_url, sentiment, sentiment_confidence, summary`
 
+### `value_journal.jsonl` (Partner Value Journal)
+The central chronological record of alliance activities and what came of
+them. JSON Lines, not CSV — the roadmap explicitly allows either for this
+register, and JSONL was chosen because entries have genuinely nested/
+multi-value fields (`participants`, `metric_links`, `opportunity_links`,
+`evidence_links`, `value`) that a CSV would need fragile in-cell encoding
+for. One JSON object per line; managed by `scripts/journal.py`
+(`create` / `edit` / `archive` / `list` / `export`), validated by
+`scripts/validate_data.py`.
+
+**Activity, outcome, contribution, and value are four different things —
+don't conflate them:**
+
+- **Activity** is *what happened* — a QBR, a co-sell call, an enablement
+  session. It's the `type` + `title` + `description` fields. An activity on
+  its own proves nothing; it's just a record that time was spent.
+- **Outcome** is *what resulted* from the activity — the required `outcome`
+  field. Every entry must have one, even a plain "no material outcome yet."
+  This is what separates a journal from a calendar: Orbit2 cares about
+  results, not attendance.
+- **Contribution** is *how you personally shaped that outcome* — the
+  optional `contribution_type` field (`initiated`, `led`, `influenced`,
+  `supported`, `connected`, `accelerated`, `protected`, `other`). The same
+  outcome can have several contributors with different contribution types;
+  recording yours as `led` does not imply nobody else was involved (see
+  R1-T07's "joint contributions do not imply sole ownership").
+- **Value** is *the measurable business impact*, if any — the nested
+  `value` object (`amount`, `currency`, `status`). It is deliberately
+  optional and separate from outcome, because most outcomes (a relationship
+  strengthened, a risk mitigated, a certification earned) don't reduce to a
+  number. When a number is given, `value.status` must say what kind of
+  number it is — `confirmed`, `estimated`, `protected`, or `potential` —
+  and `value.currency` is required alongside it.
+  `scripts/validate_data.py` rejects any entry with a `value.amount` but no
+  `value.currency`/`value.status`, so a number can never appear without
+  saying how sure it is.
+
+Fields: `activity_id` (`ACT-` prefix, stable), `date`, `type` (controlled,
+`data/activity_types.json`), `title`, `description`, `participants` (array
+of free-text names — there's no contacts register yet, see R3-T01),
+`organisation`, `customer_account`, `contribution_type` (controlled,
+`data/contribution_types.json`), `outcome`, `next_action`, `metric_links`
+(array of `record_id`s from the category CSVs), `opportunity_links` (array —
+reserved, no opportunities register exists until R3-T03, not yet validated
+for existence), `evidence_links` (array of `evidence_id`s), `value`
+(`{amount, currency, status}`), `recognition_status` (`unrecognised`,
+`logged`, `shared`, `acknowledged`), `visibility`, `status` (`active` /
+`archived` — archiving is a flag, never a delete, matching the evidence
+removal precedent), `archived_at`, `archived_reason`, plus the canonical
+`created_at`/`updated_at`/`created_by`/`updated_by`/`source_type`/
+`confidence`/`notes` fields.
+
 ### Generated files (not sources of truth — do not hand-edit)
 - `scores_snapshot.json` — output of `scripts/scoring.py`, consumed by the Cowork dashboard artifact.
 - `web_snapshot.json` — output of `scripts/build_web.py`, fetched at runtime by the public GitHub Pages site.

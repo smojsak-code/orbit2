@@ -1,0 +1,17 @@
+{
+  "_comment": "Controlled vocabulary for value_journal.jsonl's 'type' field. Add a new type by adding an entry here — no code changes needed. 'other' always exists as an escape hatch; use the entry's notes field to explain when picking it.",
+  "types": {
+    "qbr": { "label": "QBR", "description": "Quarterly Business Review with Atlassian or a joint QBR involving a customer." },
+    "meeting": { "label": "Meeting", "description": "General meeting or call with an Atlassian contact, customer, or ecosystem partner." },
+    "enablement": { "label": "Enablement", "description": "Training, certification, or enablement session — given or received." },
+    "co_sell": { "label": "Co-sell activity", "description": "Joint selling activity with Atlassian, AWS, Google, or a GSI." },
+    "workshop": { "label": "Workshop", "description": "Workshop or working session with a customer or Atlassian." },
+    "escalation_support": { "label": "Escalation support", "description": "Supporting or resolving a customer or partner escalation." },
+    "marketplace_activity": { "label": "Marketplace activity", "description": "Work on an Atlassian Marketplace app, listing, or submission." },
+    "executive_briefing": { "label": "Executive briefing", "description": "Executive-level briefing or relationship-building conversation." },
+    "campaign": { "label": "Campaign", "description": "Marketing or co-marketing campaign activity." },
+    "deal_support": { "label": "Deal support", "description": "Direct support on a specific deal or opportunity." },
+    "program_admin": { "label": "Program administration", "description": "Partner program administration — registrations, renewals, compliance." },
+    "other": { "label": "Other", "description": "Anything not covered above — explain in the notes field." }
+  }
+}

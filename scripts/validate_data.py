@@ -155,6 +155,7 @@ def validate_category_files(report, category_registry):
                 report.error(f"{label}: {row_desc} is missing 'vendor'")
             if not (r.get("sub_metric") or "").strip():
                 report.error(f"{label}: {row_desc} is missing 'sub_metric'")
+    return seen_ids
 
 
 def validate_evidence_index(report, category_registry):
@@ -163,7 +164,7 @@ def validate_evidence_index(report, category_registry):
     fieldnames, rows = read_csv(path)
     check_columns(report, label, fieldnames, EVIDENCE_REQUIRED_COLUMNS)
     if fieldnames is None:
-        return
+        return set()
     seen_ids = set()
     for i, r in enumerate(rows, start=2):
         row_desc = f"row {i} ({r.get('evidence_id', '?')})"
@@ -183,6 +184,7 @@ def validate_evidence_index(report, category_registry):
         category = (r.get("category") or "").strip()
         if category and category not in category_registry:
             report.error(f"{label}: {row_desc} references unknown category '{category}' (not in data/categories.json)")
+    return seen_ids
 
 
 def validate_changelog(report):
@@ -235,6 +237,99 @@ def validate_weights_and_categories(report):
     return categories
 
 
+VALID_VISIBILITY = {
+    "personal_only", "communardo_internal", "communardo_management",
+    "atlassian_shareable", "customer_approved", "anonymised", "public",
+}
+VALID_VALUE_STATUS = {"confirmed", "estimated", "protected", "potential"}
+VALID_JOURNAL_STATUS = {"active", "archived"}
+JOURNAL_REQUIRED_FIELDS = ["activity_id", "date", "type", "title", "outcome"]
+
+
+def validate_journal(report, metric_ids, evidence_ids):
+    path = os.path.join(DATA_DIR, "value_journal.jsonl")
+    label = "data/value_journal.jsonl"
+    if not os.path.exists(path):
+        report.error(f"{label}: file is missing entirely")
+        return
+
+    activity_types_path = os.path.join(DATA_DIR, "activity_types.json")
+    contribution_types_path = os.path.join(DATA_DIR, "contribution_types.json")
+    activity_types = {}
+    contribution_types = {}
+    if os.path.exists(activity_types_path):
+        with open(activity_types_path) as f:
+            activity_types = json.load(f).get("types", {})
+    if os.path.exists(contribution_types_path):
+        with open(contribution_types_path) as f:
+            contribution_types = json.load(f).get("types", {})
+
+    seen_ids = set()
+    with open(path) as f:
+        for i, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            row_desc = f"line {i}"
+            try:
+                e = json.loads(line)
+            except json.JSONDecodeError as err:
+                report.error(f"{label}: {row_desc} is not valid JSON ({err})")
+                continue
+
+            for field in JOURNAL_REQUIRED_FIELDS:
+                if not str(e.get(field, "")).strip():
+                    report.error(f"{label}: {row_desc} is missing required field '{field}'")
+
+            aid = (e.get("activity_id") or "").strip()
+            if aid:
+                if aid in seen_ids:
+                    report.error(f"{label}: {row_desc} has duplicate activity_id '{aid}'")
+                else:
+                    seen_ids.add(aid)
+                row_desc = f"{row_desc} ({aid})"
+
+            check_date(report, label, e.get("date"), "date", row_desc)
+
+            atype = (e.get("type") or "").strip()
+            if atype and activity_types and atype not in activity_types:
+                report.error(f"{label}: {row_desc} has type '{atype}' not in data/activity_types.json")
+
+            ctype = (e.get("contribution_type") or "").strip()
+            if ctype and contribution_types and ctype not in contribution_types:
+                report.error(f"{label}: {row_desc} has contribution_type '{ctype}' not in data/contribution_types.json")
+
+            visibility = (e.get("visibility") or "").strip()
+            if visibility and visibility not in VALID_VISIBILITY:
+                report.error(f"{label}: {row_desc} has an invalid visibility '{visibility}' (expected one of {sorted(VALID_VISIBILITY)})")
+
+            status = (e.get("status") or "").strip()
+            if status and status not in VALID_JOURNAL_STATUS:
+                report.error(f"{label}: {row_desc} has an invalid status '{status}' (expected one of {sorted(VALID_JOURNAL_STATUS)})")
+
+            # Confirmed (or any) financial value must carry a currency and a value status —
+            # this is the acceptance criterion from R1-T03: never let a bare number imply
+            # confirmed revenue without saying what it is and how sure we are.
+            value = e.get("value") or {}
+            amount = value.get("amount")
+            if amount:
+                if not value.get("currency"):
+                    report.error(f"{label}: {row_desc} has value.amount {amount} but no value.currency")
+                if not value.get("status"):
+                    report.error(f"{label}: {row_desc} has value.amount {amount} but no value.status")
+                elif value.get("status") not in VALID_VALUE_STATUS:
+                    report.error(f"{label}: {row_desc} has an invalid value.status '{value.get('status')}' (expected one of {sorted(VALID_VALUE_STATUS)})")
+
+            for mid in e.get("metric_links") or []:
+                if mid not in metric_ids:
+                    report.error(f"{label}: {row_desc} references unknown metric_links id '{mid}'")
+            for eid in e.get("evidence_links") or []:
+                if eid not in evidence_ids:
+                    report.error(f"{label}: {row_desc} references unknown evidence_links id '{eid}'")
+            # opportunity_links: no opportunities register exists yet (roadmap task R3-T03),
+            # so there's nothing to check existence against — just note it's reserved.
+
+
 def validate_app_config(report):
     label = "data/app_config.json"
     config = app_config.load_config()
@@ -255,10 +350,11 @@ def main():
 
     report = Report()
     categories = validate_weights_and_categories(report)
-    validate_category_files(report, categories)
-    validate_evidence_index(report, categories)
+    metric_ids = validate_category_files(report, categories) or set()
+    evidence_ids = validate_evidence_index(report, categories) or set()
     validate_changelog(report)
     validate_app_config(report)
+    validate_journal(report, set(metric_ids), evidence_ids)
 
     print(f"Orbit2 data validation — {len(report.errors)} error(s), {len(report.warnings)} warning(s)\n")
     if report.errors:
