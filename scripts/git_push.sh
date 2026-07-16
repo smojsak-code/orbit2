@@ -38,7 +38,7 @@ rsync -a --exclude 'node_modules' --exclude '.git' --exclude '.github_token' --e
 # LibreOffice lock files (.~lock.*#) and fuse_hidden files are transient app/filesystem
 # artifacts that should never be version controlled — remove wherever they appear, not just
 # in reports/, since soffice drops them next to whatever file it's converting.
-find "$WORKDIR" -name '.~lock.*' -o -name '.fuse_hidden*' | xargs -r rm -f
+find "$WORKDIR" \( -name '.~lock.*' -o -name '.fuse_hidden*' \) -print0 | xargs -0 -r rm -f
 rm -rf "$WORKDIR/reports/_qa_tmp" "$WORKDIR"/reports/*.tmp "$WORKDIR"/reports/slide-*.jpg \
   "$WORKDIR/data/embedded_snapshot.json" 2>/dev/null || true
 
