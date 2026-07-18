@@ -43,6 +43,14 @@ MIGRATIONS = [
         "Add stable record_id columns to the 9 category sub-metric CSVs, "
         "metric_changelog.csv, solution_verticals.csv and news_log.csv.",
     ),
+    (
+        "002_metric_results_history",
+        "migration_002_metric_results_history",
+        "1.2.0",
+        "Add data/metric_results_history.csv and data/verification_levels.json "
+        "(R2-T01); migrate existing category sub-metric rows into a "
+        "period-indexed, append-only result history without changing scoring.",
+    ),
 ]
 
 

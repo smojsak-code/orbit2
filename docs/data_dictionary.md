@@ -31,6 +31,7 @@ changes when a title, name, or quarter changes:
 | `value_journal.jsonl` | `activity_id` | `ACT-` | Own file (R1-T03) |
 | `actions.csv` | `action_id` | `ACTN-` | Own file (R1-T05) — deliberately distinct from `ACT-` so the journal and actions registers are never visually confused |
 | `objectives.csv` | `objective_id` | `OBJ-` | Own file (R1-T08) |
+| `metric_results_history.csv` | `record_id` | `RES-` | Own file (R2-T01) — every row already carries the source category-CSV row's `MET-` id in `source_record_id`, but has its own independent `RES-` counter since it can also hold results with no category-CSV row behind them in future releases |
 
 IDs are assigned once and never reused or renumbered, including by
 migrations run more than once (`scripts/migrations/migration_001_add_record_ids.py`
@@ -68,6 +69,67 @@ Columns: `record_id, vendor, quarter, sub_metric, weight_pct_in_category, target
 - `score_method`: `ratio` (higher actual is better) or `inverse` (lower actual is better).
 - `weight_pct_in_category`: must sum to 100 across all rows for one vendor+quarter within a file.
 - `source`: free text — where the actual value came from (evidence ID, verbal update, etc.). Not yet a structured reference.
+
+### `metric_results_history.csv` (Metric result history, R2-T01)
+A period-indexed, append-only log of metric results — introduced by
+Release 2 to carry history, forecasts, confidence and evidence coverage
+without disturbing how the 9 category sub-metric CSVs already work.
+Written by `scripts/metric_results.py` (shared logic: computing
+`official_score`/`actual_attainment`, id assignment, versioning) and by
+`scripts/migrations/migration_002_metric_results_history.py` (one-time
+backfill from the category CSVs). `scripts/metric_manager.py`'s
+`add-submetric`/`amend-submetric` commands also append a row here going
+forward — see "Relationship to the category CSVs" below.
+
+Columns: `record_id, vendor, category, sub_metric, period, result_version, source_record_id, target, actual, unit, score_method, official_score, actual_attainment, forecast, confidence, freshness_date, owner, verification_level, evidence_refs, source, notes, recorded_date, recorded_by`
+
+**Which fields are manual, calculated, or imported (roadmap instruction #64):**
+
+| Field | Kind | Notes |
+|---|---|---|
+| `vendor`, `category`, `sub_metric`, `period`, `target`, `actual`, `unit`, `score_method` | Manual | Entered via `metric_manager.py`, or copied from the category CSV row at migration time |
+| `official_score`, `actual_attainment` | Calculated | Always derived from `target`/`actual`/`score_method` — never accepted as a caller-supplied value anywhere in `scripts/metric_results.py`. `scripts/validate_data.py`'s `validate_metric_results_history()` recomputes both and flags any row where the stored value has drifted from what its own source fields produce |
+| `forecast` | Manual (future) | Defined in the schema now; nothing in R2-T01 populates it yet — no forecasting workflow exists until a later Release 2 task needs one |
+| `confidence` | Calculated (future) | Defined in the schema now; deliberately left blank everywhere in R2-T01 — R2-T02 ("Upgrade the scoring and confidence engine") is what computes it, from `verification_level` + `freshness_date` + evidence coverage + completeness together. Populating it here would mean inventing a number ahead of the engine that's supposed to calculate it |
+| `freshness_date` | Imported / Manual | At migration time, the most recent matching `metric_changelog.csv` date; otherwise today's date when a result is recorded |
+| `owner` | Imported | Defaults from `app_config.json`'s `user_display_name` (single-user edition) |
+| `verification_level` | Manual | See `verification_levels.json` below. Migration defaults to `evidence_backed` when matching active evidence exists, `unverified` otherwise; `add-submetric` defaults to `self_reported`; `amend-submetric` carries forward the previous version's level unless told otherwise |
+| `evidence_refs` | Imported | Semicolon-separated `evidence_id` list, matched from `evidence_index.csv` by the same `(vendor, category, sub_metric, quarter)` key `scripts/evidence_ingest.py` already uses, filtered to `status == active` |
+| `source_record_id`, `source`, `notes`, `recorded_date`, `recorded_by` | Imported / Manual | Bookkeeping — which category-CSV row this came from (if any) and who/what wrote this history row |
+
+**Versioning, not overwriting.** `result_version` starts at 1 for a new
+`(vendor, category, sub_metric, period)` and increments by 1 each time
+that exact period's result is amended — the previous version's row is
+never mutated or deleted. `validate_metric_results_history()` rejects two
+rows sharing the same `(vendor, category, sub_metric, period,
+result_version)` tuple, which is what "duplicate period results are
+rejected or explicitly versioned" (R2-T01 acceptance criterion) means in
+practice: a duplicate at the same version is an error, a new version is
+the sanctioned way to record "the number changed since we last looked."
+
+**Relationship to the category CSVs — why a separate file.**
+`scripts/scoring.py` (R1) still reads the 9 category CSVs directly and
+only the latest quarter's row per vendor/category/sub_metric is scored;
+this migration and everything in `scripts/metric_results.py` leaves that
+contract completely untouched (R2-T01 acceptance criterion: "existing
+current scores reproduce the pre-migration values" — verified by diffing
+`scores_snapshot.json` before/after migration 002 byte-for-byte). Adding
+history/forecast/confidence columns to the category CSVs themselves would
+have broken that "only the latest row per period counts" model, since
+those files were never designed to hold more than one live value per
+period. `metric_results_history.csv` gets the new capabilities without
+requiring `scoring.py` to change until R2-T02 formally upgrades it.
+
+### `verification_levels.json`
+Config, not a register. Controlled vocabulary for `verification_level`,
+ordered least to most rigorously checked: `unverified`, `self_reported`,
+`manager_reviewed`, `evidence_backed`, `third_party_verified`. Add a new
+level by adding an entry here — no code change needed,
+`scripts/metric_results.py`'s `load_verification_levels()` reads it fresh
+on every call. Deliberately separate from `confidence`: this field
+describes *how* a result was checked (a fact about process); `confidence`
+is the computed trust score R2-T02's engine will derive from this field
+plus freshness, evidence coverage and completeness together.
 
 ### `categories.json`
 Config, not a register. Registry of category keys → `{label, file}`. Adding

@@ -1,0 +1,23 @@
+{
+  "_comment": "Controlled vocabulary for metric_results_history.csv's verification_level field (R2-T01). Ordered from least to most rigorously verified. This is deliberately separate from the 'confidence' field: verification_level describes HOW a result was checked (a fact about process), while confidence is a computed trust score that R2-T02's confidence engine derives from verification_level plus freshness, evidence coverage and completeness together. Add a new level by adding an entry here — no code change needed, scripts/metric_results.py reads this file at runtime.",
+  "unverified": {
+    "label": "Unverified",
+    "description": "Entered with no supporting check — a placeholder, a rough estimate, or reset/default data. The default for any result that hasn't been reviewed."
+  },
+  "self_reported": {
+    "label": "Self-reported",
+    "description": "Entered by the account owner (Steve) from their own knowledge of the number, without a second source or attached evidence yet."
+  },
+  "manager_reviewed": {
+    "label": "Manager-reviewed",
+    "description": "Reviewed and confirmed accurate by a manager or second person, but without a standalone evidence artifact on file."
+  },
+  "evidence_backed": {
+    "label": "Evidence-backed",
+    "description": "At least one active item in the Evidence Library (data/evidence_index.csv) is linked to this specific vendor/category/sub_metric/period."
+  },
+  "third_party_verified": {
+    "label": "Third-party verified",
+    "description": "Confirmed by an external source outside Communardo/Atlassian (e.g. a partner portal export, an auditable CRM report, a vendor-issued statement)."
+  }
+}

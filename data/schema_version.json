@@ -1,8 +1,9 @@
 {
   "_comment": "Managed by scripts/migrations/run_migrations.py. Do not hand-edit applied_migrations or history \u2014 run the migration runner instead. See docs/data_dictionary.md for what each schema version means.",
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "applied_migrations": [
-    "001_add_record_ids"
+    "001_add_record_ids",
+    "002_metric_results_history"
   ],
   "history": [
     {
@@ -11,6 +12,13 @@
       "schema_version": "1.1.0",
       "description": "Add stable record_id columns to the 9 category sub-metric CSVs, metric_changelog.csv, solution_verticals.csv and news_log.csv.",
       "backup": "backups/20260716T082447"
+    },
+    {
+      "migration_id": "002_metric_results_history",
+      "applied_at": "2026-07-18T12:56:51",
+      "schema_version": "1.2.0",
+      "description": "Add data/metric_results_history.csv and data/verification_levels.json (R2-T01); migrate existing category sub-metric rows into a period-indexed, append-only result history without changing scoring.",
+      "backup": "backups/20260718T125651"
     }
   ]
 }

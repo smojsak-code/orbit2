@@ -1,0 +1,22 @@
+{
+  "unverified": {
+    "label": "Unverified",
+    "description": "Entered with no supporting check \u2014 a placeholder, a rough estimate, or reset/default data. The default for any result that hasn't been reviewed."
+  },
+  "self_reported": {
+    "label": "Self-reported",
+    "description": "Entered by the account owner from their own knowledge of the number, without a second source or attached evidence yet."
+  },
+  "manager_reviewed": {
+    "label": "Manager-reviewed",
+    "description": "Reviewed and confirmed accurate by a manager or second person, but without a standalone evidence artifact on file."
+  },
+  "evidence_backed": {
+    "label": "Evidence-backed",
+    "description": "At least one active item in the Evidence Library (data/evidence_index.csv) is linked to this specific vendor/category/sub_metric/period."
+  },
+  "third_party_verified": {
+    "label": "Third-party verified",
+    "description": "Confirmed by an external source outside Communardo/Atlassian (e.g. a partner portal export, an auditable CRM report, a vendor-issued statement)."
+  }
+}

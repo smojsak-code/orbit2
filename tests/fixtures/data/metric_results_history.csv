@@ -1,0 +1,2 @@
+record_id,vendor,category,sub_metric,period,result_version,source_record_id,target,actual,unit,score_method,official_score,actual_attainment,forecast,confidence,freshness_date,owner,verification_level,evidence_refs,source,notes,recorded_date,recorded_by
+RES-0001,TestVendor,sales_performance,Fixture pipeline generated,2026-Q3,1,MET-0001,10,6,count,ratio,60.0,60.0,,,2026-07-01,Test User,evidence_backed,EVD-0001,fixture,,2026-07-01,fixture

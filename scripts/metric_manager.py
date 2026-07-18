@@ -22,12 +22,24 @@ Commands:
                       and write changelog rows for you (added / removed / amended)
 
 Every command prints what it did. Re-run scripts/scoring.py afterwards to refresh the scorecard.
+
+R2-T01 addition: add-submetric and amend-submetric also append a row to
+data/metric_results_history.csv (via scripts/metric_results.py) — a new
+result_version=1 row for a brand-new sub-metric, or version = previous max
++ 1 for an amendment, so the period-indexed history never overwrites an
+earlier version even though the category CSV itself still only holds the
+current row per (vendor, quarter, sub_metric). See scripts/metric_results.py
+for why this file exists rather than adding columns to the category CSVs.
 """
 import argparse
 import csv
 import json
 import os
+import sys
 from datetime import date
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import metric_results as metric_results_mod
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -175,8 +187,9 @@ def cmd_add_submetric(args):
     if existing:
         print(f"'{args.sub_metric}' already exists for {args.vendor} {args.quarter} in this category — use amend-submetric instead.")
         return
+    new_record_id = next_shared_id("MET-", CATEGORY_RECORD_ID_FILES)
     rows.append({
-        "record_id": next_shared_id("MET-", CATEGORY_RECORD_ID_FILES),
+        "record_id": new_record_id,
         "vendor": args.vendor, "quarter": args.quarter, "sub_metric": args.sub_metric,
         "weight_pct_in_category": args.weight, "target": args.target, "actual": args.actual,
         "unit": args.unit, "score_method": args.score_method, "source": args.source_field, "notes": args.notes,
@@ -184,6 +197,12 @@ def cmd_add_submetric(args):
     })
     write_category_rows(path, rows)
     log_change(args.vendor, args.category, args.sub_metric, "added", "", f"weight {args.weight}%, target {args.target} {args.unit}", args.reason, args.source_field)
+    metric_results_mod.append_result_version(
+        vendor=args.vendor, category=args.category, sub_metric=args.sub_metric,
+        period=args.quarter, target=args.target, actual=args.actual,
+        unit=args.unit, score_method=args.score_method, source_record_id=new_record_id,
+        source=args.source_field, notes=args.notes, verification_level="self_reported",
+    )
     print(f"Added sub-metric '{args.sub_metric}' to {args.category} for {args.vendor} {args.quarter}. Remember: weights within a category must sum to 100 — check the others.")
 
 
@@ -191,6 +210,7 @@ def cmd_amend_submetric(args):
     path, rows = read_category_rows(args.category)
     found = False
     old_summary = None
+    target_row = None
     for r in rows:
         if r["vendor"] == args.vendor and r["quarter"] == args.quarter and r["sub_metric"] == args.sub_metric:
             old_summary = f"weight {r['weight_pct_in_category']}%, target {r['target']} {r['unit']}"
@@ -207,12 +227,24 @@ def cmd_amend_submetric(args):
             if args.description is not None:
                 r["description"] = args.description
             found = True
+            target_row = r
     if not found:
         print(f"No row found for '{args.sub_metric}' / {args.vendor} / {args.quarter} in {args.category} — use add-submetric instead.")
         return
     write_category_rows(path, rows)
     new_summary = f"weight {args.weight}%, target {args.target}" if args.weight or args.target else "see notes"
     log_change(args.vendor, args.category, args.sub_metric, "amended", old_summary, new_summary, args.reason, "Claude")
+    # Append a new version rather than mutating history in place — "duplicate
+    # period results are rejected or explicitly versioned" (R2-T01 acceptance
+    # criterion). verification_level/evidence_refs aren't passed, so they
+    # carry forward from the previous version (see append_result_version()).
+    metric_results_mod.append_result_version(
+        vendor=args.vendor, category=args.category, sub_metric=args.sub_metric,
+        period=args.quarter, target=target_row["target"], actual=target_row["actual"],
+        unit=target_row["unit"], score_method=target_row.get("score_method", "ratio"),
+        source_record_id=target_row.get("record_id", ""),
+        source=target_row.get("source", ""), notes=target_row.get("notes", ""),
+    )
     print(f"Amended '{args.sub_metric}' in {args.category} for {args.vendor} {args.quarter}.")
 
 

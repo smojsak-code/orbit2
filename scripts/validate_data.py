@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config as app_config  # scripts/config.py — validates data/app_config.json
 import actions as actions_mod  # scripts/actions.py — reuses its enums so validation never drifts from what the CLI accepts
 import objectives as objectives_mod  # scripts/objectives.py — same reasoning, for data/objectives.csv (R1-T08)
+import metric_results as metric_results_mod  # scripts/metric_results.py — same reasoning, for data/metric_results_history.csv (R2-T01)
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 QUARTER_RE = re.compile(r"^\d{4}-Q[1-4]$")
@@ -497,6 +498,119 @@ def validate_app_config(report):
         report.error(f"{label}: {err}")
 
 
+def validate_metric_results_history(report, category_registry, metric_ids, evidence_ids):
+    """data/metric_results_history.csv (R2-T01). Beyond the usual required
+    columns / unique record_id / referenced-id checks, this validator
+    enforces the two acceptance criteria specific to this register:
+      - "Duplicate period results are rejected or explicitly versioned" —
+        two rows sharing (vendor, category, sub_metric, period,
+        result_version) is an error; different result_version values for
+        the same period are fine (that's the versioning escape hatch).
+      - "Every calculated field can be regenerated from source fields" —
+        official_score and actual_attainment are recomputed from each row's
+        own target/actual/score_method and compared to the stored value;
+        a mismatch means the row was hand-edited out of sync with its
+        source fields (or a future writer skipped the compute step)."""
+    path = os.path.join(DATA_DIR, "metric_results_history.csv")
+    label = "data/metric_results_history.csv"
+    fieldnames, rows = read_csv(path)
+    check_columns(report, label, fieldnames, metric_results_mod.FIELDNAMES)
+    if fieldnames is None:
+        return
+
+    valid_levels = metric_results_mod.valid_verification_levels()
+    seen_ids = set()
+    seen_version_keys = {}
+    for i, r in enumerate(rows, start=2):
+        rid = (r.get("record_id") or "").strip()
+        row_desc = f"row {i} ({rid or '?'})"
+        if not rid:
+            report.error(f"{label}: {row_desc} has no record_id")
+        elif rid in seen_ids:
+            report.error(f"{label}: duplicate record_id '{rid}'")
+        else:
+            seen_ids.add(rid)
+
+        vendor = (r.get("vendor") or "").strip()
+        category = (r.get("category") or "").strip()
+        sub_metric = (r.get("sub_metric") or "").strip()
+        period = (r.get("period") or "").strip()
+        if not vendor:
+            report.error(f"{label}: {row_desc} is missing 'vendor'")
+        if not category:
+            report.error(f"{label}: {row_desc} is missing 'category'")
+        elif category not in category_registry:
+            report.error(f"{label}: {row_desc} references unknown category '{category}' (not in data/categories.json)")
+        if not sub_metric:
+            report.error(f"{label}: {row_desc} is missing 'sub_metric'")
+        check_quarter(report, label, period, row_desc)
+
+        check_number(report, label, r.get("target"), "target", row_desc)
+        check_number(report, label, r.get("actual"), "actual", row_desc)
+        method = (r.get("score_method") or "").strip()
+        if method and method not in VALID_SCORE_METHODS:
+            report.error(f"{label}: {row_desc} has an invalid score_method '{method}' (expected one of {sorted(VALID_SCORE_METHODS)})")
+
+        version_raw = (r.get("result_version") or "").strip()
+        version = None
+        if not version_raw:
+            report.error(f"{label}: {row_desc} is missing 'result_version'")
+        else:
+            try:
+                version = int(version_raw)
+                if version < 1:
+                    report.error(f"{label}: {row_desc} has a non-positive result_version {version}")
+            except ValueError:
+                report.error(f"{label}: {row_desc} has a non-integer result_version {version_raw!r}")
+
+        if vendor and category and sub_metric and period and version is not None:
+            key = (vendor, category, sub_metric, period, version)
+            if key in seen_version_keys:
+                report.error(
+                    f"{label}: {row_desc} duplicates {seen_version_keys[key]} — same vendor/category/sub_metric/"
+                    f"period/result_version ({vendor}/{category}/{sub_metric}/{period} v{version}). "
+                    f"Amendments to an existing period must increment result_version, not repeat it."
+                )
+            else:
+                seen_version_keys[key] = row_desc
+
+        # official_score / actual_attainment must always be regenerable from
+        # target/actual/score_method — recompute and compare rather than
+        # trusting the stored value.
+        recomputed_official = metric_results_mod.official_score(r.get("target"), r.get("actual"), method)
+        recomputed_attainment = metric_results_mod.actual_attainment(r.get("target"), r.get("actual"), method)
+        for field, recomputed in (("official_score", recomputed_official), ("actual_attainment", recomputed_attainment)):
+            stored_raw = (r.get(field) or "").strip()
+            if not stored_raw:
+                if recomputed is not None:
+                    report.error(f"{label}: {row_desc} has no '{field}' but one could be computed from target/actual/score_method ({recomputed})")
+                continue
+            try:
+                stored = float(stored_raw)
+            except ValueError:
+                report.error(f"{label}: {row_desc} has a non-numeric '{field}' value: {stored_raw!r}")
+                continue
+            if recomputed is None:
+                report.error(f"{label}: {row_desc} has a '{field}' value ({stored}) but target/actual/score_method can't produce one — check for a zero target or unknown score_method")
+            elif abs(stored - recomputed) > 0.05:
+                report.error(f"{label}: {row_desc} has {field}={stored} but recomputing from target/actual/score_method gives {recomputed} — value has drifted from its source fields")
+
+        verification_level = (r.get("verification_level") or "").strip()
+        if verification_level and verification_level not in valid_levels:
+            report.error(f"{label}: {row_desc} has an invalid verification_level '{verification_level}' (expected one of {sorted(valid_levels)})")
+
+        for eid in metric_results_mod.split_ids(r.get("evidence_refs")):
+            if eid not in evidence_ids:
+                report.error(f"{label}: {row_desc} references unknown evidence_refs id '{eid}'")
+
+        source_record_id = (r.get("source_record_id") or "").strip()
+        if source_record_id and source_record_id not in metric_ids:
+            report.error(f"{label}: {row_desc} references unknown source_record_id '{source_record_id}' (not in a category sub-metric CSV)")
+
+        check_date(report, label, r.get("freshness_date"), "freshness_date", row_desc, required=False)
+        check_date(report, label, r.get("recorded_date"), "recorded_date", row_desc, required=False)
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -517,6 +631,7 @@ def main():
     activity_ids = validate_journal(report, set(metric_ids), evidence_ids) or set()
     validate_actions(report, activity_ids, set(metric_ids))
     validate_objectives(report, activity_ids, evidence_ids)
+    validate_metric_results_history(report, categories, set(metric_ids), evidence_ids)
 
     print(f"Orbit2 data validation — {len(report.errors)} error(s), {len(report.warnings)} warning(s)\n")
     if report.errors:

@@ -110,12 +110,42 @@ def patched_objectives(monkeypatch, fixture_data_dir, patched_config, patched_jo
 
 
 @pytest.fixture
-def patched_validate_data(monkeypatch, fixture_data_dir, patched_config):
+def patched_metric_results(monkeypatch, fixture_data_dir, patched_config):
+    """metric_results.py (R2-T01), pointed at the isolated fixture copy.
+    Depends on patched_config too — default_owner() calls
+    config.load_config() with no path argument."""
+    import metric_results as metric_results_mod
+    monkeypatch.setattr(metric_results_mod, "DATA_DIR", fixture_data_dir)
+    monkeypatch.setattr(metric_results_mod, "HISTORY_PATH", os.path.join(fixture_data_dir, "metric_results_history.csv"))
+    monkeypatch.setattr(metric_results_mod, "VERIFICATION_LEVELS_PATH", os.path.join(fixture_data_dir, "verification_levels.json"))
+    return metric_results_mod
+
+
+@pytest.fixture
+def patched_metric_manager(monkeypatch, fixture_data_dir, patched_config, patched_metric_results):
+    """metric_manager.py, pointed at the isolated fixture copy. Depends on
+    patched_metric_results too — cmd_add_submetric()/cmd_amend_submetric()
+    call metric_results_mod.append_result_version() internally (R2-T01),
+    which without this would silently write to the real project's
+    data/metric_results_history.csv instead of the fixture."""
+    import metric_manager as metric_manager_mod
+    monkeypatch.setattr(metric_manager_mod, "DATA_DIR", fixture_data_dir)
+    monkeypatch.setattr(metric_manager_mod, "CATEGORIES_PATH", os.path.join(fixture_data_dir, "categories.json"))
+    monkeypatch.setattr(metric_manager_mod, "WEIGHTS_PATH", os.path.join(fixture_data_dir, "weights.json"))
+    monkeypatch.setattr(metric_manager_mod, "CHANGELOG_PATH", os.path.join(fixture_data_dir, "metric_changelog.csv"))
+    return metric_manager_mod
+
+
+@pytest.fixture
+def patched_validate_data(monkeypatch, fixture_data_dir, patched_config, patched_metric_results):
     """validate_data.py, pointed at the isolated fixture copy. Depends on
     patched_config too — validate_app_config() calls config.load_config()
     with no path argument, which (per patched_config's own docstring)
     needs the load_config wrapper, not just a DATA_DIR/CONFIG_PATH
-    attribute patch, to actually resolve against the fixture."""
+    attribute patch, to actually resolve against the fixture. Depends on
+    patched_metric_results too — validate_metric_results_history() (R2-T01)
+    calls metric_results_mod.valid_verification_levels(), which reads
+    VERIFICATION_LEVELS_PATH from disk."""
     import validate_data as validate_data_mod
     monkeypatch.setattr(validate_data_mod, "DATA_DIR", fixture_data_dir)
     return validate_data_mod

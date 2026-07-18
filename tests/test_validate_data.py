@@ -28,6 +28,7 @@ def _run_full_validation(patched_validate_data):
     activity_ids = vd.validate_journal(report, set(metric_ids), evidence_ids) or set()
     vd.validate_actions(report, activity_ids, set(metric_ids))
     vd.validate_objectives(report, activity_ids, evidence_ids)
+    vd.validate_metric_results_history(report, categories, set(metric_ids), evidence_ids)
     return report
 
 
@@ -205,3 +206,89 @@ def test_changelog_duplicate_record_id_is_caught(patched_validate_data, fixture_
     report = patched_validate_data.Report()
     patched_validate_data.validate_changelog(report)
     assert any("duplicate record_id" in e for e in report.errors)
+
+
+# ---------------------------------------------------------------------------
+# metric_results_history.csv validator (R2-T01)
+# ---------------------------------------------------------------------------
+
+def _read_history_rows(fixture_data_dir):
+    path = os.path.join(fixture_data_dir, "metric_results_history.csv")
+    with open(path, newline="") as f:
+        rows = list(csv.DictReader(f))
+    return path, rows, list(rows[0].keys())
+
+
+def _write_history_rows(path, fieldnames, rows):
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w.writeheader()
+        w.writerows(rows)
+
+
+def test_metric_results_history_duplicate_version_is_caught(patched_validate_data, fixture_data_dir):
+    """Intentional-failure case: two rows sharing the exact same
+    vendor/category/sub_metric/period/result_version must be rejected — an
+    amendment must increment result_version, not repeat it."""
+    path, rows, fieldnames = _read_history_rows(fixture_data_dir)
+    duplicate = dict(rows[0])
+    duplicate["record_id"] = "RES-0002"  # distinct record_id, same version key
+    rows.append(duplicate)
+    _write_history_rows(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    categories = json.load(open(os.path.join(fixture_data_dir, "categories.json")))
+    categories.pop("_comment", None)
+    patched_validate_data.validate_metric_results_history(report, categories, {"MET-0001"}, {"EVD-0001"})
+    assert any("duplicates" in e and "result_version" in e for e in report.errors)
+
+
+def test_metric_results_history_official_score_drift_is_caught(patched_validate_data, fixture_data_dir):
+    """Intentional-failure case: official_score must always be regenerable
+    from target/actual/score_method — a hand-edited value that no longer
+    matches the recomputed figure must be flagged."""
+    path, rows, fieldnames = _read_history_rows(fixture_data_dir)
+    rows[0]["official_score"] = "99.9"  # target=10, actual=6, ratio -> should be 60.0
+    _write_history_rows(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    categories = json.load(open(os.path.join(fixture_data_dir, "categories.json")))
+    categories.pop("_comment", None)
+    patched_validate_data.validate_metric_results_history(report, categories, {"MET-0001"}, {"EVD-0001"})
+    assert any("drifted" in e for e in report.errors)
+
+
+def test_metric_results_history_invalid_verification_level_is_caught(patched_validate_data, fixture_data_dir):
+    path, rows, fieldnames = _read_history_rows(fixture_data_dir)
+    rows[0]["verification_level"] = "trust_me_bro"
+    _write_history_rows(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    categories = json.load(open(os.path.join(fixture_data_dir, "categories.json")))
+    categories.pop("_comment", None)
+    patched_validate_data.validate_metric_results_history(report, categories, {"MET-0001"}, {"EVD-0001"})
+    assert any("invalid verification_level" in e for e in report.errors)
+
+
+def test_metric_results_history_unknown_evidence_ref_is_caught(patched_validate_data, fixture_data_dir):
+    path, rows, fieldnames = _read_history_rows(fixture_data_dir)
+    rows[0]["evidence_refs"] = "EVD-9999"
+    _write_history_rows(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    categories = json.load(open(os.path.join(fixture_data_dir, "categories.json")))
+    categories.pop("_comment", None)
+    patched_validate_data.validate_metric_results_history(report, categories, {"MET-0001"}, {"EVD-0001"})  # EVD-9999 deliberately absent
+    assert any("unknown evidence_refs" in e for e in report.errors)
+
+
+def test_metric_results_history_unknown_category_is_caught(patched_validate_data, fixture_data_dir):
+    path, rows, fieldnames = _read_history_rows(fixture_data_dir)
+    rows[0]["category"] = "not_a_real_category"
+    _write_history_rows(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    categories = json.load(open(os.path.join(fixture_data_dir, "categories.json")))
+    categories.pop("_comment", None)
+    patched_validate_data.validate_metric_results_history(report, categories, {"MET-0001"}, {"EVD-0001"})
+    assert any("unknown category" in e for e in report.errors)
