@@ -87,7 +87,7 @@ function bandLabel(score) {
 function money(v, currency) {
   const n = Number(v);
   if (!v || Number.isNaN(n)) return "—";
-  return (currency || "EUR") + " " + n.toLocaleString();
+  return (currency || "USD") + " " + n.toLocaleString();
 }
 
 const categories = Object.entries(vendorData.categories);
@@ -192,7 +192,7 @@ pres.title = `Orbit2 Performance Deck — ${vendor} ${quarter}`;
   } else {
     const totalTcv = deals.reduce((a, d) => a + (Number(d.tcv) || 0), 0);
     const totalAcv = deals.reduce((a, d) => a + (Number(d.acv) || 0), 0);
-    slide.addText(`${deals.length} deal(s) · Total TCV ${money(totalTcv, "EUR")} · Total ACV ${money(totalAcv, "EUR")}`,
+    slide.addText(`${deals.length} deal(s) · Total TCV ${money(totalTcv, "USD")} · Total ACV ${money(totalAcv, "USD")}`,
       { x: 0.6, y: 0.95, w: 11, h: 0.4, fontSize: 13, color: MUTED, fontFace: "Calibri" });
 
     const rows = [[

@@ -5,7 +5,7 @@
   "company": "Communardo",
   "default_vendor": "Atlassian",
   "timezone": "Europe/London",
-  "financial_currency": "EUR",
+  "financial_currency": "USD",
   "reporting_year": 2026,
   "feature_flags": {
     "evidence_library": true,

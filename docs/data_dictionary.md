@@ -159,7 +159,7 @@ Fields:
 | `company` | yes | — | Drives the page title and header sub-text everywhere |
 | `default_vendor` | yes | — | Must match a key in `weights.json` to be meaningful, but this isn't enforced by `config.py` itself |
 | `timezone` | no | `"Europe/London"` | Must be a valid IANA timezone name |
-| `financial_currency` | no | `"EUR"` | One of `EUR, USD, GBP, CHF, SEK, NOK, DKK` — extend the list in `scripts/config.py` as needed |
+| `financial_currency` | no | `"USD"` | One of `EUR, USD, GBP, CHF, SEK, NOK, DKK` — extend the list in `scripts/config.py` as needed |
 | `reporting_year` | no | current calendar year | Integer, 2000-2100 |
 | `feature_flags` | no | `{}` | Object of `flag_name: true/false` |
 

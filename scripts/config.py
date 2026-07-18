@@ -42,7 +42,7 @@ REQUIRED_FIELDS = ["user_display_name", "company", "default_vendor"]
 DEFAULTS = {
     "job_title": "",
     "timezone": "Europe/London",
-    "financial_currency": "EUR",
+    "financial_currency": "USD",
     "reporting_year": None,
     "feature_flags": {},
 }

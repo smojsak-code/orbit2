@@ -15,7 +15,7 @@
               "sub_metric": "Pipeline growth QoQ",
               "target": "500000",
               "actual": "0",
-              "unit": "EUR",
+              "unit": "USD",
               "weight_pct_in_category": 35.0,
               "score": 0.0,
               "source": "",
@@ -26,7 +26,7 @@
               "sub_metric": "Bookings/revenue attainment vs quota",
               "target": "1200000",
               "actual": "0",
-              "unit": "EUR",
+              "unit": "USD",
               "weight_pct_in_category": 40.0,
               "score": 0.0,
               "source": "",
@@ -289,7 +289,7 @@
               "sub_metric": "Revenue influenced via 3rd-party referrals",
               "target": "300000",
               "actual": "0",
-              "unit": "EUR",
+              "unit": "USD",
               "weight_pct_in_category": 20.0,
               "score": 0.0,
               "source": "",
@@ -322,7 +322,7 @@
               "sub_metric": "GSI joint pipeline value",
               "target": "400000",
               "actual": "0",
-              "unit": "EUR",
+              "unit": "USD",
               "weight_pct_in_category": 20.0,
               "score": 0.0,
               "source": "",
@@ -364,7 +364,7 @@
               "sub_metric": "Revenue generated from solutions",
               "target": "400000",
               "actual": "0",
-              "unit": "EUR",
+              "unit": "USD",
               "weight_pct_in_category": 30.0,
               "score": 0.0,
               "source": "",
@@ -395,7 +395,7 @@
               "sub_metric": "Services revenue sold to clients",
               "target": "600000",
               "actual": "0",
-              "unit": "EUR",
+              "unit": "USD",
               "weight_pct_in_category": 60.0,
               "score": 0.0,
               "source": "",
@@ -505,6 +505,78 @@
       "new_value": "all sub-metrics reset to actual=0 for 2026-Q3; only the Market Visibility 'Press/analyst mentions volume' sub-metric reflects real data, sourced from the live news scan",
       "reason": "Steve requested all sample scores cleared and reset to zero, keeping only real Communardo web-mention data \u2014 the earlier PVR-retirement scenario was illustrative demo data and has been reverted",
       "source": "Steve Mojsak"
+    },
+    {
+      "record_id": "CHG-0005",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "sales_performance",
+      "sub_metric": "Pipeline growth QoQ",
+      "change_type": "amended",
+      "old_value": "weight 35%, target 500000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
+    },
+    {
+      "record_id": "CHG-0006",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "sales_performance",
+      "sub_metric": "Bookings/revenue attainment vs quota",
+      "change_type": "amended",
+      "old_value": "weight 40%, target 1200000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
+    },
+    {
+      "record_id": "CHG-0007",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "third_party_coselling",
+      "sub_metric": "Revenue influenced via 3rd-party referrals",
+      "change_type": "amended",
+      "old_value": "weight 20%, target 300000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
+    },
+    {
+      "record_id": "CHG-0008",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "third_party_coselling",
+      "sub_metric": "GSI joint pipeline value",
+      "change_type": "amended",
+      "old_value": "weight 20%, target 400000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
+    },
+    {
+      "record_id": "CHG-0009",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "solutions",
+      "sub_metric": "Revenue generated from solutions",
+      "change_type": "amended",
+      "old_value": "weight 30%, target 400000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
+    },
+    {
+      "record_id": "CHG-0010",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "services",
+      "sub_metric": "Services revenue sold to clients",
+      "change_type": "amended",
+      "old_value": "weight 60%, target 600000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
     }
   ],
   "category_registry": {
@@ -695,6 +767,136 @@
       "sentiment": "positive",
       "sentiment_confidence": "medium",
       "summary": "Communardo Products rebranded as Elevatic, consolidating the former Communardo Products, bitvoodoo, and Mibex brands into one independent Atlassian Marketplace vendor."
+    },
+    {
+      "record_id": "NEWS-0016",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo extends Nordic market leadership with acquisition of Danish Atlassian partner Aety",
+      "source_url": "https://www.bu-partners.com/news/communardo-extends-nordic-market-leadership-with-acquisition-of-danish-atlassian-partner-aety/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "BU Partners' own coverage of Communardo's acquisition of Danish Atlassian consultancy Aety, extending its Nordic market leadership (signed April 30, 2026)."
+    },
+    {
+      "record_id": "NEWS-0017",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Paul Hastings advised Bregal on acquisition of Mibex by Communardo",
+      "source_url": "https://www.paulhastings.com/news/paul-hastings-advised-bregal-on-acquisition-of-mibex-by-communardo",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Law firm Paul Hastings announced (Dec 19, 2024) it advised Bregal Unternehmerkapital on Communardo Group's acquisition of Atlassian Gold Marketplace Partner Mibex Software."
+    },
+    {
+      "record_id": "NEWS-0018",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "PROM12 to sell Communardo Holding GmbH to Bregal Unternehmerkapital",
+      "source_url": "https://www.loyensloeff.com/insights/news--events/news/prom12-to-sell-communardo-holding-gmbh-to-bregal-unternehmerkapital/",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Law firm Loyens & Loeff announced (Sept 6, 2024) it served as Swiss legal advisor to PROM12 on the sale of a majority stake in Communardo Holding GmbH to Bregal Unternehmerkapital."
+    },
+    {
+      "record_id": "NEWS-0019",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Has Agreed to be Acquired by Bregal Unternehmerkapital",
+      "source_url": "https://www.williamblair.com/News/Communardo-and-Bregal-Unternehmerkapital-Transaction",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "William Blair announced (Sept 4, 2024) it acted as exclusive financial advisor to Communardo, then a PROM12 portfolio company, on its agreed sale to Bregal Unternehmerkapital."
+    },
+    {
+      "record_id": "NEWS-0020",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Group welcomes Stretch Addera as a new partner",
+      "source_url": "https://www.bu-partners.com/news/communardo-group-welcomes-stretch-addera-as-a-new-partner/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "BU Partners' coverage of Communardo Group welcoming Swedish Atlassian Platinum Partner Stretch Addera, marking its Nordic market entry."
+    },
+    {
+      "record_id": "NEWS-0021",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Acquisition Strengthens Communardo's Market Position in Germany",
+      "source_url": "https://www.communardo.com/knowledge/blog/acquisition-strengthens-communardos-market-position-in-germany/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo blog post (April 25, 2024) announcing the integration of German IT service provider Scolution into the Communardo Group, strengthening its Atlassian market position and regional presence in Swabian Hall."
+    },
+    {
+      "record_id": "NEWS-0022",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Group extends Nordic platform with the acquisition of Aety",
+      "source_url": "https://accura.dk/en/cases/communardo-group-acquires-aety/",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Danish law firm Accura's case page describing its advisory role for Communardo Group in its acquisition of Aety, extending the group's Nordic Atlassian platform to roughly 100 specialists."
+    },
+    {
+      "record_id": "NEWS-0023",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "German Communardo Group, backed by Bregal Unternehmerkapital (BU), acquires Swedish Atlassian partner Stretch Addera",
+      "source_url": "https://www.mainsights.io/ma-news/german-communardo-group-backed-by-bregal-unternehmerkapital-bu-acquires-swedish-atlassian-partner-stretch-addera",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "M&A intelligence tracker NKP/Mainsights' historical coverage (May 27, 2025) of Communardo Group's acquisition of Swedish Atlassian partner Stretch Addera, including deal financial details."
+    },
+    {
+      "record_id": "NEWS-0024",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Expanding Nordic Coverage: Communardo Group Adds Ambientia's Atlassian Business",
+      "source_url": "https://communardo-nordics.com/insights/expanding-nordic-coverage/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo Nordics blog post (Jan 8, 2026) on the acquisition of Ambientia's Atlassian business in Finland, extending Nordic coverage to Sweden, Norway, Denmark, and Finland."
+    },
+    {
+      "record_id": "NEWS-0025",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Stretch Addera joins Communardo Group",
+      "source_url": "https://communardo-nordics.com/insights/stretch-addera-joins-communardo-group/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo Nordics (formerly Stretch Addera) blog post (May 27, 2025) announcing Stretch Addera joining the Communardo Group, forming a group of 420+ Atlassian experts."
+    },
+    {
+      "record_id": "NEWS-0026",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Expanding Nordic Coverage: Communardo Group Adds Ambientia's Atlassian Business",
+      "source_url": "https://stretchaddera.com/insights/expanding-nordic-coverage/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Mirror of the Communardo Nordics blog post on stretchaddera.com, covering the Ambientia Atlassian business acquisition in Finland."
+    },
+    {
+      "record_id": "NEWS-0027",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Stretch Addera joins Communardo Group",
+      "source_url": "https://stretchaddera.com/insights/stretch-addera-joins-communardo-group/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Mirror of the Communardo Nordics blog post on stretchaddera.com, announcing Stretch Addera joining the Communardo Group."
+    },
+    {
+      "record_id": "NEWS-0028",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo GmbH - Atlassian Solutions Partner Directory listing",
+      "source_url": "https://partnerdirectory.atlassian.com/communardo-gmbh",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Atlassian's official partner directory profile for Communardo GmbH shows Platinum Solution Partner status, a 5.0 rating, and Atlassian Partner of the Year awards for 2019, 2023, and 2025 (Cloud Platform Solutions)."
     }
   ],
   "report_files": {
@@ -707,7 +909,7 @@
   "app_config": {
     "job_title": "Atlassian Alliance Manager",
     "timezone": "Europe/London",
-    "financial_currency": "EUR",
+    "financial_currency": "USD",
     "reporting_year": 2026,
     "feature_flags": {
       "evidence_library": true,

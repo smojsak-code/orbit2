@@ -79,7 +79,7 @@ function money(v, currency) {
   if (v === undefined || v === null || v === "") return "—";
   const n = Number(v);
   if (Number.isNaN(n)) return v;
-  return (currency || "EUR") + " " + n.toLocaleString();
+  return (currency || "USD") + " " + n.toLocaleString();
 }
 
 function headerCell(text, width) {
@@ -266,7 +266,7 @@ const doc = new Document({
       new Paragraph({ heading: HeadingLevel.HEADING_1, pageBreakBefore: true, children: [new TextRun("Key Deals")] }),
       new Paragraph({ spacing: { after: 160 }, children: [new TextRun({
         text: deals.length
-          ? `${deals.length} deal(s) on file. Total TCV ${money(dealTotals.tcv, "EUR")} · Total ACV ${money(dealTotals.acv, "EUR")}.`
+          ? `${deals.length} deal(s) on file. Total TCV ${money(dealTotals.tcv, "USD")} · Total ACV ${money(dealTotals.acv, "USD")}.`
           : "Deal-level detail (company, contract value, products/services sold, vertical, Atlassian account category) will appear here once entered in data/deals.csv.",
         size: 18,
       })] }),

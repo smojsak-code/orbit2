@@ -65,7 +65,7 @@ def test_app_config_defaults_applied_when_fields_missing(tmp_path):
     config = config_mod.load_config(path=str(minimal_path))
     # DEFAULTS should backfill everything not explicitly set.
     assert config["timezone"] == "Europe/London"
-    assert config["financial_currency"] == "EUR"
+    assert config["financial_currency"] == "USD"
     assert config["feature_flags"] == {}
     assert isinstance(config["reporting_year"], int)
 
