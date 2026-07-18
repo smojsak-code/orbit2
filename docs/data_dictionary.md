@@ -30,6 +30,7 @@ changes when a title, name, or quarter changes:
 | `deals.csv` | `deal_id` | `DEAL-` | Own file (pre-existing column; no rows populated yet) |
 | `value_journal.jsonl` | `activity_id` | `ACT-` | Own file (R1-T03) |
 | `actions.csv` | `action_id` | `ACTN-` | Own file (R1-T05) — deliberately distinct from `ACT-` so the journal and actions registers are never visually confused |
+| `objectives.csv` | `objective_id` | `OBJ-` | Own file (R1-T08) |
 
 IDs are assigned once and never reused or renumbered, including by
 migrations run more than once (`scripts/migrations/migration_001_add_record_ids.py`
@@ -434,9 +435,92 @@ obvious from the schema alone:
 - Same `personal_only` exclusion and calendar-based `period_start()` sharing
   as `homepage` above.
 
+### `objectives.csv` (Objectives register, R1-T08)
+Quarterly and annual role objectives, connecting daily activity to what the
+role is actually meant to accomplish. One plain CSV row per objective (like
+`actions.csv`, no field here is deeply nested — the two multi-value fields,
+`linked_activities` and `linked_evidence`, are semicolon-separated ID lists
+within a single cell rather than needing JSONL). `scripts/objectives.py` is
+the only writer; the Cowork dashboard's Objectives tab and the public site's
+My Impact "Objectives" section both render from the `objectives` array
+injected into the snapshot by `scripts/build_dashboard.py`/`build_web.py`'s
+shared `load_objectives_snapshot()` (see "Generated files" below).
+
+Stable ID: `objective_id`, `OBJ-` prefix, own namespace.
+
+**`period` is a single string, not a separate type + value.** Either a
+quarter (`2026-Q3`) or a full year (`2026`) — `scripts/objectives.py`'s
+`period_type()` infers which from the string's own format (same pattern the
+category sub-metric CSVs already use for their own `quarter` column), so
+there's no redundant `period_type` field to keep in sync.
+
+**Progress is either stored or computed, never both at once** —
+`progress_method` (`manual` / `count_linked` / `sum_linked_value`)
+determines which:
+- `manual`: `progress_pct` is set directly via `objectives.py set-progress`
+  and may exceed 100 to record genuine overachievement.
+- `count_linked`: progress = (number of IDs in `linked_activities`) / `target`
+  × 100. `target` must be a positive number (a count).
+- `sum_linked_value`: progress = (sum of `value.amount` across the linked
+  activities in `value_journal.jsonl`, regardless of `value.status`) /
+  `target` × 100. `target` must be a positive number (an amount, in whatever
+  currency `target_unit` says). Currency consistency across the linked
+  entries is not cross-checked — a deliberate R1 simplification, since
+  `target_unit` itself also isn't cross-checked against each entry's
+  `value.currency`. Revisit if objectives start mixing currencies in
+  practice.
+
+Either way, `scripts/objectives.py`'s `compute_progress()` always returns
+both a `raw_pct` (uncapped — can exceed 100) and an `official_pct`
+(`min(100, raw_pct)`), plus `overachievement_pct` (`max(0, raw_pct - 100)`).
+**The UI must always display both** — R1-T08's acceptance criterion is
+explicit that overachievement above 100% is never silently hidden behind a
+capped progress bar. `compute_progress()` is never called client-side; it
+runs once at build time (`load_objectives_snapshot()`, shared by both
+`build_dashboard.py` and `build_web.py`) and the result is injected onto
+each row as a `progress` object, so the Cowork dashboard and the public
+site always agree on a given objective's percentage without either
+recomputing it.
+
+Status vocabulary: `on_track` (default), `at_risk`, `completed`, `missed`.
+`completed`/`missed` are terminal. Same discipline as `actions.csv`: direct
+`edit` can only move an objective between `on_track`/`at_risk` — every other
+transition goes through its own command (`at-risk`/`resolve-risk`/
+`complete`/`miss`) so required side effects always happen. Marking an
+objective `at_risk` requires both `at_risk_reason` and `recovery_action`
+(R1-T08 acceptance criterion) — `scripts/validate_data.py` rejects a
+hand-edited row that sets `status=at_risk` without both fields present, the
+same way it already does for `actions.csv`'s status-consistency rules.
+
+Key fields: `objective` (the statement itself), `success_measure` (how
+you'll know it was achieved — free text, not enforced against
+`progress_method`), `target`/`target_unit`/`target_date`,
+`communardo_priority`/`atlassian_priority` (`low`/`medium`/`high`, or blank
+— how important this objective is to each side of the alliance,
+independently), `linked_activities`/`linked_evidence` (semicolon-separated
+`ACT-`/`EVD-` ids — attached via `objectives.py link-activity`/
+`link-evidence`, or set in bulk at `create`/`edit` time), `at_risk_reason`/
+`recovery_action`, `completed_at`/`completion_note`, `missed_at`/
+`missed_reason`, `vendor` (defaults to `app_config.json`'s `default_vendor`),
+`visibility` (defaults to `communardo_internal`, not `personal_only` —
+objectives are role-level commitments, not private journal notes, so the
+more sharing-friendly default was a deliberate choice distinct from
+`actions.csv`'s `personal_only` default), plus the canonical
+`created_at`/`updated_at`/`created_by`/`updated_by`/`notes`.
+
+**Objective review export (instruction #52).** `objectives.py export
+[--period <period>]` writes a deterministic Markdown file to
+`reports/Objective_Review_<period>.md` — plain string templates over
+already-computed data (same no-AI discipline as `impact.py`'s narrative),
+listing every objective's statement, status, progress (official % plus any
+overachievement, never hidden), priorities, linked activities, and any
+at-risk/completion/miss detail. Triggered from the Cowork dashboard's
+Objectives tab via an "Export review" button (same "stage locally, confirm
+via chat" pattern as every other Objectives action).
+
 ### Generated files (not sources of truth — do not hand-edit)
-- `scores_snapshot.json` — output of `scripts/scoring.py`, consumed by the Cowork dashboard artifact.
-- `web_snapshot.json` — output of `scripts/build_web.py`, fetched at runtime by the public GitHub Pages site. Includes the `homepage` (R1-T06) and `impact` (R1-T07) keys documented above.
+- `scores_snapshot.json` — output of `scripts/scoring.py`. `scripts/build_dashboard.py` loads this and augments it in memory (adding `actions`, `objectives`, `app_config`, etc.) before embedding the result as the Cowork dashboard artifact's `SNAPSHOT` — the augmented version is never written back to `scores_snapshot.json` on disk.
+- `web_snapshot.json` — output of `scripts/build_web.py`, fetched at runtime by the public GitHub Pages site. Includes the `homepage` (R1-T06), `impact` (R1-T07), and `objectives` (R1-T08) keys documented above.
 - `embedded_snapshot.json` — orphaned/stale artifact from an earlier build approach, no longer read by any script. Excluded from `git push` (`scripts/git_push.sh`). Left in place because the sandbox cannot delete files; safe to ignore.
 
 ### Deprecated/orphaned files

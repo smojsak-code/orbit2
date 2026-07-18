@@ -168,12 +168,29 @@
   .impact-fin-amount { font-weight: 700; color: #1c1f24; }
   .impact-fin-note { font-size: 11px; color: #9ca3af; margin-top: 6px; line-height: 1.6; }
   .impact-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .impact-objectives-card { margin-bottom: 16px; }
+  .obj-status-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 12.5px; }
+  .obj-status-row:last-child { border-bottom: none; }
+  .obj-status-row .obj-title { font-weight: 600; color: #374151; }
+  .obj-status-row .obj-meta { color: #9ca3af; font-size: 11px; margin-top: 2px; }
+  .obj-progress-wrap { min-width: 120px; flex-shrink: 0; }
+  .obj-progress-track { height: 7px; border-radius: 99px; background: #eef0f3; overflow: hidden; margin-bottom: 3px; }
+  .obj-progress-fill { height: 100%; border-radius: 99px; background: #2563eb; }
+  .obj-progress-fill.at-risk { background: #dc2626; }
+  .obj-progress-fill.completed { background: #059669; }
+  .obj-progress-label { font-size: 10.5px; color: #6b7280; text-align: right; }
+  .obj-over-badge { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: #ecfdf5; color: #059669; margin-left: 4px; }
+  .objective-status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; background: #f3f4f6; color: #6b7280; flex-shrink: 0; }
+  .objective-status-on_track { background: #eff6ff; color: #2563eb; }
+  .objective-status-at_risk { background: #fef2f2; color: #dc2626; }
+  .objective-status-completed { background: #ecfdf5; color: #059669; }
+  .objective-status-missed { background: #f3f4f6; color: #9ca3af; }
   @media print {
     header, .tab-bar, .home-toolbar, .primary-actions, .home-notice, .impact-toolbar .btn-secondary,
     #viewHome, #viewDashboard, #viewActions, #viewReports, #viewSettings, .footer-note { display: none !important; }
     #viewImpact { display: block !important; }
     body { background: #fff; padding: 0; }
-    .impact-cat-card, .impact-financial-card, .impact-narrative, .card { break-inside: avoid; }
+    .impact-cat-card, .impact-financial-card, .impact-narrative, .impact-objectives-card, .card { break-inside: avoid; }
   }
 
   .modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
@@ -320,6 +337,11 @@
     </div>
 
     <div class="impact-narrative" id="impactNarrative"></div>
+
+    <div class="card impact-objectives-card">
+      <h3>Objectives <span class="toggle-hint" style="font-weight:400;">quarterly/annual role objectives — independent of the period selector above, each spans its own period</span></h3>
+      <div id="impactObjectivesList"></div>
+    </div>
 
     <div class="impact-grid">
       <div class="card impact-cat-card" id="impactCat-relationship">

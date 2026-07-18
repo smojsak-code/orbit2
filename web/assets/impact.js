@@ -134,6 +134,49 @@ function renderImpactFinancial(financial) {
     'Each figure is a separate total for its status and currency — never combined or netted against another. "Awaiting validation" is the subset of the above with unverified confidence.';
 }
 
+/* --- Objectives status (R1-T08 instruction #50) ---
+ * Read-only. SNAPSHOT.objectives is the same array the Cowork dashboard's
+ * Objectives tab renders from, each row already carrying a computed
+ * `progress` object (official_pct/raw_pct/overachievement_pct/basis) from
+ * scripts/objectives.py's compute_progress(), injected at build time by
+ * build_web.py so this view and the dashboard never disagree. Independent
+ * of the impact period selector above — an objective's own `period` field
+ * (e.g. "2026-Q3") is a fixed assignment, not a rolling window, so it isn't
+ * re-filtered by week/month/quarter/year the way journal-derived sections
+ * are. */
+function renderImpactObjectives() {
+  const list = document.getElementById('impactObjectivesList');
+  if (!list) return;
+  const all = SNAPSHOT.objectives || [];
+  const active = all
+    .filter(o => o.status === 'on_track' || o.status === 'at_risk')
+    .sort((a, b) => (a.target_date || '9999-99-99').localeCompare(b.target_date || '9999-99-99'));
+
+  list.innerHTML = '';
+  if (!active.length) {
+    list.innerHTML = '<div class="home-empty">No active objectives on file. Add one from the Objectives tab in Cowork.</div>';
+    return;
+  }
+  active.forEach(o => {
+    const p = o.progress || { official_pct: 0, overachievement_pct: 0 };
+    const fillClass = o.status === 'at_risk' ? 'at-risk' : '';
+    const overBadge = p.overachievement_pct > 0 ? `<span class="obj-over-badge">+${esc(p.overachievement_pct)}% over</span>` : '';
+    const row = document.createElement('div');
+    row.className = 'obj-status-row';
+    row.innerHTML = `
+      <div>
+        <div class="obj-title">${esc(o.objective)}</div>
+        <div class="obj-meta">${esc(o.period)}${o.target_date ? ' · due ' + esc(o.target_date) : ''}</div>
+      </div>
+      <div class="obj-progress-wrap">
+        <div class="obj-progress-track"><div class="obj-progress-fill ${fillClass}" style="width:${p.official_pct}%"></div></div>
+        <div class="obj-progress-label">${esc(p.official_pct)}%${overBadge}</div>
+      </div>
+      <span class="objective-status-pill objective-status-${esc(o.status)}">${esc(o.status.replace('_', ' '))}</span>`;
+    list.appendChild(row);
+  });
+}
+
 function renderImpactView() {
   if (!SNAPSHOT || !SNAPSHOT.impact) return;
   const impact = SNAPSHOT.impact;
@@ -147,6 +190,7 @@ function renderImpactView() {
   IMPACT_CATEGORIES.forEach(cat => renderImpactCategoryBlock(cat, agg.categories[cat]));
   renderImpactRecognitionBlock(agg.recognition);
   renderImpactFinancial(agg.financial);
+  renderImpactObjectives();
 }
 
 function setupImpactControls() {

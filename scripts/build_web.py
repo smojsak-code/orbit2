@@ -242,6 +242,11 @@ def main():
     snapshot["actions"] = action_rows
     snapshot["action_statuses"] = action_statuses
 
+    # objectives.csv (R1-T08) — read-only status surfaced on the My Impact
+    # tab (instruction #50); same computed-progress helper as
+    # build_dashboard.py so the two surfaces never disagree.
+    snapshot["objectives"] = bd.load_objectives_snapshot()
+
     # Daily Alliance Manager homepage (R1-T06) — web-only, see module-level
     # comment above compute_homepage_aggregates().
     journal_entries = journal_mod.read_journal()

@@ -177,6 +177,29 @@
   .action-inline-form input, .action-inline-form select { font-size: 11px; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; }
   .action-btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
   .action-btn-row button { padding: 3px 8px; font-size: 10.5px; }
+  /* --- Objectives (R1-T08) --- */
+  #viewObjectives { display: none; }
+  .obj-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .obj-filter-bar select, .obj-filter-bar input { padding: 6px 9px; border-radius: 6px; border: 1px solid #d1d5db; background: #fff; font-size: 12px; }
+  .obj-progress-wrap { min-width: 130px; }
+  .obj-progress-track { height: 7px; border-radius: 99px; background: #eef0f3; overflow: hidden; margin-bottom: 3px; }
+  .obj-progress-fill { height: 100%; border-radius: 99px; background: #2563eb; }
+  .obj-progress-fill.at-risk { background: #dc2626; }
+  .obj-progress-fill.completed { background: #059669; }
+  .obj-progress-label { font-size: 10.5px; color: #6b7280; }
+  .obj-over-badge { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: #ecfdf5; color: #059669; margin-left: 4px; }
+  .objective-status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; background: #f3f4f6; color: #6b7280; }
+  .objective-status-on_track { background: #eff6ff; color: #2563eb; }
+  .objective-status-at_risk { background: #fef2f2; color: #dc2626; }
+  .objective-status-completed { background: #ecfdf5; color: #059669; }
+  .objective-status-missed { background: #f3f4f6; color: #9ca3af; }
+  .obj-priority-tag { font-size: 9.5px; padding: 1px 6px; border-radius: 999px; background: #f3f4f6; color: #6b7280; margin-right: 3px; }
+  .obj-priority-tag.high { background: #fffbeb; color: #b45309; }
+  .obj-inline-form { display: flex; flex-direction: column; gap: 4px; min-width: 200px; }
+  .obj-inline-form input, .obj-inline-form select, .obj-inline-form textarea { font-size: 11px; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; }
+  .obj-btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
+  .obj-btn-row button { padding: 3px 8px; font-size: 10.5px; }
+
   .report-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
   .report-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
   .report-sub { font-size: 11.5px; color: #9ca3af; }
@@ -211,6 +234,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" id="tabDashboard" onclick="switchView('dashboard')">Dashboard</button>
     <button class="tab-btn" id="tabActions" onclick="switchView('actions')">Actions</button>
+    <button class="tab-btn" id="tabObjectives" onclick="switchView('objectives')">Objectives</button>
     <button class="tab-btn" id="tabReports" onclick="switchView('reports')">Reports</button>
     <button class="tab-btn" id="tabSettings" onclick="switchView('settings')">Settings</button>
   </div>
@@ -393,6 +417,29 @@
     </section>
   </div>
 
+  <div id="viewObjectives">
+    <section class="block card">
+      <h2>Objectives <span class="toggle-hint">quarterly and annual role objectives, linked to the activities and evidence that show progress against them — never deleted, only completed or missed</span></h2>
+      <div class="obj-filter-bar">
+        <select id="objFilterPeriod">
+          <option value="" selected>All periods</option>
+        </select>
+        <select id="objFilterStatus">
+          <option value="open_all" selected>Open (on track or at risk)</option>
+          <option value="on_track">On track only</option>
+          <option value="at_risk">At risk only</option>
+          <option value="completed">Completed</option>
+          <option value="missed">Missed</option>
+          <option value="all">All statuses</option>
+        </select>
+        <button class="btn-primary" onclick="openObjectiveModal()">+ Add Objective</button>
+        <button class="btn-secondary" onclick="startExportObjectives()">Export review</button>
+      </div>
+      <table class="data-table" id="objectivesTable"></table>
+      <div class="dz-empty-hint" id="objectivesHint"></div>
+    </section>
+  </div>
+
   <div id="viewSettings">
     <section class="block card">
       <h2>Application settings <span class="toggle-hint">read-only — this is the configuration every generated heading, report header, and default pulls from</span></h2>
@@ -526,6 +573,86 @@
       <div class="modal-actions">
         <button type="button" class="btn-secondary" onclick="closeActivityModal()">Cancel</button>
         <button type="submit" class="btn-primary">Save Activity</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="objectiveModalOverlay" role="dialog" aria-modal="true" aria-labelledby="objectiveModalTitle">
+  <div class="modal-card">
+    <h2 id="objectiveModalTitle">Add Objective</h2>
+    <div class="modal-sub">
+      Same "stage locally, confirm via chat" pattern as the Actions tab — filling this in composes a
+      message in chat that asks Claude to run <code>scripts/objectives.py create</code> with these
+      values, then rebuild and push. Nothing is written until you send it.
+    </div>
+    <form id="objectiveForm" onsubmit="return submitObjectiveForm(event)">
+      <div class="modal-field" id="fieldObjText">
+        <label for="objText">Objective *</label>
+        <input type="text" id="objText" maxlength="200" placeholder="e.g. Grow Atlassian marketplace co-sell pipeline">
+        <div class="modal-error">Please describe the objective.</div>
+      </div>
+      <div class="modal-field" id="fieldObjPeriod">
+        <label for="objPeriod">Period * <span class="toggle-hint" style="display:inline;">'2026-Q3' for a quarter, or '2026' for the full year</span></label>
+        <input type="text" id="objPeriod" placeholder="2026-Q3">
+        <div class="modal-error">Please enter a valid quarter (YYYY-Q1..4) or year (YYYY).</div>
+      </div>
+      <div class="modal-field">
+        <label for="objSuccessMeasure">Success measure</label>
+        <input type="text" id="objSuccessMeasure" placeholder="how will you know this was achieved?">
+      </div>
+
+      <details class="modal-more" open>
+        <summary>Progress tracking</summary>
+        <div class="modal-more-grid">
+          <div class="modal-field">
+            <label for="objProgressMethod">Progress method</label>
+            <select id="objProgressMethod" onchange="document.getElementById('objTargetFields').style.display = this.value === 'manual' ? 'none' : ''">
+              <option value="manual" selected>Manual — I'll update % myself</option>
+              <option value="count_linked">Calculated — count of linked activities vs. a target count</option>
+              <option value="sum_linked_value">Calculated — sum of linked activities' value vs. a target amount</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label for="objTargetDate">Target date</label>
+            <input type="date" id="objTargetDate">
+          </div>
+          <div id="objTargetFields" style="display:none;grid-column:1/-1;display:contents;">
+            <div class="modal-field">
+              <label for="objTarget">Target (count or amount)</label>
+              <input type="number" id="objTarget" step="0.01" min="0">
+            </div>
+            <div class="modal-field">
+              <label for="objTargetUnit">Target unit</label>
+              <input type="text" id="objTargetUnit" placeholder="e.g. count, GBP">
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="modal-more">
+        <summary>Priority</summary>
+        <div class="modal-more-grid">
+          <div class="modal-field">
+            <label for="objCommunardoPriority">Communardo priority</label>
+            <select id="objCommunardoPriority">
+              <option value="">—</option><option value="low">Low</option>
+              <option value="medium">Medium</option><option value="high">High</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label for="objAtlassianPriority">Atlassian priority</label>
+            <select id="objAtlassianPriority">
+              <option value="">—</option><option value="low">Low</option>
+              <option value="medium">Medium</option><option value="high">High</option>
+            </select>
+          </div>
+        </div>
+      </details>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeObjectiveModal()">Cancel</button>
+        <button type="submit" class="btn-primary">Send to chat</button>
       </div>
     </form>
   </div>
@@ -769,7 +896,7 @@ function render(vendorName) {
 // Note: #viewReports and #viewSettings both have a hard `display: none` in the stylesheet, so
 // showing one needs an explicit 'block' — setting style.display = '' just falls back to that CSS
 // rule and leaves it hidden even though nothing errors.
-const VIEWS = ['dashboard', 'actions', 'reports', 'settings'];
+const VIEWS = ['dashboard', 'actions', 'objectives', 'reports', 'settings'];
 function switchView(view) {
   VIEWS.forEach(v => {
     const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
@@ -1518,10 +1645,278 @@ function confirmDeferAction(actionId) {
   );
 }
 
+// --- Objectives (R1-T08) ---
+// Same "stage locally, confirm via chat" pattern as Actions: quick-action
+// buttons compose a fully-worked-out sendPrompt() message asking Claude to
+// run the relevant scripts/objectives.py command, then validate/rebuild/
+// push. Progress is never entered here directly for calculated objectives —
+// it's read straight from SNAPSHOT.objectives[i].progress, computed at
+// build time by build_dashboard.py's load_objectives_snapshot() (so this
+// view and the public site's My Impact "Objectives" section never disagree).
+function populateObjectivePeriodFilter() {
+  const sel = document.getElementById('objFilterPeriod');
+  const periods = [...new Set((SNAPSHOT.objectives || []).map(o => o.period))].sort();
+  const current = sel.value;
+  sel.innerHTML = '<option value="" selected>All periods</option>' +
+    periods.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+  if (periods.includes(current)) sel.value = current;
+}
+
+function renderObjectivesView() {
+  populateObjectivePeriodFilter();
+  const all = SNAPSHOT.objectives || [];
+  const period = document.getElementById('objFilterPeriod').value;
+  const status = document.getElementById('objFilterStatus').value;
+
+  const filtered = all.filter(o => {
+    if (period && o.period !== period) return false;
+    if (status === 'open_all') { if (o.status === 'completed' || o.status === 'missed') return false; }
+    else if (status !== 'all' && o.status !== status) return false;
+    return true;
+  }).sort((a, b) => (a.target_date || '9999-99-99').localeCompare(b.target_date || '9999-99-99'));
+
+  const table = document.getElementById('objectivesTable');
+  const hint = document.getElementById('objectivesHint');
+  if (!filtered.length) {
+    table.innerHTML = '<tr><td class="empty">No objectives match those filters.</td></tr>';
+    hint.textContent = `0 of ${all.length} objective(s) shown.`;
+    return;
+  }
+
+  table.innerHTML = `
+    <tr><th>Objective</th><th>Period</th><th>Priority</th><th>Progress</th><th>Status</th><th>Target date</th><th>Actions</th></tr>
+    ${filtered.map(o => {
+      const p = o.progress || { official_pct: 0, overachievement_pct: 0, basis: '' };
+      const fillClass = o.status === 'completed' ? 'completed' : (o.status === 'at_risk' ? 'at-risk' : '');
+      const overBadge = p.overachievement_pct > 0 ? `<span class="obj-over-badge">+${p.overachievement_pct}% over</span>` : '';
+      const priorities = [
+        o.communardo_priority ? `<span class="obj-priority-tag ${o.communardo_priority === 'high' ? 'high' : ''}" title="Communardo priority">C:${esc(o.communardo_priority)}</span>` : '',
+        o.atlassian_priority ? `<span class="obj-priority-tag ${o.atlassian_priority === 'high' ? 'high' : ''}" title="Atlassian priority">A:${esc(o.atlassian_priority)}</span>` : '',
+      ].join('');
+      const terminal = o.status === 'completed' || o.status === 'missed';
+      let controls;
+      if (terminal) {
+        controls = `<span class="empty" style="font-style:italic;">${o.status === 'completed' ? (o.completion_note || 'completed') : (o.missed_reason || 'missed')}</span>`;
+      } else {
+        const riskBtn = o.status === 'at_risk'
+          ? `<button class="btn-secondary" onclick="startResolveRisk('${esc(o.objective_id)}')">Resolve risk</button>`
+          : `<button class="btn-secondary" onclick="startAtRiskObjective('${esc(o.objective_id)}')">Mark at risk</button>`;
+        controls = `<div class="obj-btn-row">
+             ${riskBtn}
+             <button class="btn-secondary" onclick="startCompleteObjective('${esc(o.objective_id)}')">Complete</button>
+             <button class="btn-secondary" onclick="startMissObjective('${esc(o.objective_id)}')">Miss</button>
+           </div>`;
+      }
+      return `<tr>
+        <td title="${esc(o.objective)}">${esc(o.objective)}${o.success_measure ? `<div class="empty" style="padding:0;">${esc(o.success_measure)}</div>` : ''}</td>
+        <td>${esc(o.period)}</td>
+        <td>${priorities || '—'}</td>
+        <td>
+          <div class="obj-progress-wrap">
+            <div class="obj-progress-track"><div class="obj-progress-fill ${fillClass}" style="width:${p.official_pct}%"></div></div>
+            <div class="obj-progress-label">${p.official_pct}%${overBadge}</div>
+          </div>
+        </td>
+        <td><span class="objective-status-pill objective-status-${esc(o.status || 'on_track')}">${esc((o.status || 'on_track').replace('_', ' '))}</span></td>
+        <td>${esc(o.target_date || '—')}</td>
+        <td id="objRowAction-${esc(o.objective_id)}">${controls}</td>
+      </tr>`;
+    }).join('')}`;
+  hint.textContent = `${filtered.length} of ${all.length} objective(s) shown` +
+    (status === 'open_all' ? ' (on track or at risk — completed/missed hidden)' : '') + '.';
+}
+
+function setupObjectivesFilters() {
+  ['objFilterPeriod', 'objFilterStatus'].forEach(id =>
+    document.getElementById(id).addEventListener('change', renderObjectivesView));
+}
+
+function startAtRiskObjective(objectiveId) {
+  const cell = document.getElementById('objRowAction-' + objectiveId);
+  if (!cell) return;
+  cell.innerHTML = `
+    <div class="obj-inline-form">
+      <input type="text" id="objRiskReason-${objectiveId}" placeholder="Why is this at risk? (required)">
+      <input type="text" id="objRiskRecovery-${objectiveId}" placeholder="Recovery action? (required)">
+      <div class="obj-btn-row">
+        <button class="btn-primary" onclick="confirmAtRiskObjective('${objectiveId}')">Confirm at risk</button>
+        <button class="btn-secondary" onclick="renderObjectivesView()">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById('objRiskReason-' + objectiveId).focus();
+}
+
+function confirmAtRiskObjective(objectiveId) {
+  const reason = (document.getElementById('objRiskReason-' + objectiveId).value || '').trim();
+  const recovery = (document.getElementById('objRiskRecovery-' + objectiveId).value || '').trim();
+  if (!reason || !recovery) {
+    if (!reason) document.getElementById('objRiskReason-' + objectiveId).style.borderColor = '#dc2626';
+    if (!recovery) document.getElementById('objRiskRecovery-' + objectiveId).style.borderColor = '#dc2626';
+    return;
+  }
+  const cell = document.getElementById('objRowAction-' + objectiveId);
+  if (cell) cell.innerHTML = '<span class="empty">Requested — check chat ↓</span>';
+  sendPrompt(
+    `Mark objective ${objectiveId} at risk in Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run scripts/objectives.py at-risk --objective-id "${objectiveId}" --reason "${reason.replace(/"/g, '\\"')}" --recovery-action "${recovery.replace(/"/g, '\\"')}"\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly.`
+  );
+}
+
+function startResolveRisk(objectiveId) {
+  const cell = document.getElementById('objRowAction-' + objectiveId);
+  if (cell) cell.innerHTML = '<span class="empty">Requested — check chat ↓</span>';
+  sendPrompt(
+    `Resolve the at-risk status on objective ${objectiveId} in Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run scripts/objectives.py resolve-risk --objective-id "${objectiveId}"\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly.`
+  );
+}
+
+function startCompleteObjective(objectiveId) {
+  const cell = document.getElementById('objRowAction-' + objectiveId);
+  if (!cell) return;
+  cell.innerHTML = `
+    <div class="obj-inline-form">
+      <input type="text" id="objCompleteNote-${objectiveId}" placeholder="Completion note (optional)">
+      <div class="obj-btn-row">
+        <button class="btn-primary" onclick="confirmCompleteObjective('${objectiveId}')">Confirm complete</button>
+        <button class="btn-secondary" onclick="renderObjectivesView()">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById('objCompleteNote-' + objectiveId).focus();
+}
+
+function confirmCompleteObjective(objectiveId) {
+  const note = (document.getElementById('objCompleteNote-' + objectiveId).value || '').trim();
+  const cell = document.getElementById('objRowAction-' + objectiveId);
+  if (cell) cell.innerHTML = '<span class="empty">Requested — check chat ↓</span>';
+  sendPrompt(
+    `Mark objective ${objectiveId} complete in Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run scripts/objectives.py complete --objective-id "${objectiveId}"` +
+    (note ? ` --completion-note "${note.replace(/"/g, '\\"')}"` : '') + `\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly, noting whether it was overachieved.`
+  );
+}
+
+function startMissObjective(objectiveId) {
+  const cell = document.getElementById('objRowAction-' + objectiveId);
+  if (!cell) return;
+  cell.innerHTML = `
+    <div class="obj-inline-form">
+      <input type="text" id="objMissReason-${objectiveId}" placeholder="Why was this missed? (required)">
+      <div class="obj-btn-row">
+        <button class="btn-primary" onclick="confirmMissObjective('${objectiveId}')">Confirm missed</button>
+        <button class="btn-secondary" onclick="renderObjectivesView()">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById('objMissReason-' + objectiveId).focus();
+}
+
+function confirmMissObjective(objectiveId) {
+  const reason = (document.getElementById('objMissReason-' + objectiveId).value || '').trim();
+  if (!reason) {
+    document.getElementById('objMissReason-' + objectiveId).style.borderColor = '#dc2626';
+    return;
+  }
+  const cell = document.getElementById('objRowAction-' + objectiveId);
+  if (cell) cell.innerHTML = '<span class="empty">Requested — check chat ↓</span>';
+  sendPrompt(
+    `Mark objective ${objectiveId} missed in Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run scripts/objectives.py miss --objective-id "${objectiveId}" --reason "${reason.replace(/"/g, '\\"')}"\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly.`
+  );
+}
+
+function startExportObjectives() {
+  const period = document.getElementById('objFilterPeriod').value;
+  sendPrompt(
+    `Export an Objective Review from Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run scripts/objectives.py export` + (period ? ` --period "${period}"` : '') + `\n` +
+    `2. Tell me the path it wrote to (under reports/) so I can open it.`
+  );
+}
+
+function openObjectiveModal() {
+  document.getElementById('objectiveModalOverlay').classList.add('open');
+  document.querySelector('.wrap').setAttribute('inert', '');
+  document.addEventListener('keydown', objectiveModalKeydown);
+  document.getElementById('objText').focus();
+}
+
+function closeObjectiveModal() {
+  document.getElementById('objectiveModalOverlay').classList.remove('open');
+  document.querySelector('.wrap').removeAttribute('inert');
+  document.removeEventListener('keydown', objectiveModalKeydown);
+  document.getElementById('objectiveForm').reset();
+  document.getElementById('fieldObjText').classList.remove('error');
+  document.getElementById('fieldObjPeriod').classList.remove('error');
+}
+
+function objectiveModalKeydown(e) {
+  if (e.key === 'Escape') closeObjectiveModal();
+}
+
+const OBJ_PERIOD_RE = /^(\d{4}-Q[1-4]|\d{4})$/;
+
+function submitObjectiveForm(evt) {
+  evt.preventDefault();
+  const objective = document.getElementById('objText').value.trim();
+  const period = document.getElementById('objPeriod').value.trim();
+  let hasError = false;
+  document.getElementById('fieldObjText').classList.toggle('error', !objective);
+  document.getElementById('fieldObjPeriod').classList.toggle('error', !OBJ_PERIOD_RE.test(period));
+  if (!objective) hasError = true;
+  if (!OBJ_PERIOD_RE.test(period)) hasError = true;
+  if (hasError) {
+    document.getElementById(objective ? 'objPeriod' : 'objText').focus();
+    return false;
+  }
+
+  const successMeasure = document.getElementById('objSuccessMeasure').value.trim();
+  const progressMethod = document.getElementById('objProgressMethod').value;
+  const target = document.getElementById('objTarget').value;
+  const targetUnit = document.getElementById('objTargetUnit').value.trim();
+  const targetDate = document.getElementById('objTargetDate').value;
+  const communardoPriority = document.getElementById('objCommunardoPriority').value;
+  const atlassianPriority = document.getElementById('objAtlassianPriority').value;
+
+  if (progressMethod !== 'manual' && !target) {
+    document.getElementById('objTarget').style.borderColor = '#dc2626';
+    document.getElementById('objTarget').focus();
+    return false;
+  }
+
+  const esc2 = s => (s || '').replace(/"/g, '\\"');
+  let cmd = `scripts/objectives.py create --objective "${esc2(objective)}" --period "${esc2(period)}"` +
+    ` --progress-method ${progressMethod}`;
+  if (successMeasure) cmd += ` --success-measure "${esc2(successMeasure)}"`;
+  if (target) cmd += ` --target ${target}`;
+  if (targetUnit) cmd += ` --target-unit "${esc2(targetUnit)}"`;
+  if (targetDate) cmd += ` --target-date "${targetDate}"`;
+  if (communardoPriority) cmd += ` --communardo-priority ${communardoPriority}`;
+  if (atlassianPriority) cmd += ` --atlassian-priority ${atlassianPriority}`;
+
+  closeObjectiveModal();
+  sendPrompt(
+    `Add a new objective to Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run: ${cmd}\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly with the new objective_id.`
+  );
+  return false;
+}
+
 applyAppConfigHeader();
 renderSettingsView();
 renderActionsView();
 setupActionsFilters();
+renderObjectivesView();
+setupObjectivesFilters();
 setupVendorSelect();
 setupDropzone();
 setupDropzoneSchema();

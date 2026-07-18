@@ -38,6 +38,7 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config as app_config  # scripts/config.py — validates data/app_config.json
 import actions as actions_mod  # scripts/actions.py — reuses its enums so validation never drifts from what the CLI accepts
+import objectives as objectives_mod  # scripts/objectives.py — same reasoning, for data/objectives.csv (R1-T08)
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 QUARTER_RE = re.compile(r"^\d{4}-Q[1-4]$")
@@ -409,6 +410,86 @@ def validate_actions(report, activity_ids, metric_ids):
                 report.error(f"{label}: {row_desc} has status 'deferred' but no original_due_date on file")
 
 
+OBJECTIVES_REQUIRED_COLUMNS = objectives_mod.FIELDNAMES
+
+
+def validate_objectives(report, activity_ids, evidence_ids):
+    path = os.path.join(DATA_DIR, "objectives.csv")
+    label = "data/objectives.csv"
+    fieldnames, rows = read_csv(path)
+    check_columns(report, label, fieldnames, OBJECTIVES_REQUIRED_COLUMNS)
+    if fieldnames is None:
+        return
+
+    seen_ids = set()
+    for i, r in enumerate(rows, start=2):
+        oid = (r.get("objective_id") or "").strip()
+        row_desc = f"row {i} ({oid or '?'})"
+        if not oid:
+            report.error(f"{label}: {row_desc} has no objective_id")
+        elif oid in seen_ids:
+            report.error(f"{label}: duplicate objective_id '{oid}'")
+        else:
+            seen_ids.add(oid)
+
+        if not (r.get("objective") or "").strip():
+            report.error(f"{label}: {row_desc} is missing 'objective'")
+
+        period = (r.get("period") or "").strip()
+        if not period:
+            report.error(f"{label}: {row_desc} is missing 'period'")
+        elif objectives_mod.period_type(period) is None:
+            report.error(f"{label}: {row_desc} has a period '{period}' that is neither a quarter (YYYY-QN) nor a year (YYYY)")
+
+        status = (r.get("status") or "").strip()
+        if status and status not in objectives_mod.VALID_STATUS:
+            report.error(f"{label}: {row_desc} has an invalid status '{status}' (expected one of {sorted(objectives_mod.VALID_STATUS)})")
+
+        method = (r.get("progress_method") or "").strip()
+        if method and method not in objectives_mod.VALID_PROGRESS_METHOD:
+            report.error(f"{label}: {row_desc} has an invalid progress_method '{method}' (expected one of {sorted(objectives_mod.VALID_PROGRESS_METHOD)})")
+        if method in ("count_linked", "sum_linked_value"):
+            check_number(report, label, r.get("target"), "target", row_desc)
+
+        for field in ("communardo_priority", "atlassian_priority"):
+            value = (r.get(field) or "").strip()
+            if value and value not in {"low", "medium", "high"}:
+                report.error(f"{label}: {row_desc} has an invalid {field} '{value}' (expected one of low/medium/high, or blank)")
+
+        visibility = (r.get("visibility") or "").strip()
+        if visibility and visibility not in VALID_VISIBILITY:
+            report.error(f"{label}: {row_desc} has an invalid visibility '{visibility}' (expected one of {sorted(VALID_VISIBILITY)})")
+
+        check_date(report, label, r.get("target_date"), "target_date", row_desc, required=False)
+        for field in ("completed_at", "missed_at", "created_at", "updated_at"):
+            value = (r.get(field) or "").strip()
+            if value and not DATE_RE.match(value[:10]):
+                report.error(f"{label}: {row_desc} has a malformed '{field}' timestamp: {value!r}")
+
+        for aid in objectives_mod.split_ids(r.get("linked_activities")):
+            if aid not in activity_ids:
+                report.error(f"{label}: {row_desc} references unknown linked_activities id '{aid}' (not in data/value_journal.jsonl)")
+        for eid in objectives_mod.split_ids(r.get("linked_evidence")):
+            if eid not in evidence_ids:
+                report.error(f"{label}: {row_desc} references unknown linked_evidence id '{eid}'")
+
+        # Status-consistency checks — mirror what scripts/objectives.py's own
+        # commands enforce at write time, so a hand-edited row that bypassed
+        # the CLI still gets caught (same discipline as validate_actions()).
+        if status == "at_risk":
+            if not (r.get("at_risk_reason") or "").strip():
+                report.error(f"{label}: {row_desc} has status 'at_risk' but no at_risk_reason")
+            if not (r.get("recovery_action") or "").strip():
+                report.error(f"{label}: {row_desc} has status 'at_risk' but no recovery_action")
+        if status == "completed" and not (r.get("completed_at") or "").strip():
+            report.error(f"{label}: {row_desc} has status 'completed' but no completed_at timestamp")
+        if status == "missed":
+            if not (r.get("missed_at") or "").strip():
+                report.error(f"{label}: {row_desc} has status 'missed' but no missed_at timestamp")
+            if not (r.get("missed_reason") or "").strip():
+                report.error(f"{label}: {row_desc} has status 'missed' but no missed_reason")
+
+
 def validate_app_config(report):
     label = "data/app_config.json"
     config = app_config.load_config()
@@ -435,6 +516,7 @@ def main():
     validate_app_config(report)
     activity_ids = validate_journal(report, set(metric_ids), evidence_ids) or set()
     validate_actions(report, activity_ids, set(metric_ids))
+    validate_objectives(report, activity_ids, evidence_ids)
 
     print(f"Orbit2 data validation — {len(report.errors)} error(s), {len(report.warnings)} warning(s)\n")
     if report.errors:

@@ -44,6 +44,8 @@ SCRIPTS_NODE_DIR = os.path.join(BASE_DIR, "scripts_node")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import config as app_config  # scripts/config.py
 import actions as actions_mod  # scripts/actions.py — R1-T05
+import journal as journal_mod  # scripts/journal.py — read_journal(), used by load_objectives_snapshot()
+import objectives as objectives_mod  # scripts/objectives.py — R1-T08
 
 MIME = {
     "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -172,6 +174,21 @@ def load_actions_snapshot():
     return rows, statuses
 
 
+def load_objectives_snapshot():
+    """Read data/objectives.csv and return rows with computed (not stored)
+    progress fields added — official_pct/raw_pct/overachievement_pct/basis,
+    from objectives_mod.compute_progress() — so the dashboard's Objectives
+    tab and the public site's My Impact "Objectives" section never
+    disagree about a given objective's progress. Shared by
+    build_dashboard.py and build_web.py, same pattern as
+    load_actions_snapshot() above (R1-T08)."""
+    rows = objectives_mod.read_objectives()
+    journal_by_id = {e.get("activity_id"): e for e in journal_mod.read_journal()}
+    for r in rows:
+        r["progress"] = objectives_mod.compute_progress(r, journal_by_id)
+    return rows
+
+
 def main():
     # 1. Rescore
     print("Re-running scoring engine...")
@@ -231,6 +248,11 @@ def main():
     action_rows, action_statuses = load_actions_snapshot()
     snapshot["actions"] = action_rows
     snapshot["action_statuses"] = action_statuses
+
+    # objectives.csv (R1-T08) — the Objectives dashboard view reads this
+    # directly; the public site's My Impact "Objectives" section reads the
+    # equivalent key built by build_web.py using the same helper.
+    snapshot["objectives"] = load_objectives_snapshot()
 
     # 4. Render dashboard.html -> dashboard_rendered.html
     template_path = os.path.join(BASE_DIR, "dashboard.html")
