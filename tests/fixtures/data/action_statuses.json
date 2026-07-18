@@ -1,0 +1,10 @@
+{
+  "_comment": "Controlled vocabulary for actions.csv's 'status' field (R1-T05). 'overdue' and 'due_soon' are NOT stored statuses — they're calculated at build time from due_date against the current Europe/London date (see scripts/actions.py's is_overdue()/is_due_soon()) and apply only to actions still in an open (non-terminal) status. Add a new status by adding an entry here — no code changes needed for display, but scripts/actions.py's VALID_STATUS/TERMINAL_STATUSES sets must be kept in sync since they drive validation and the overdue/due-soon calculation.",
+  "types": {
+    "open": { "label": "Open", "description": "Not started or in progress. The default status for a new action. Eligible for overdue/due-soon calculation.", "terminal": false },
+    "blocked": { "label": "Blocked", "description": "Cannot proceed — waiting on the dependency named in the action's 'dependency' field (a person, decision, or another action). Still eligible for overdue/due-soon calculation, since being blocked doesn't move the due date.", "terminal": false },
+    "deferred": { "label": "Deferred", "description": "Explicitly pushed to a new due date via the 'defer' command. The original due date is preserved separately in 'original_due_date' for audit history.", "terminal": false },
+    "completed": { "label": "Completed", "description": "Done. Set only via the 'complete' command, which stamps completed_at and — if the action was created with evidence_required — requires a completion note or evidence reference first. Terminal: excluded from overdue/due-soon.", "terminal": true },
+    "cancelled": { "label": "Cancelled", "description": "No longer needed. Set only via the 'cancel' command, which requires a reason. Terminal: excluded from overdue/due-soon.", "terminal": true }
+  }
+}

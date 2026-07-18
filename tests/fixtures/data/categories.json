@@ -1,0 +1,12 @@
+{
+  "_comment": "Fixture copy for tests/ — structurally identical to the real categories.json, no confidential content (category labels only).",
+  "sales_performance": { "label": "Sales Performance", "file": "sales_performance" },
+  "marketing": { "label": "Marketing", "file": "marketing" },
+  "market_visibility": { "label": "Market Visibility", "file": "market_visibility" },
+  "ai_adoption": { "label": "AI Adoption", "file": "ai_adoption" },
+  "business_planning_qbr": { "label": "Business Planning & QBRs", "file": "business_planning_qbr" },
+  "registrations": { "label": "Registrations (Deal Reg / PVR / Service Reg)", "file": "registrations" },
+  "third_party_coselling": { "label": "3rd Party Vendors & Co-selling (AWS, Google, GSIs)", "file": "third_party_coselling" },
+  "solutions": { "label": "Solutions", "file": "solutions" },
+  "services": { "label": "Services", "file": "services" }
+}

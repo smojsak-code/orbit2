@@ -1,0 +1,16 @@
+{
+  "_comment": "Fixture copy — fake user/company, no real identity.",
+  "user_display_name": "Test User",
+  "job_title": "Fixture Role",
+  "company": "TestCo",
+  "default_vendor": "TestVendor",
+  "timezone": "Europe/London",
+  "financial_currency": "GBP",
+  "reporting_year": 2026,
+  "feature_flags": {
+    "evidence_library": true,
+    "reports_tab": true,
+    "news_monitoring": false,
+    "ai_assisted_features": false
+  }
+}

@@ -1,0 +1,2 @@
+evidence_id,date_added,vendor,category,sub_metric,quarter,filename,description,dedupe_key,status,superseded_by,source_type,removed_date,removed_reason
+EVD-0001,2026-07-01,TestVendor,sales_performance,Fixture pipeline generated,2026-Q3,fixture.png,Fixture evidence,fixturededupe1,active,,manual,,

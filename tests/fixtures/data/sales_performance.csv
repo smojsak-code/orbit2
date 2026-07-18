@@ -1,0 +1,2 @@
+record_id,vendor,quarter,sub_metric,weight_pct_in_category,target,actual,unit,score_method,source,notes,description
+MET-0001,TestVendor,2026-Q3,Fixture pipeline generated,100,10,6,count,ratio,fixture,,Fixture sub-metric for tests only

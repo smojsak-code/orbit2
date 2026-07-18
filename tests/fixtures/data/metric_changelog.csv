@@ -1,0 +1,2 @@
+record_id,date,vendor,category,sub_metric,change_type,old_value,new_value,reason,source
+CHG-0001,2026-07-01,TestVendor,sales_performance,Fixture pipeline generated,added,,6,Fixture changelog row for tests,fixture

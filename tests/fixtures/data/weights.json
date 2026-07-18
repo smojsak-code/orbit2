@@ -1,0 +1,14 @@
+{
+  "_comment": "Fixture copy — fake vendor 'TestVendor', not a real Orbit2 partner.",
+  "TestVendor": {
+    "sales_performance": 18,
+    "marketing": 8,
+    "market_visibility": 8,
+    "ai_adoption": 8,
+    "business_planning_qbr": 12,
+    "registrations": 12,
+    "third_party_coselling": 12,
+    "solutions": 12,
+    "services": 10
+  }
+}
