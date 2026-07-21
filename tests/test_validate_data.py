@@ -397,6 +397,43 @@ def test_contacts_invalid_affiliation_is_caught(patched_validate_data, fixture_d
     assert any("invalid affiliation" in e for e in report.errors)
 
 
+def test_contacts_invalid_function_is_caught(patched_validate_data, fixture_data_dir):
+    path = os.path.join(fixture_data_dir, "contacts.csv")
+    rows, fieldnames = _read_write_csv(path)
+    rows[0]["function"] = "not_a_real_function"
+    _write_csv(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contacts(report)
+    assert any("invalid function" in e for e in report.errors)
+
+
+def test_contacts_blank_function_on_active_contact_is_a_warning_not_an_error(patched_validate_data, fixture_data_dir):
+    path = os.path.join(fixture_data_dir, "contacts.csv")
+    rows, fieldnames = _read_write_csv(path)
+    rows[0]["function"] = ""
+    rows[0]["status"] = "confirmed"
+    _write_csv(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contacts(report)
+    assert not report.errors
+    assert any("no function set" in w for w in report.warnings)
+
+
+def test_contacts_blank_function_on_archived_contact_is_not_flagged(patched_validate_data, fixture_data_dir):
+    """A merged/archived contact doesn't need sectioning — no warning."""
+    path = os.path.join(fixture_data_dir, "contacts.csv")
+    rows, fieldnames = _read_write_csv(path)
+    rows[0]["function"] = ""
+    rows[0]["status"] = "archived"
+    _write_csv(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contacts(report)
+    assert not any("no function set" in w for w in report.warnings)
+
+
 def test_contact_aliases_reference_unknown_contact_is_caught(patched_validate_data, fixture_data_dir):
     path = os.path.join(fixture_data_dir, "contact_aliases.csv")
     rows, fieldnames = _read_write_csv(path)

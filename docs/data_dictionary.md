@@ -576,6 +576,21 @@ more sharing-friendly default was a deliberate choice distinct from
 `actions.csv`'s `personal_only` default), plus the canonical
 `created_at`/`updated_at`/`created_by`/`updated_by`/`notes`.
 
+**`category` (added 2026-07-21, Steve's request).** Every objective is
+sorted into exactly one of five fixed sections —
+`relationship`/`commercial`/`strategic`/`operational`/`recognition` (see
+`scripts/objectives.py`'s `VALID_CATEGORY`/module docstring for the JD
+mapping rationale). Unlike `period` (which is per-objective and independent
+of the dashboard's period selector), `category` is **required** at
+`create` time — Steve always knows a role objective's category upfront, so
+there's no partial-extraction case to accommodate the way Contacts has.
+`edit --category` can recategorise an existing objective at any time.
+`scripts/validate_data.py` errors on an invalid value and warns (does not
+error) on a blank one, since migration 004 backfilled pre-existing rows
+blank rather than guessing. Both the Cowork dashboard's Objectives tab and
+the public site's My Impact "Objectives" section show a colour-coded
+category badge per objective and a category filter dropdown.
+
 **Objective review export (instruction #52).** `objectives.py export
 [--period <period>]` writes a deterministic Markdown file to
 `reports/Objective_Review_<period>.md` — plain string templates over
@@ -622,11 +637,12 @@ evidence for the same field arrives (`CONFIDENCE_RANK`:
 never overwrites a higher-confidence existing value.
 
 `contacts.csv` columns: `contact_id, status, canonical_name,
-raw_extracted_name, title, seniority, department, business_unit, company,
-affiliation, region, country, location, email, phone, relationship_owner,
-stakeholder_role, influence_level, relationship_strength, vendor,
-visibility, merged_into, first_seen_at, last_interaction_at, summary,
-summary_updated_at, created_at, updated_at, created_by, updated_by, notes`
+raw_extracted_name, title, seniority, department, business_unit, function,
+company, affiliation, region, country, location, email, phone,
+relationship_owner, stakeholder_role, influence_level,
+relationship_strength, vendor, visibility, merged_into, first_seen_at,
+last_interaction_at, summary, summary_updated_at, created_at, updated_at,
+created_by, updated_by, notes`
 
 - `status`: `provisional` (created via `find-or-create` when no confident
   match exists) → `confirmed` (via `confirm`) → terminal `merged` (via
@@ -634,6 +650,26 @@ summary_updated_at, created_at, updated_at, created_by, updated_by, notes`
   discipline as `actions.csv`/`objectives.csv`: `edit` can only move a
   contact between `provisional`/`confirmed`; every other transition goes
   through its own command.
+- `function` (added 2026-07-21, Steve's request; migration 005): one of
+  five fixed organisational sections — `management`/`sales`/
+  `partner_channel`/`delivery_technical`/`solution` (see
+  `scripts/contacts.py`'s `VALID_FUNCTION`/`FUNCTION_LABELS`), or blank.
+  Deliberately a **separate** field from the freeform `department`/
+  `business_unit`/`stakeholder_role` columns — `function` is the fixed
+  taxonomy the Contacts tab groups/filters by. Unlike `objectives.csv`'s
+  `category`, `function` is **optional** at creation on all three creation
+  paths (`create`, `find-or-create`, `ingest`) since contacts are very
+  often auto-extracted from documents with incomplete information;
+  `edit --function` sets or changes it at any time. `scripts/validate_data.py`
+  errors on an invalid value and warns (does not error) on a blank value
+  for any non-terminal (not merged/archived) contact. Both the Cowork
+  dashboard's Contacts tab and the public site's Contacts mirror group
+  contacts into these five sections (plus a trailing "Unsectioned" bucket)
+  and offer a Function filter dropdown plus free-text search across name,
+  title, location, region/country and company — so a group of people
+  ("everyone in Sales") can be pulled up as easily as one individual.
+  `scripts/contacts.py list` supports the same filters via `--function`,
+  `--location`, and `--search` for scripted/chat-driven lookups.
 - `affiliation`: `communardo`, `atlassian`, `customer`, `partner`, `other`,
   or blank.
 - `influence_level`: `low`/`medium`/`high`/`critical`, or blank.

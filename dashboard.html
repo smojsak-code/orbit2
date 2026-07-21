@@ -219,6 +219,14 @@
   .contact-status-merged { background: #f3f4f6; color: #9ca3af; }
   .contact-status-archived { background: #f3f4f6; color: #9ca3af; }
   .contact-review-badge { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: #fef2f2; color: #dc2626; text-transform: uppercase; letter-spacing: .02em; margin-left: 4px; }
+  .contact-function-badge { font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .contact-function-management { background: #eff6ff; color: #2563eb; }
+  .contact-function-sales { background: #ecfdf5; color: #059669; }
+  .contact-function-partner_channel { background: #f5f3ff; color: #7c3aed; }
+  .contact-function-delivery_technical { background: #fffbeb; color: #b45309; }
+  .contact-function-solution { background: #fdf2f8; color: #db2777; }
+  .contact-function-unsectioned { background: #f3f4f6; color: #9ca3af; }
+  .contact-section-header td { background: #f3f4f6; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: #4b5563; padding: 6px 12px; }
   .contact-name-row { font-weight: 600; }
   .contact-raw-name { font-size: 10.5px; color: #9ca3af; font-weight: 400; }
   .cont-btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -496,7 +504,15 @@
           <option value="archived">Archived</option>
           <option value="all">All statuses</option>
         </select>
-        <input type="text" id="contFilterSearch" placeholder="Search name, company, title…">
+        <select id="contFilterFunction">
+          <option value="" selected>All sections</option>
+          <option value="management">Management</option>
+          <option value="sales">Sales</option>
+          <option value="partner_channel">Partner / Channel</option>
+          <option value="delivery_technical">Delivery/Technical</option>
+          <option value="solution">Solution</option>
+        </select>
+        <input type="text" id="contFilterSearch" placeholder="Search name, location, title, company…">
         <label class="cont-checkbox-label"><input type="checkbox" id="contFilterReview"> Needs review only</label>
         <button class="btn-primary" onclick="openContactModal()">+ Add Contact</button>
       </div>
@@ -758,12 +774,27 @@
         <label for="contCompany">Company</label>
         <input type="text" id="contCompany" placeholder="e.g. Atlassian">
       </div>
+      <div class="modal-field">
+        <label for="contFunction">Section <span class="toggle-hint" style="display:inline;">optional — can be set later once known</span></label>
+        <select id="contFunction">
+          <option value="" selected>— unsectioned —</option>
+          <option value="management">Management</option>
+          <option value="sales">Sales</option>
+          <option value="partner_channel">Partner / Channel</option>
+          <option value="delivery_technical">Delivery/Technical</option>
+          <option value="solution">Solution</option>
+        </select>
+      </div>
       <details class="modal-more">
-        <summary>More options (email, affiliation, vendor, visibility…)</summary>
+        <summary>More options (email, location, affiliation, vendor, visibility…)</summary>
         <div class="modal-more-grid">
           <div class="modal-field">
             <label for="contEmail">Email</label>
             <input type="email" id="contEmail">
+          </div>
+          <div class="modal-field">
+            <label for="contLocation">Location</label>
+            <input type="text" id="contLocation" placeholder="e.g. London, UK">
           </div>
           <div class="modal-field">
             <label for="contAffiliation">Affiliation</label>
@@ -2083,6 +2114,13 @@ function submitObjectiveForm(evt) {
 const CONTACT_SOURCE_TYPES = ['meeting_note', 'transcript', 'audio_summary', 'document', 'slide_deck', 'pdf', 'spreadsheet', 'email_summary', 'manual_note'];
 const CONTACT_CONFIDENCE = ['confirmed', 'probable', 'low_confidence'];
 const CONTACT_SENSITIVITY = ['standard', 'subjective', 'sensitive'];
+// Mirrors scripts/contacts.py's FUNCTION_LABELS — Steve's five requested
+// organisational sections. Order here is the canonical section display
+// order used everywhere contacts are grouped (renderContactsView() below).
+const FUNCTION_LABELS = {
+  management: 'Management', sales: 'Sales', partner_channel: 'Partner / Channel',
+  delivery_technical: 'Delivery/Technical', solution: 'Solution',
+};
 
 function contactsById() {
   const map = {};
@@ -2090,18 +2128,63 @@ function contactsById() {
   return map;
 }
 
+function contactFunctionBadge(func) {
+  const key = func && FUNCTION_LABELS[func] ? func : 'unsectioned';
+  const label = FUNCTION_LABELS[func] || 'Unsectioned';
+  return `<span class="contact-function-badge contact-function-${key}">${esc(label)}</span>`;
+}
+
+function contactRowHtml(c) {
+  const flags = c.possible_duplicate_flags || [];
+  const reviewBadge = flags.length ? `<span class="contact-review-badge">${flags.length} needs review</span>` : '';
+  const nameLine = (c.raw_extracted_name && c.canonical_name && c.raw_extracted_name !== c.canonical_name)
+    ? `<div class="contact-raw-name">extracted as '${esc(c.raw_extracted_name)}'</div>` : '';
+  const terminal = c.status === 'merged' || c.status === 'archived';
+  let controls = `<button class="btn-secondary" onclick="toggleContactDetail('${esc(c.contact_id)}')">View</button>`;
+  if (!terminal) {
+    controls += `<div class="cont-btn-row" style="margin-top:4px;">`;
+    if (c.status === 'provisional') controls += `<button class="btn-secondary" onclick="startConfirmContact('${esc(c.contact_id)}')">Confirm</button>`;
+    controls += `<button class="btn-secondary" onclick="startArchiveContact('${esc(c.contact_id)}')">Archive</button>`;
+    controls += `</div>`;
+  } else if (c.status === 'merged') {
+    controls += `<div class="empty" style="font-style:italic;">merged into ${esc(c.merged_into || '?')}</div>`;
+  }
+  return `<tr id="contRow-${esc(c.contact_id)}">
+    <td><div class="contact-name-row">${esc(c.canonical_name || c.contact_id)}</div>${nameLine}${c.location ? `<div class="contact-raw-name">${esc(c.location)}</div>` : ''}</td>
+    <td>${esc(c.title) || '—'}${c.company ? ' @ ' + esc(c.company) : ''}</td>
+    <td>${contactFunctionBadge(c.function)}</td>
+    <td><span class="contact-status-pill contact-status-${esc(c.status || 'provisional')}">${esc(c.status || 'provisional')}</span>${reviewBadge}</td>
+    <td>${esc(c.influence_level) || '—'} / ${esc(c.relationship_strength) || '—'}</td>
+    <td>${esc(c.relationship_owner) || '—'}</td>
+    <td id="contActions-${esc(c.contact_id)}">${controls}</td>
+  </tr>
+  <tr id="contDetail-${esc(c.contact_id)}" class="contact-detail-row" style="display:none;"><td colspan="7"></td></tr>`;
+}
+
+// Contacts are grouped into Steve's five requested sections (2026-07-21),
+// in this fixed display order, plus a trailing "Unsectioned" bucket for
+// anything without a function set yet — so browsing the tab always shows
+// organised groups of people, not just a flat alphabetical list, and the
+// Function filter above lets him jump straight to one section's group.
+const FUNCTION_SECTION_ORDER = ['management', 'sales', 'partner_channel', 'delivery_technical', 'solution', ''];
+
 function renderContactsView() {
   const all = SNAPSHOT.contacts || [];
   const status = document.getElementById('contFilterStatus').value;
   const search = (document.getElementById('contFilterSearch').value || '').trim().toLowerCase();
+  const funcFilter = document.getElementById('contFilterFunction').value;
   const reviewOnly = document.getElementById('contFilterReview').checked;
 
   const filtered = all.filter(c => {
     if (status === 'open_all') { if (c.status === 'merged' || c.status === 'archived') return false; }
     else if (status !== 'all' && c.status !== status) return false;
+    if (funcFilter && (c.function || '') !== funcFilter) return false;
     if (reviewOnly && !(c.possible_duplicate_flags && c.possible_duplicate_flags.length)) return false;
     if (search) {
-      const hay = [c.canonical_name, c.raw_extracted_name, c.company, c.title].join(' ').toLowerCase();
+      const hay = [
+        c.canonical_name, c.raw_extracted_name, c.company, c.title,
+        c.location, c.region, c.country, FUNCTION_LABELS[c.function] || '',
+      ].join(' ').toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;
@@ -2115,39 +2198,31 @@ function renderContactsView() {
     return;
   }
 
-  table.innerHTML = `
-    <tr><th>Name</th><th>Title / Company</th><th>Status</th><th>Influence / Strength</th><th>Owner</th><th>Actions</th></tr>
-    ${filtered.map(c => {
-      const flags = c.possible_duplicate_flags || [];
-      const reviewBadge = flags.length ? `<span class="contact-review-badge">${flags.length} needs review</span>` : '';
-      const nameLine = (c.raw_extracted_name && c.canonical_name && c.raw_extracted_name !== c.canonical_name)
-        ? `<div class="contact-raw-name">extracted as '${esc(c.raw_extracted_name)}'</div>` : '';
-      const terminal = c.status === 'merged' || c.status === 'archived';
-      let controls = `<button class="btn-secondary" onclick="toggleContactDetail('${esc(c.contact_id)}')">View</button>`;
-      if (!terminal) {
-        controls += `<div class="cont-btn-row" style="margin-top:4px;">`;
-        if (c.status === 'provisional') controls += `<button class="btn-secondary" onclick="startConfirmContact('${esc(c.contact_id)}')">Confirm</button>`;
-        controls += `<button class="btn-secondary" onclick="startArchiveContact('${esc(c.contact_id)}')">Archive</button>`;
-        controls += `</div>`;
-      } else if (c.status === 'merged') {
-        controls += `<div class="empty" style="font-style:italic;">merged into ${esc(c.merged_into || '?')}</div>`;
-      }
-      return `<tr id="contRow-${esc(c.contact_id)}">
-        <td><div class="contact-name-row">${esc(c.canonical_name || c.contact_id)}</div>${nameLine}</td>
-        <td>${esc(c.title) || '—'}${c.company ? ' @ ' + esc(c.company) : ''}</td>
-        <td><span class="contact-status-pill contact-status-${esc(c.status || 'provisional')}">${esc(c.status || 'provisional')}</span>${reviewBadge}</td>
-        <td>${esc(c.influence_level) || '—'} / ${esc(c.relationship_strength) || '—'}</td>
-        <td>${esc(c.relationship_owner) || '—'}</td>
-        <td id="contActions-${esc(c.contact_id)}">${controls}</td>
-      </tr>
-      <tr id="contDetail-${esc(c.contact_id)}" class="contact-detail-row" style="display:none;"><td colspan="6"></td></tr>`;
-    }).join('')}`;
+  const header = '<tr><th>Name</th><th>Title / Company</th><th>Section</th><th>Status</th><th>Influence / Strength</th><th>Owner</th><th>Actions</th></tr>';
+
+  let bodyHtml;
+  if (funcFilter) {
+    // A specific section is already selected — one flat group, no need to
+    // repeat a redundant single-section header.
+    bodyHtml = filtered.map(contactRowHtml).join('');
+  } else {
+    const byFunction = {};
+    filtered.forEach(c => { (byFunction[c.function || ''] = byFunction[c.function || ''] || []).push(c); });
+    bodyHtml = FUNCTION_SECTION_ORDER.filter(key => byFunction[key] && byFunction[key].length).map(key => {
+      const label = key ? FUNCTION_LABELS[key] : 'Unsectioned';
+      const rows = byFunction[key];
+      return `<tr class="contact-section-header"><td colspan="7">${esc(label)} (${rows.length})</td></tr>` +
+        rows.map(contactRowHtml).join('');
+    }).join('');
+  }
+
+  table.innerHTML = header + bodyHtml;
   hint.textContent = `${filtered.length} of ${all.length} contact(s) shown` +
     (status === 'open_all' ? ' (provisional or confirmed — merged/archived hidden)' : '') + '.';
 }
 
 function setupContactsFilters() {
-  ['contFilterStatus', 'contFilterReview'].forEach(id =>
+  ['contFilterStatus', 'contFilterReview', 'contFilterFunction'].forEach(id =>
     document.getElementById(id).addEventListener('change', renderContactsView));
   document.getElementById('contFilterSearch').addEventListener('input', renderContactsView);
 }
@@ -2202,6 +2277,16 @@ function renderContactDetail(contactId) {
       <div class="cont-inline-form">
         <input type="text" id="contSetName-${contactId}" value="${esc(c.canonical_name || '')}">
         <div class="cont-btn-row"><button class="btn-secondary" onclick="startSetCanonicalName('${contactId}')">Update</button></div>
+      </div>
+    </div>
+    <div class="contact-detail-section">
+      <h4>Set section</h4>
+      <div class="cont-inline-form">
+        <select id="contSetFunction-${contactId}">
+          <option value="" ${!c.function ? 'selected' : ''}>— unsectioned —</option>
+          ${Object.entries(FUNCTION_LABELS).map(([k, label]) => `<option value="${k}" ${c.function === k ? 'selected' : ''}>${esc(label)}</option>`).join('')}
+        </select>
+        <div class="cont-btn-row"><button class="btn-secondary" onclick="startSetFunction('${contactId}')">Update</button></div>
       </div>
     </div>
     <div class="contact-detail-section">
@@ -2284,6 +2369,16 @@ function startSetCanonicalName(contactId) {
   );
 }
 
+function startSetFunction(contactId) {
+  const func = document.getElementById('contSetFunction-' + contactId).value;
+  sendPrompt(
+    `Set the section for contact ${contactId} in Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run: scripts/contacts.py edit --contact-id "${contactId}" --function ${func ? func : '""'}\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly.`
+  );
+}
+
 function startAddEvidence(contactId) {
   const field = document.getElementById('contEvField-' + contactId).value;
   const value = (document.getElementById('contEvValue-' + contactId).value || '').trim();
@@ -2361,7 +2456,9 @@ function submitContactForm(evt) {
   }
   const title = document.getElementById('contTitle').value.trim();
   const company = document.getElementById('contCompany').value.trim();
+  const func = document.getElementById('contFunction').value;
   const email = document.getElementById('contEmail').value.trim();
+  const location = document.getElementById('contLocation').value.trim();
   const affiliation = document.getElementById('contAffiliation').value;
   const vendor = document.getElementById('contVendor').value.trim();
   const visibility = document.getElementById('contVisibility').value;
@@ -2370,7 +2467,9 @@ function submitContactForm(evt) {
   let cmd = `scripts/contacts.py create --name "${esc2(name)}"`;
   if (title) cmd += ` --title "${esc2(title)}"`;
   if (company) cmd += ` --company "${esc2(company)}"`;
+  if (func) cmd += ` --function ${func}`;
   if (email) cmd += ` --email "${esc2(email)}"`;
+  if (location) cmd += ` --location "${esc2(location)}"`;
   if (affiliation) cmd += ` --affiliation ${affiliation}`;
   if (vendor) cmd += ` --vendor "${esc2(vendor)}"`;
   if (visibility) cmd += ` --visibility ${visibility}`;

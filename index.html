@@ -123,6 +123,14 @@
   .contacts-strength-at_risk { background: #fef2f2; color: #dc2626; }
   .contacts-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 10.5px; color: #6b7280; margin-bottom: 14px; }
   .contacts-legend span { display: flex; align-items: center; gap: 4px; }
+  .contact-function-badge { font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .contact-function-management { background: #eff6ff; color: #2563eb; }
+  .contact-function-sales { background: #ecfdf5; color: #059669; }
+  .contact-function-partner_channel { background: #f5f3ff; color: #7c3aed; }
+  .contact-function-delivery_technical { background: #fffbeb; color: #b45309; }
+  .contact-function-solution { background: #fdf2f8; color: #db2777; }
+  .contact-function-unsectioned { background: #f3f4f6; color: #9ca3af; }
+  .contact-section-header td { background: #f3f4f6; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: #4b5563; padding: 6px 12px; }
   .action-checkbox-row { display: flex; align-items: center; gap: 8px; margin: 4px 0 12px; font-size: 13px; color: #374151; }
   .action-checkbox-row input { width: auto; }
   .action-subfields { display: none; }
@@ -560,6 +568,17 @@
       <div id="contactsEmptyState" class="dz-empty-hint" style="display:none;"></div>
       <div id="contactsOrgMap" class="contacts-org-map"></div>
       <h3 style="font-size:13px;margin:22px 0 8px;">All cleared contacts</h3>
+      <div class="obj-filter-bar">
+        <select id="contFilterFunction">
+          <option value="" selected>All sections</option>
+          <option value="management">Management</option>
+          <option value="sales">Sales</option>
+          <option value="partner_channel">Partner / Channel</option>
+          <option value="delivery_technical">Delivery/Technical</option>
+          <option value="solution">Solution</option>
+        </select>
+        <input type="text" id="contFilterSearch" placeholder="Search name, location, title, company…">
+      </div>
       <table class="data-table" id="contactsTable"></table>
     </section>
   </div>
@@ -1345,6 +1364,21 @@ function downloadReport(format) {
 // external sharing, with sensitive/subjective evidence and direct contact
 // details already stripped server-side. This code never re-decides what's
 // safe to show; it only renders what's already in the snapshot.
+// Mirrors scripts/contacts.py's FUNCTION_LABELS / dashboard.html's own
+// FUNCTION_LABELS constant — Steve's five requested organisational
+// sections (2026-07-21), used to filter and group the flat table below.
+const CONTACTS_FUNCTION_LABELS = {
+  management: 'Management', sales: 'Sales', partner_channel: 'Partner / Channel',
+  delivery_technical: 'Delivery/Technical', solution: 'Solution',
+};
+const CONTACTS_FUNCTION_SECTION_ORDER = ['management', 'sales', 'partner_channel', 'delivery_technical', 'solution', ''];
+
+function contactFunctionBadge(func) {
+  const key = func && CONTACTS_FUNCTION_LABELS[func] ? func : 'unsectioned';
+  const label = CONTACTS_FUNCTION_LABELS[func] || 'Unsectioned';
+  return `<span class="contact-function-badge contact-function-${key}">${esc(label)}</span>`;
+}
+
 function renderContactsView() {
   const contacts = SNAPSHOT.contacts || [];
   const emptyState = document.getElementById('contactsEmptyState');
@@ -1387,16 +1421,57 @@ function renderContactsView() {
         </div>`).join('')}
     </div>`).join('');
 
-  table.innerHTML = `
-    <tr><th>Name</th><th>Title / Company</th><th>Affiliation</th><th>Region</th><th>Influence / Strength</th></tr>
-    ${contacts.slice().sort((a, b) => (a.canonical_name || '').localeCompare(b.canonical_name || '')).map(c => `
+  const funcFilter = document.getElementById('contFilterFunction') ? document.getElementById('contFilterFunction').value : '';
+  const search = document.getElementById('contFilterSearch') ? (document.getElementById('contFilterSearch').value || '').trim().toLowerCase() : '';
+
+  const filtered = contacts.filter(c => {
+    if (funcFilter && (c.function || '') !== funcFilter) return false;
+    if (search) {
+      const hay = [c.canonical_name, c.title, c.company, c.region, c.country, CONTACTS_FUNCTION_LABELS[c.function] || ''].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  }).sort((a, b) => (a.canonical_name || '').localeCompare(b.canonical_name || ''));
+
+  const header = '<tr><th>Name</th><th>Title / Company</th><th>Section</th><th>Affiliation</th><th>Region</th><th>Influence / Strength</th></tr>';
+  const rowHtml = c => `
       <tr>
         <td>${esc(c.canonical_name)}</td>
         <td>${esc(c.title) || '—'}${c.company ? ' @ ' + esc(c.company) : ''}</td>
+        <td>${contactFunctionBadge(c.function)}</td>
         <td>${esc(c.affiliation) || '—'}</td>
         <td>${esc(c.region) || esc(c.country) || '—'}</td>
         <td>${esc(c.influence_level) || '—'} / ${esc(c.relationship_strength) || '—'}</td>
-      </tr>`).join('')}`;
+      </tr>`;
+
+  if (!filtered.length) {
+    table.innerHTML = header + '<tr><td colspan="6" class="empty">No contacts match those filters.</td></tr>';
+    return;
+  }
+
+  let bodyHtml;
+  if (funcFilter) {
+    bodyHtml = filtered.map(rowHtml).join('');
+  } else {
+    const byFunction = {};
+    filtered.forEach(c => { (byFunction[c.function || ''] = byFunction[c.function || ''] || []).push(c); });
+    bodyHtml = CONTACTS_FUNCTION_SECTION_ORDER.filter(key => byFunction[key] && byFunction[key].length).map(key => {
+      const label = key ? CONTACTS_FUNCTION_LABELS[key] : 'Unsectioned';
+      const rows = byFunction[key];
+      return `<tr class="contact-section-header"><td colspan="6">${esc(label)} (${rows.length})</td></tr>` + rows.map(rowHtml).join('');
+    }).join('');
+  }
+
+  table.innerHTML = header + bodyHtml;
+}
+
+function setupContactsFilters() {
+  ['contFilterFunction'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', renderContactsView);
+  });
+  const search = document.getElementById('contFilterSearch');
+  if (search) search.addEventListener('input', renderContactsView);
 }
 
 function setupVendorSelect() {
@@ -1438,6 +1513,7 @@ fetch('data/web_snapshot.json', { cache: 'no-store' })
     setupImpactControls();
     setupImpactObjectivesFilter();
     renderContactsView();
+    setupContactsFilters();
   })
   .catch(err => {
     document.getElementById('loadingState').style.display = 'none';

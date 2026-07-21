@@ -660,6 +660,13 @@ def validate_contacts(report):
         if strength and strength not in contacts_mod.VALID_RELATIONSHIP_STRENGTH:
             report.error(f"{label}: {row_desc} has an invalid relationship_strength '{strength}' (expected one of {sorted(contacts_mod.VALID_RELATIONSHIP_STRENGTH)})")
 
+        function = (r.get("function") or "").strip()
+        if function and function not in contacts_mod.VALID_FUNCTION:
+            report.error(f"{label}: {row_desc} has an invalid function '{function}' (expected one of {sorted(f for f in contacts_mod.VALID_FUNCTION if f)})")
+        elif not function and status not in ("merged", "archived"):
+            report.warn(f"{label}: {row_desc} has no function set — every active contact should be sorted into "
+                        f"one of {sorted(f for f in contacts_mod.VALID_FUNCTION if f)} (see 'contacts.py edit --function')")
+
         visibility = (r.get("visibility") or "").strip()
         if visibility and visibility not in VALID_VISIBILITY:
             report.error(f"{label}: {row_desc} has an invalid visibility '{visibility}' (expected one of {sorted(VALID_VISIBILITY)})")

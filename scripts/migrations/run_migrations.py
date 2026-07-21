@@ -68,6 +68,15 @@ MIGRATIONS = [
         "rows backfilled blank, to be sorted via 'objectives.py edit "
         "--category'.",
     ),
+    (
+        "005_contacts_function",
+        "migration_005_contacts_function",
+        "1.5.0",
+        "Add a 'function' column to data/contacts.csv (management / sales / "
+        "partner_channel / delivery_technical / solution) — pre-existing "
+        "rows backfilled blank, to be sorted via 'contacts.py edit "
+        "--function'.",
+    ),
 ]
 
 

@@ -534,3 +534,137 @@ def test_compute_profile_summary_possible_duplicate_excluded_from_probable_secti
     summary = contacts_mod.compute_profile_summary(new_row["contact_id"], contacts, evidence, aliases)
     assert not any("Possibly the same person" in line for line in summary["probable"])
     assert not any("Possibly the same person" in line for line in summary["confirmed"])
+
+
+# ---------------------------------------------------------------------------
+# Function (Management / Sales / Partner-Channel / Delivery-Technical /
+# Solution) — Steve's requested organisational sections, 2026-07-21.
+# ---------------------------------------------------------------------------
+
+def _create_args(**overrides):
+    base = dict(
+        name="New Person", title=None, company=None, email=None,
+        affiliation=None, function=None, vendor=None, visibility=None,
+    )
+    base.update(overrides)
+    return SimpleNamespace(**base)
+
+
+def test_create_with_valid_function_stores_it(patched_contacts):
+    contacts_mod.cmd_create(_create_args(name="Taylor Fields", function="sales"))
+    rows = contacts_mod.read_contacts()
+    new_row = next(r for r in rows if r["canonical_name"] == "Taylor Fields")
+    assert new_row["function"] == "sales"
+
+
+def test_create_without_function_leaves_it_blank(patched_contacts):
+    """Unlike objectives.py's category, function is deliberately OPTIONAL at
+    creation — contacts are very often auto-extracted with incomplete info,
+    so this must not error or default to something guessed."""
+    contacts_mod.cmd_create(_create_args(name="Riley Moss"))
+    rows = contacts_mod.read_contacts()
+    new_row = next(r for r in rows if r["canonical_name"] == "Riley Moss")
+    assert new_row["function"] == ""
+
+
+def test_edit_can_set_function_on_an_existing_contact(patched_contacts):
+    args = SimpleNamespace(
+        contact_id="CONT-0001", title=None, seniority=None, department=None,
+        business_unit=None, function="management", company=None, affiliation=None,
+        region=None, country=None, location=None, email=None, phone=None,
+        relationship_owner=None, stakeholder_role=None, influence_level=None,
+        relationship_strength=None, vendor=None, visibility=None, notes=None,
+    )
+    contacts_mod.cmd_edit(args)
+    row = {r["contact_id"]: r for r in contacts_mod.read_contacts()}["CONT-0001"]
+    assert row["function"] == "management"
+
+
+def test_edit_rejects_invalid_function(patched_contacts, capsys):
+    """Intentional-failure case: edit must reject an unrecognised function
+    rather than writing it through."""
+    args = SimpleNamespace(
+        contact_id="CONT-0001", title=None, seniority=None, department=None,
+        business_unit=None, function="not_a_real_function", company=None, affiliation=None,
+        region=None, country=None, location=None, email=None, phone=None,
+        relationship_owner=None, stakeholder_role=None, influence_level=None,
+        relationship_strength=None, vendor=None, visibility=None, notes=None,
+    )
+    contacts_mod.cmd_edit(args)
+    out = capsys.readouterr().out
+    assert "invalid function" in out.lower()
+    row = {r["contact_id"]: r for r in contacts_mod.read_contacts()}["CONT-0001"]
+    assert row["function"] == "partner_channel", "invalid function must not overwrite the fixture's existing value"
+
+
+def test_edit_without_function_argument_leaves_it_unchanged(patched_contacts):
+    """A caller that doesn't pass `function` at all (missing attribute, not
+    just None) must not crash and must not touch the stored function —
+    proves the getattr() fallback in cmd_edit, same discipline as
+    objectives.py's category field."""
+    args = SimpleNamespace(
+        contact_id="CONT-0001", title="Renamed Title", seniority=None, department=None,
+        business_unit=None, company=None, affiliation=None,
+        region=None, country=None, location=None, email=None, phone=None,
+        relationship_owner=None, stakeholder_role=None, influence_level=None,
+        relationship_strength=None, vendor=None, visibility=None, notes=None,
+    )
+    assert not hasattr(args, "function")
+    contacts_mod.cmd_edit(args)
+    row = {r["contact_id"]: r for r in contacts_mod.read_contacts()}["CONT-0001"]
+    assert row["function"] == "partner_channel"
+    assert row["title"] == "Renamed Title"
+
+
+def test_find_or_create_new_contact_can_carry_a_function(patched_contacts):
+    contacts_mod.cmd_find_or_create(SimpleNamespace(
+        name="Morgan Blake", company=None, title=None, email=None,
+        vendor=None, visibility=None, function="delivery_technical",
+    ))
+    rows = contacts_mod.read_contacts()
+    new_row = next(r for r in rows if r["canonical_name"] == "Morgan Blake")
+    assert new_row["function"] == "delivery_technical"
+
+
+def test_ingest_payload_rejects_invalid_function(patched_contacts, tmp_path):
+    """Intentional-failure case: the whole ingest payload must be rejected
+    (all-or-nothing) if a person's function isn't one of VALID_FUNCTION."""
+    payload = {"source_type": "document", "people": [{"name": "Alex Rivera", "function": "not_a_real_function", "evidence": []}]}
+    path = _write_payload(tmp_path, payload)
+    contacts_before = contacts_mod.read_contacts()
+    contacts_mod.cmd_ingest(SimpleNamespace(file=path, dry_run=False))
+    contacts_after = contacts_mod.read_contacts()
+    assert contacts_before == contacts_after, "an invalid function anywhere in the payload must write nothing"
+
+
+def test_ingest_payload_accepts_valid_function(patched_contacts, tmp_path):
+    payload = {"source_type": "document", "people": [{"name": "Casey Nguyen", "function": "solution", "evidence": []}]}
+    path = _write_payload(tmp_path, payload)
+    contacts_mod.cmd_ingest(SimpleNamespace(file=path, dry_run=False))
+    contacts = contacts_mod.read_contacts()
+    new_row = next(r for r in contacts if r["canonical_name"] == "Casey Nguyen")
+    assert new_row["function"] == "solution"
+
+
+def test_list_filters_by_function(patched_contacts, capsys):
+    contacts_mod.cmd_create(_create_args(name="Sales Person", function="sales"))
+    capsys.readouterr()
+    contacts_mod.cmd_list(SimpleNamespace(status=None, company=None, vendor=None, function="sales", location=None, search=None))
+    out = capsys.readouterr().out
+    assert "Sales Person" in out
+    assert "Jamie Chen" not in out, "CONT-0001's fixture function is partner_channel, must not show under a sales filter"
+
+
+def test_list_search_matches_across_name_title_location(patched_contacts, capsys):
+    args = SimpleNamespace(
+        contact_id="CONT-0001", title=None, seniority=None, department=None,
+        business_unit=None, function=None, company=None, affiliation=None,
+        region=None, country=None, location="London", email=None, phone=None,
+        relationship_owner=None, stakeholder_role=None, influence_level=None,
+        relationship_strength=None, vendor=None, visibility=None, notes=None,
+    )
+    contacts_mod.cmd_edit(args)
+    capsys.readouterr()
+    contacts_mod.cmd_list(SimpleNamespace(status=None, company=None, vendor=None, function=None, location=None, search="london"))
+    out = capsys.readouterr().out
+    assert "Jamie Chen" in out

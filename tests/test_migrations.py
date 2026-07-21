@@ -356,3 +356,64 @@ def test_migration_004_is_idempotent_and_never_overwrites_a_set_category(tmp_pat
     assert "already has" in second_summary.lower()
     rows_after = read_csv_rows(str(d / "objectives.csv"))
     assert rows_after[0]["category"] == "commercial", "an already-set category must never be touched/reset by a second migration run"
+
+
+def test_migration_005_adds_function_column_backfilled_blank(tmp_path):
+    import migration_005_contacts_function as migration
+
+    d = tmp_path / "data"
+    d.mkdir()
+    # Fabricated pre-migration_005 contacts.csv — no function column yet.
+    old_fieldnames = [
+        "contact_id", "status", "canonical_name", "raw_extracted_name",
+        "title", "seniority", "department", "business_unit", "company",
+        "affiliation", "region", "country", "location", "email", "phone",
+        "relationship_owner", "stakeholder_role", "influence_level",
+        "relationship_strength", "vendor", "visibility", "merged_into",
+        "first_seen_at", "last_interaction_at", "summary", "summary_updated_at",
+        "created_at", "updated_at", "created_by", "updated_by", "notes",
+    ]
+    with open(d / "contacts.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=old_fieldnames)
+        w.writeheader()
+        w.writerow({k: "" for k in old_fieldnames} | {
+            "contact_id": "CONT-0001", "status": "confirmed", "canonical_name": "Pre-existing Contact",
+        })
+
+    summary = migration.apply(str(d))
+    assert "added" in summary.lower() and "function" in summary.lower()
+
+    rows = read_csv_rows(str(d / "contacts.csv"))
+    assert len(rows) == 1
+    assert rows[0]["function"] == "", "pre-existing rows must be backfilled blank, never guessed"
+    assert rows[0]["contact_id"] == "CONT-0001", "existing data must be preserved through the migration"
+
+
+def test_migration_005_is_idempotent_and_never_overwrites_a_set_function(tmp_path):
+    import migration_005_contacts_function as migration
+
+    d = tmp_path / "data"
+    d.mkdir()
+    old_fieldnames = ["contact_id", "status", "canonical_name"]
+    with open(d / "contacts.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=old_fieldnames)
+        w.writeheader()
+        w.writerow({"contact_id": "CONT-0001", "status": "confirmed", "canonical_name": "Pre-existing Contact"})
+
+    migration.apply(str(d))
+
+    # Simulate the follow-up `contacts.py edit --function ...` call that
+    # actually sorts the row having happened between two migration runner
+    # passes (e.g. a fresh checkout run after Steve already sectioned it).
+    rows = read_csv_rows(str(d / "contacts.csv"))
+    rows[0]["function"] = "sales"
+    with open(d / "contacts.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=migration.FIELDNAMES)
+        w.writeheader()
+        for r in rows:
+            w.writerow({k: r.get(k, "") for k in migration.FIELDNAMES})
+
+    second_summary = migration.apply(str(d))
+    assert "already has" in second_summary.lower()
+    rows_after = read_csv_rows(str(d / "contacts.csv"))
+    assert rows_after[0]["function"] == "sales", "an already-set function must never be touched/reset by a second migration run"

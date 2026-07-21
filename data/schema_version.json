@@ -1,11 +1,12 @@
 {
   "_comment": "Managed by scripts/migrations/run_migrations.py. Do not hand-edit applied_migrations or history \u2014 run the migration runner instead. See docs/data_dictionary.md for what each schema version means.",
-  "schema_version": "1.4.0",
+  "schema_version": "1.5.0",
   "applied_migrations": [
     "001_add_record_ids",
     "002_metric_results_history",
     "003_contacts",
-    "004_objectives_category"
+    "004_objectives_category",
+    "005_contacts_function"
   ],
   "history": [
     {
@@ -35,6 +36,13 @@
       "schema_version": "1.4.0",
       "description": "Add a 'category' column to data/objectives.csv (relationship / commercial / strategic / operational / recognition) \u2014 pre-existing rows backfilled blank, to be sorted via 'objectives.py edit --category'.",
       "backup": "backups/20260721T174618"
+    },
+    {
+      "migration_id": "005_contacts_function",
+      "applied_at": "2026-07-21T18:11:09",
+      "schema_version": "1.5.0",
+      "description": "Add a 'function' column to data/contacts.csv (management / sales / partner_channel / delivery_technical / solution) \u2014 pre-existing rows backfilled blank, to be sorted via 'contacts.py edit --function'.",
+      "backup": "backups/20260721T181108"
     }
   ]
 }

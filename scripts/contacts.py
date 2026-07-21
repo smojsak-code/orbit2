@@ -94,13 +94,36 @@ EVIDENCE_FIELDS_PATH = os.path.join(DATA_DIR, "contact_evidence_fields.json")
 
 FIELDNAMES = [
     "contact_id", "status", "canonical_name", "raw_extracted_name",
-    "title", "seniority", "department", "business_unit", "company",
+    "title", "seniority", "department", "business_unit", "function", "company",
     "affiliation", "region", "country", "location", "email", "phone",
     "relationship_owner", "stakeholder_role", "influence_level",
     "relationship_strength", "vendor", "visibility", "merged_into",
     "first_seen_at", "last_interaction_at", "summary", "summary_updated_at",
     "created_at", "updated_at", "created_by", "updated_by", "notes",
 ]
+
+# Steve's requested organisational sections (2026-07-21) — every contact is
+# meant to be sorted into exactly one of these five functional groups so the
+# Contacts tab can be browsed/searched as groups of people ("show me
+# everyone in Sales"), not just individually. Deliberately a SEPARATE field
+# from the freeform `department`/`business_unit`/`stakeholder_role` columns
+# above (those stay freeform extracted-fact fields; `function` is the fixed
+# taxonomy used for sectioning + filtering in both the Cowork dashboard and
+# the public site mirror). Unlike scripts/objectives.py's `category` (which
+# is required at creation because Steve always knows a role objective's
+# category upfront), `function` is left OPTIONAL at creation — contacts are
+# very often auto-extracted from documents via find-or-create/ingest with
+# incomplete information, so forcing a value here would break that flow.
+# validate_data.py warns (does not error) on a blank function so a contact
+# can't silently stay unsectioned forever, mirroring the category warning.
+VALID_FUNCTION = {"", "management", "sales", "partner_channel", "delivery_technical", "solution"}
+FUNCTION_LABELS = {
+    "management": "Management",
+    "sales": "Sales",
+    "partner_channel": "Partner / Channel",
+    "delivery_technical": "Delivery/Technical",
+    "solution": "Solution",
+}
 
 ALIAS_FIELDNAMES = [
     "alias_id", "contact_id", "alias", "alias_type", "source_evidence_id",
@@ -470,6 +493,7 @@ def public_contact_view(row, evidence_rows):
         "contact_id": contact_id,
         "canonical_name": row.get("canonical_name") or row.get("raw_extracted_name") or contact_id,
         "title": row.get("title") or "",
+        "function": row.get("function") or "",
         "company": row.get("company") or "",
         "affiliation": row.get("affiliation") or "",
         "region": row.get("region") or "",
@@ -598,7 +622,7 @@ def compute_profile_summary(contact_id, contacts, evidence_rows, aliases):
 # CLI commands
 # ---------------------------------------------------------------------------
 
-def _new_provisional_row(contacts, name, company=None, title=None, email=None, vendor=None, visibility=None):
+def _new_provisional_row(contacts, name, company=None, title=None, email=None, vendor=None, visibility=None, function=None):
     """Build (but do not append/write) a new provisional contact row. Shared
     by cmd_find_or_create (interactive, single-contact) and
     resolve_or_create_for_ingest (batch document ingestion, Phase 2) so the
@@ -611,6 +635,7 @@ def _new_provisional_row(contacts, name, company=None, title=None, email=None, v
         "contact_id": contact_id, "status": "provisional",
         "canonical_name": name, "raw_extracted_name": name,
         "company": company or "", "title": title or "", "email": email or "",
+        "function": function or "",
         "relationship_owner": _default_user(), "vendor": vendor or _default_vendor(),
         "visibility": visibility or "communardo_internal",
         "first_seen_at": now, "last_interaction_at": now,
@@ -636,7 +661,8 @@ def cmd_find_or_create(args):
 
     # decision == "new"
     row = _new_provisional_row(contacts, args.name, company=args.company, title=args.title,
-                                email=args.email, vendor=args.vendor, visibility=args.visibility)
+                                email=args.email, vendor=args.vendor, visibility=args.visibility,
+                                function=getattr(args, "function", None))
     contact_id = row["contact_id"]
     contacts.append(row)
     write_contacts(contacts)
@@ -647,7 +673,7 @@ def cmd_find_or_create(args):
 
 
 def resolve_or_create_for_ingest(name, contacts, contacts_map, *, company=None, title=None,
-                                  email=None, vendor=None, visibility=None):
+                                  email=None, vendor=None, visibility=None, function=None):
     """Identity resolution for batch document ingestion (Phase 2). Unlike
     find-or-create — which only reports on ambiguous/matched cases and
     leaves the decision to a human — this ALWAYS returns a usable
@@ -672,7 +698,7 @@ def resolve_or_create_for_ingest(name, contacts, contacts_map, *, company=None, 
                 "score": decision["score"], "reasons": decision["reasons"]}
 
     row = _new_provisional_row(contacts, name, company=company, title=title, email=email,
-                                vendor=vendor, visibility=visibility)
+                                vendor=vendor, visibility=visibility, function=function)
     contact_id = row["contact_id"]
     contacts.append(row)
     contacts_map[contact_id] = row
@@ -693,7 +719,9 @@ def cmd_create(args):
         "contact_id": contact_id, "status": "confirmed",
         "canonical_name": args.name, "raw_extracted_name": args.name,
         "title": args.title or "", "company": args.company or "", "email": args.email or "",
-        "affiliation": args.affiliation or "", "relationship_owner": _default_user(),
+        "affiliation": args.affiliation or "", "function": getattr(args, "function", None) or "",
+        "location": getattr(args, "location", None) or "",
+        "relationship_owner": _default_user(),
         "vendor": args.vendor or _default_vendor(), "visibility": args.visibility or "communardo_internal",
         "first_seen_at": now, "last_interaction_at": now,
         "created_at": now, "updated_at": now,
@@ -705,7 +733,7 @@ def cmd_create(args):
 
 
 EDITABLE_FIELDS = [
-    "title", "seniority", "department", "business_unit", "company", "affiliation",
+    "title", "seniority", "department", "business_unit", "function", "company", "affiliation",
     "region", "country", "location", "email", "phone", "relationship_owner",
     "stakeholder_role", "influence_level", "relationship_strength", "vendor",
     "visibility", "notes",
@@ -713,6 +741,11 @@ EDITABLE_FIELDS = [
 
 
 def cmd_edit(args):
+    function = getattr(args, "function", None)
+    if function and function not in VALID_FUNCTION:
+        print(f"Invalid function '{function}' — expected one of {sorted(f for f in VALID_FUNCTION if f)}.")
+        return
+
     contacts = read_contacts()
     found = False
     for r in contacts:
@@ -966,6 +999,13 @@ def cmd_summary(args):
 
 
 def cmd_list(args):
+    """List contacts, optionally filtered. `--function` and `--location`
+    are exact-ish matches (function is a controlled value; location is
+    normalized like company); `--search` is a free-text substring match
+    across name, title, location, and company, matching the same fields
+    the Cowork dashboard's search box checks — so this command can answer
+    "who's in Sales" (--function sales) or "who's in London" (--search
+    london) as a group, not just look up one person at a time."""
     contacts = read_contacts()
     if args.status:
         contacts = [r for r in contacts if r.get("status") == args.status]
@@ -973,12 +1013,28 @@ def cmd_list(args):
         contacts = [r for r in contacts if normalize_name(r.get("company", "")) == normalize_name(args.company)]
     if args.vendor:
         contacts = [r for r in contacts if r.get("vendor") == args.vendor]
+    if args.function:
+        contacts = [r for r in contacts if (r.get("function") or "") == args.function]
+    if args.location:
+        contacts = [r for r in contacts if normalize_name(args.location) in normalize_name(r.get("location", ""))]
+    if args.search:
+        needle = normalize_name(args.search)
+        contacts = [
+            r for r in contacts
+            if needle in normalize_name(" ".join([
+                r.get("canonical_name", ""), r.get("raw_extracted_name", ""),
+                r.get("title", ""), r.get("location", ""), r.get("region", ""),
+                r.get("country", ""), r.get("company", ""),
+            ]))
+        ]
     if not contacts:
         print("No contacts match.")
         return
     for r in contacts:
+        func_label = FUNCTION_LABELS.get(r.get("function") or "", "unsectioned")
         print(f"{r['contact_id']}  [{r.get('status')}]  {r.get('canonical_name')}"
               f"  —  {r.get('title') or '(no title)'} @ {r.get('company') or '(no company)'}"
+              f"  —  {func_label}"
               f"  —  owner: {r.get('relationship_owner') or '?'}")
 
 
@@ -996,6 +1052,7 @@ def cmd_list(args):
 #         "name": "Jamie Chen",             // required
 #         "company": "...", "title": "...", "email": "...",   // optional, used for identity resolution
 #         "vendor": "...", "visibility": "...",                // optional, only used if a new contact is created
+#         "function": "sales",              // optional, one of VALID_FUNCTION, only used if a new contact is created
 #         "evidence": [
 #           {
 #             "field": "priority", "value": "Wants a joint QBR next quarter",
@@ -1047,6 +1104,9 @@ def validate_ingest_payload(payload):
         visibility = person.get("visibility")
         if visibility and visibility not in VALID_VISIBILITY:
             errors.append(f"{label}.visibility {visibility!r} is not one of {sorted(VALID_VISIBILITY)}.")
+        function = person.get("function")
+        if function and function not in VALID_FUNCTION:
+            errors.append(f"{label}.function {function!r} is not one of {sorted(f for f in VALID_FUNCTION if f)}.")
 
         evidence_list = person.get("evidence", [])
         if evidence_list and not isinstance(evidence_list, list):
@@ -1106,7 +1166,7 @@ def cmd_ingest(args):
             name, contacts, contacts_map,
             company=person.get("company"), title=person.get("title"),
             email=person.get("email"), vendor=person.get("vendor"),
-            visibility=person.get("visibility"),
+            visibility=person.get("visibility"), function=person.get("function"),
         )
         contact_id = res["contact_id"]
         decision = res["decision"]
@@ -1185,6 +1245,7 @@ def main():
     p.add_argument("--email", default=None)
     p.add_argument("--vendor", default=None)
     p.add_argument("--visibility", default=None)
+    p.add_argument("--function", default=None, choices=sorted(VALID_FUNCTION - {""}))
     p.set_defaults(func=cmd_find_or_create)
 
     p = sub.add_parser("create")
@@ -1193,6 +1254,8 @@ def main():
     p.add_argument("--company", default=None)
     p.add_argument("--email", default=None)
     p.add_argument("--affiliation", default=None, choices=sorted(VALID_AFFILIATION - {""}))
+    p.add_argument("--function", default=None, choices=sorted(VALID_FUNCTION - {""}))
+    p.add_argument("--location", default=None)
     p.add_argument("--vendor", default=None)
     p.add_argument("--visibility", default=None)
     p.set_defaults(func=cmd_create)
@@ -1259,6 +1322,11 @@ def main():
     p.add_argument("--status", default=None, choices=sorted(VALID_STATUS))
     p.add_argument("--company", default=None)
     p.add_argument("--vendor", default=None)
+    p.add_argument("--function", default=None, choices=sorted(VALID_FUNCTION - {""}),
+                    help="Filter to one functional section, e.g. --function sales to list a whole group.")
+    p.add_argument("--location", default=None, help="Substring match against the 'location' field.")
+    p.add_argument("--search", default=None,
+                    help="Free-text substring match across name, title, location, region, country, company.")
     p.set_defaults(func=cmd_list)
 
     p = sub.add_parser("ingest")
