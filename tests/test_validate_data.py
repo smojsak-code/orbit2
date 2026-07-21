@@ -184,6 +184,42 @@ def test_objectives_bad_period_format_is_caught(patched_validate_data, fixture_d
     assert any("period" in e for e in report.errors)
 
 
+def test_objectives_invalid_category_is_caught(patched_validate_data, fixture_data_dir):
+    path = os.path.join(fixture_data_dir, "objectives.csv")
+    with open(path, newline="") as f:
+        rows = list(csv.DictReader(f))
+        fieldnames = list(rows[0].keys())
+    rows[0]["category"] = "not_a_real_category"
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w.writeheader()
+        w.writerows(rows)
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_objectives(report, {"ACT-0001"}, {"EVD-0001"})
+    assert any("invalid category" in e for e in report.errors)
+
+
+def test_objectives_blank_category_is_a_warning_not_an_error(patched_validate_data, fixture_data_dir):
+    """A blank category shouldn't block validation (e.g. right after
+    migration_004, before someone has categorised the row) but must be
+    flagged as a warning so it doesn't get silently forgotten."""
+    path = os.path.join(fixture_data_dir, "objectives.csv")
+    with open(path, newline="") as f:
+        rows = list(csv.DictReader(f))
+        fieldnames = list(rows[0].keys())
+    rows[0]["category"] = ""
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w.writeheader()
+        w.writerows(rows)
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_objectives(report, {"ACT-0001"}, {"EVD-0001"})
+    assert report.errors == []
+    assert any("no category set" in w for w in report.warnings)
+
+
 def test_app_config_missing_required_field_is_caught(patched_validate_data, fixture_data_dir):
     path = os.path.join(fixture_data_dir, "app_config.json")
     config = json.load(open(path))

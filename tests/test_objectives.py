@@ -132,3 +132,85 @@ def test_edit_rejects_terminal_status(patched_objectives, capsys):
     assert "cannot set status" in out.lower()
     row = {r["objective_id"]: r for r in patched_objectives.read_objectives()}["OBJ-0001"]
     assert row["status"] == "on_track", "status must be unchanged after a rejected edit"
+
+
+# ---------------------------------------------------------------------------
+# Category (relationship / commercial / strategic / operational / recognition)
+# ---------------------------------------------------------------------------
+
+def _create_args(**overrides):
+    base = dict(
+        objective="New objective", period="2026-Q3", category="operational",
+        success_measure=None, target=None, target_unit=None, target_date=None,
+        communardo_priority=None, atlassian_priority=None, progress_method="manual",
+        progress_pct=0, linked_activities=None, linked_evidence=None,
+        vendor=None, visibility=None, notes=None,
+    )
+    base.update(overrides)
+    return SimpleNamespace(**base)
+
+
+def test_create_requires_a_valid_category(patched_objectives, capsys):
+    """Intentional-failure case: an invalid --category must refuse to
+    create the objective rather than silently leaving it uncategorised."""
+    import pytest
+    with pytest.raises(SystemExit):
+        patched_objectives.cmd_create(_create_args(category="not_a_real_category"))
+    out = capsys.readouterr().out
+    assert "category" in out.lower()
+
+
+def test_create_with_valid_category_stores_it(patched_objectives):
+    patched_objectives.cmd_create(_create_args(objective="Categorised objective", category="commercial"))
+    rows = patched_objectives.read_objectives()
+    new_row = next(r for r in rows if r["objective"] == "Categorised objective")
+    assert new_row["category"] == "commercial"
+
+
+def test_edit_can_recategorise_an_objective(patched_objectives):
+    """OBJ-0001 in the fixture starts as 'operational'."""
+    args = SimpleNamespace(
+        objective_id="OBJ-0001", objective=None, period=None, category="strategic",
+        success_measure=None, target=None, target_unit=None, target_date=None,
+        communardo_priority=None, atlassian_priority=None, progress_method=None,
+        linked_activities=None, linked_evidence=None, vendor=None, visibility=None,
+        status=None, notes=None,
+    )
+    patched_objectives.cmd_edit(args)
+    row = {r["objective_id"]: r for r in patched_objectives.read_objectives()}["OBJ-0001"]
+    assert row["category"] == "strategic"
+
+
+def test_edit_rejects_invalid_category(patched_objectives, capsys):
+    """Intentional-failure case: edit must reject an unrecognised category
+    rather than writing it through."""
+    args = SimpleNamespace(
+        objective_id="OBJ-0001", objective=None, period=None, category="not_a_real_category",
+        success_measure=None, target=None, target_unit=None, target_date=None,
+        communardo_priority=None, atlassian_priority=None, progress_method=None,
+        linked_activities=None, linked_evidence=None, vendor=None, visibility=None,
+        status=None, notes=None,
+    )
+    patched_objectives.cmd_edit(args)
+    out = capsys.readouterr().out
+    assert "category" in out.lower()
+    row = {r["objective_id"]: r for r in patched_objectives.read_objectives()}["OBJ-0001"]
+    assert row["category"] == "operational", "invalid category must not overwrite the existing value"
+
+
+def test_edit_without_category_argument_leaves_it_unchanged(patched_objectives):
+    """A caller (or an older script) that doesn't pass `category` at all
+    (missing attribute, not just None) must not crash and must not touch
+    the stored category — proves the getattr() fallback in cmd_edit."""
+    args = SimpleNamespace(
+        objective_id="OBJ-0001", objective="Renamed objective", period=None,
+        success_measure=None, target=None, target_unit=None, target_date=None,
+        communardo_priority=None, atlassian_priority=None, progress_method=None,
+        linked_activities=None, linked_evidence=None, vendor=None, visibility=None,
+        status=None, notes=None,
+    )
+    assert not hasattr(args, "category")
+    patched_objectives.cmd_edit(args)
+    row = {r["objective_id"]: r for r in patched_objectives.read_objectives()}["OBJ-0001"]
+    assert row["category"] == "operational"
+    assert row["objective"] == "Renamed objective"

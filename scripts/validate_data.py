@@ -437,6 +437,13 @@ def validate_objectives(report, activity_ids, evidence_ids):
         if not (r.get("objective") or "").strip():
             report.error(f"{label}: {row_desc} is missing 'objective'")
 
+        category = (r.get("category") or "").strip()
+        if not category:
+            report.warn(f"{label}: {row_desc} has no category set — every objective should be sorted into "
+                        f"one of {sorted(objectives_mod.VALID_CATEGORY)} (see 'objectives.py edit --category')")
+        elif category not in objectives_mod.VALID_CATEGORY:
+            report.error(f"{label}: {row_desc} has an invalid category '{category}' (expected one of {sorted(objectives_mod.VALID_CATEGORY)})")
+
         period = (r.get("period") or "").strip()
         if not period:
             report.error(f"{label}: {row_desc} is missing 'period'")

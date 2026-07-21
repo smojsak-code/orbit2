@@ -292,3 +292,67 @@ def test_migration_003_is_idempotent_and_never_overwrites_existing_data(tmp_path
     assert "no files needed creating" in second_summary.lower()
     rows = read_csv_rows(str(d / "contacts.csv"))
     assert len(rows) == 1 and rows[0]["contact_id"] == "CONT-0001", "an existing contacts.csv must never be touched/reset by a second migration run"
+
+
+def test_migration_004_adds_category_column_backfilled_blank(tmp_path):
+    import migration_004_objectives_category as migration
+
+    d = tmp_path / "data"
+    d.mkdir()
+    # Fabricated pre-migration_004 objectives.csv — no category column yet.
+    old_fieldnames = [
+        "objective_id", "period", "objective", "success_measure",
+        "target", "target_unit", "target_date",
+        "communardo_priority", "atlassian_priority",
+        "status", "progress_method", "progress_pct",
+        "linked_activities", "linked_evidence",
+        "at_risk_reason", "recovery_action",
+        "completed_at", "completion_note",
+        "missed_at", "missed_reason",
+        "vendor", "visibility",
+        "created_at", "updated_at", "created_by", "updated_by", "notes",
+    ]
+    with open(d / "objectives.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=old_fieldnames)
+        w.writeheader()
+        w.writerow({k: "" for k in old_fieldnames} | {
+            "objective_id": "OBJ-0001", "period": "2026-Q3", "objective": "Pre-existing objective",
+        })
+
+    summary = migration.apply(str(d))
+    assert "added" in summary.lower() and "category" in summary.lower()
+
+    rows = read_csv_rows(str(d / "objectives.csv"))
+    assert len(rows) == 1
+    assert rows[0]["category"] == "", "pre-existing rows must be backfilled blank, never guessed"
+    assert rows[0]["objective_id"] == "OBJ-0001", "existing data must be preserved through the migration"
+
+
+def test_migration_004_is_idempotent_and_never_overwrites_a_set_category(tmp_path):
+    import migration_004_objectives_category as migration
+
+    d = tmp_path / "data"
+    d.mkdir()
+    old_fieldnames = ["objective_id", "period", "objective"]
+    with open(d / "objectives.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=old_fieldnames)
+        w.writeheader()
+        w.writerow({"objective_id": "OBJ-0001", "period": "2026-Q3", "objective": "Pre-existing objective"})
+
+    migration.apply(str(d))
+
+    # Simulate the follow-up `objectives.py edit --category ...` call that
+    # actually sorts the row having happened between two migration runner
+    # passes (e.g. a fresh checkout run after Steve already categorised).
+    rows = read_csv_rows(str(d / "objectives.csv"))
+    rows[0]["category"] = "commercial"
+    with open(d / "objectives.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=migration.FIELDNAMES)
+        w.writeheader()
+        for r in rows:
+            w.writerow({k: r.get(k, "") for k in migration.FIELDNAMES})
+
+    second_summary = migration.apply(str(d))
+    assert "already has" in second_summary.lower()
+    rows_after = read_csv_rows(str(d / "objectives.csv"))
+    assert rows_after[0]["category"] == "commercial", "an already-set category must never be touched/reset by a second migration run"

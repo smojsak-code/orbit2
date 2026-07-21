@@ -1,10 +1,11 @@
 {
   "_comment": "Managed by scripts/migrations/run_migrations.py. Do not hand-edit applied_migrations or history \u2014 run the migration runner instead. See docs/data_dictionary.md for what each schema version means.",
-  "schema_version": "1.3.0",
+  "schema_version": "1.4.0",
   "applied_migrations": [
     "001_add_record_ids",
     "002_metric_results_history",
-    "003_contacts"
+    "003_contacts",
+    "004_objectives_category"
   ],
   "history": [
     {
@@ -27,6 +28,13 @@
       "schema_version": "1.3.0",
       "description": "Add data/contacts.csv, data/contact_aliases.csv, data/contact_evidence.jsonl and data/contact_evidence_fields.json (Contacts Phase 1 / R3-T01) \u2014 new registers, nothing to backfill.",
       "backup": "backups/20260721T160114"
+    },
+    {
+      "migration_id": "004_objectives_category",
+      "applied_at": "2026-07-21T17:46:18",
+      "schema_version": "1.4.0",
+      "description": "Add a 'category' column to data/objectives.csv (relationship / commercial / strategic / operational / recognition) \u2014 pre-existing rows backfilled blank, to be sorted via 'objectives.py edit --category'.",
+      "backup": "backups/20260721T174618"
     }
   ]
 }

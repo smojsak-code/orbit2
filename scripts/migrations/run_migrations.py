@@ -59,6 +59,15 @@ MIGRATIONS = [
         "data/contact_evidence.jsonl and data/contact_evidence_fields.json "
         "(Contacts Phase 1 / R3-T01) — new registers, nothing to backfill.",
     ),
+    (
+        "004_objectives_category",
+        "migration_004_objectives_category",
+        "1.4.0",
+        "Add a 'category' column to data/objectives.csv (relationship / "
+        "commercial / strategic / operational / recognition) — pre-existing "
+        "rows backfilled blank, to be sorted via 'objectives.py edit "
+        "--category'.",
+    ),
 ]
 
 

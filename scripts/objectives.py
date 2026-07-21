@@ -8,8 +8,36 @@ semicolon-separated list of IDs, so there's no need for JSONL's nested-field
 support; semicolons rather than commas because Communardo/Atlassian names in
 free-text fields elsewhere in this project already use commas).
 
+Objectives are grouped into exactly five categories (--category on create,
+required — this is deliberate, not optional: every objective must land in
+the right section so the Objectives tab and the progress report are never
+an unsorted pile). What belongs where (derived from the Partner Alliance
+Manager (Atlassian) job description's six responsibility areas):
+  relationship   Internal enablement/collaboration AND cross-team
+                 relationship-building — training Sales/Marketing/Delivery,
+                 driving adoption of partner-centric selling, fostering
+                 collaboration across regions. (JD: "Internal Enablement &
+                 Communication".)
+  commercial     Revenue and pipeline OUTCOMES — partner-sourced/co-sold
+                 revenue, pipeline coverage, conversion/win-rate. (JD:
+                 "Pipeline, Forecasting & Co-Sell Execution" outcomes.)
+  strategic      GTM alignment, joint business planning, portfolio/
+                 commercial enablement direction-setting. (JD: "GTM
+                 Alignment & Partner Strategy", "Portfolio & Commercial
+                 Enablement".)
+  operational    Process/infrastructure/tooling rigor — KPIs, dashboards,
+                 deal registration, licensing, quoting, CRM hygiene and
+                 forecast-data quality. (JD: "Partner Lifecycle &
+                 Operational Excellence", the CRM-embedding half of
+                 "Pipeline, Forecasting & Co-Sell Execution".)
+  recognition    External standing/positioning with Atlassian itself —
+                 being recognised as a strategic, high-performing partner;
+                 elevated positioning; relationship depth with Atlassian
+                 stakeholders. (JD: "Partner Relationship Management",
+                 "Elevated strategic positioning with Atlassian".)
+
 Commands:
-  create        Add a new objective. --objective, --period, and
+  create        Add a new objective. --objective, --period, --category, and
                 --progress-method are required — everything else can be
                 added later with `edit`.
   edit          Update non-terminal fields by --objective-id. Cannot set
@@ -64,7 +92,7 @@ REPORTS_DIR = os.path.join(BASE_DIR, "reports")
 OBJECTIVES_PATH = os.path.join(DATA_DIR, "objectives.csv")
 
 FIELDNAMES = [
-    "objective_id", "period", "objective", "success_measure",
+    "objective_id", "period", "category", "objective", "success_measure",
     "target", "target_unit", "target_date",
     "communardo_priority", "atlassian_priority",
     "status", "progress_method", "progress_pct",
@@ -78,6 +106,13 @@ FIELDNAMES = [
 
 QUARTER_RE = re.compile(r"^\d{4}-Q[1-4]$")
 YEAR_RE = re.compile(r"^\d{4}$")
+
+# The five sections every objective must be sorted into — see the module
+# docstring above for what belongs in each. Blank is tolerated on read
+# (pre-migration_004 rows, or an objective someone created before deciding
+# where it belongs) but validate_data.py warns on it, and `create` refuses
+# to leave it blank.
+VALID_CATEGORY = {"relationship", "commercial", "strategic", "operational", "recognition"}
 
 VALID_STATUS = {"on_track", "at_risk", "completed", "missed"}
 TERMINAL_STATUSES = {"completed", "missed"}
@@ -242,6 +277,7 @@ def create_from_fields(fields, rows):
     row = {
         "objective_id": next_id(rows),
         "period": fields["period"],
+        "category": fields.get("category") or "",
         "objective": fields["objective"],
         "success_measure": fields.get("success_measure") or "",
         "target": fields.get("target") or "",
@@ -270,9 +306,13 @@ def cmd_create(args):
     if period_type(args.period) is None:
         print(f"--period '{args.period}' doesn't match either a quarter (YYYY-Q1..4) or a year (YYYY). Refusing.")
         sys.exit(1)
+    if args.category not in VALID_CATEGORY:
+        print(f"--category '{args.category}' must be one of {sorted(VALID_CATEGORY)} — every objective must be "
+              f"sorted into the right section. Refusing.")
+        sys.exit(1)
     rows = read_objectives()
     fields = {
-        "period": args.period, "objective": args.objective,
+        "period": args.period, "category": args.category, "objective": args.objective,
         "success_measure": args.success_measure, "target": args.target,
         "target_unit": args.target_unit, "target_date": args.target_date,
         "communardo_priority": args.communardo_priority, "atlassian_priority": args.atlassian_priority,
@@ -303,9 +343,13 @@ def cmd_edit(args):
     if args.period is not None and period_type(args.period) is None:
         print(f"--period '{args.period}' doesn't match either a quarter (YYYY-Q1..4) or a year (YYYY). Refusing.")
         return
+    category = getattr(args, "category", None)
+    if category is not None and category not in VALID_CATEGORY:
+        print(f"--category '{category}' must be one of {sorted(VALID_CATEGORY)}. Refusing.")
+        return
 
     field_map = {
-        "period": args.period, "objective": args.objective,
+        "period": args.period, "category": category, "objective": args.objective,
         "success_measure": args.success_measure, "target": args.target,
         "target_unit": args.target_unit, "target_date": args.target_date,
         "communardo_priority": args.communardo_priority, "atlassian_priority": args.atlassian_priority,
@@ -472,6 +516,8 @@ def cmd_miss(args):
 def _matches_filters(row, args):
     if args.period and row.get("period") != args.period:
         return False
+    if getattr(args, "category", None) and row.get("category") != args.category:
+        return False
     if args.status and args.status != "all":
         if args.status == "open_all":
             if row.get("status") in TERMINAL_STATUSES:
@@ -503,8 +549,8 @@ def cmd_list(args):
     for r in filtered:
         p = compute_progress(r, journal_by_id)
         over = f" (+{p['overachievement_pct']}% over)" if p["overachievement_pct"] > 0 else ""
-        print(f"{r['objective_id']}  [{r.get('period','?')}]  [{r.get('status','?')}]  "
-              f"{p['official_pct']}%{over}  due:{r.get('target_date') or '—'}  {r.get('objective','?')}")
+        print(f"{r['objective_id']}  [{r.get('period','?')}]  [{r.get('category') or 'UNCATEGORISED'}]  "
+              f"[{r.get('status','?')}]  {p['official_pct']}%{over}  due:{r.get('target_date') or '—'}  {r.get('objective','?')}")
         if args.verbose:
             print(f"    success measure: {r.get('success_measure') or '—'}")
             print(f"    progress basis: {p['basis']}")
@@ -569,6 +615,8 @@ def main():
     p = sub.add_parser("create")
     p.add_argument("--objective", required=True)
     p.add_argument("--period", required=True, help="'YYYY-Q1'..'YYYY-Q4' for a quarter objective, or 'YYYY' for a year objective")
+    p.add_argument("--category", required=True, choices=sorted(VALID_CATEGORY),
+                   help="relationship / commercial / strategic / operational / recognition — see module docstring")
     p.add_argument("--success-measure", default=None, dest="success_measure")
     p.add_argument("--target", default=None, help="numeric — required if --progress-method is count_linked or sum_linked_value")
     p.add_argument("--target-unit", default=None, dest="target_unit", help="e.g. 'count', 'GBP', '%'")
@@ -591,6 +639,7 @@ def main():
     p.add_argument("--objective-id", required=True, dest="objective_id")
     p.add_argument("--objective", default=None)
     p.add_argument("--period", default=None)
+    p.add_argument("--category", default=None, choices=sorted(VALID_CATEGORY))
     p.add_argument("--success-measure", default=None, dest="success_measure")
     p.add_argument("--target", default=None)
     p.add_argument("--target-unit", default=None, dest="target_unit")
@@ -646,6 +695,7 @@ def main():
 
     p = sub.add_parser("list")
     p.add_argument("--period", default=None)
+    p.add_argument("--category", default=None, choices=sorted(VALID_CATEGORY))
     p.add_argument("--status", default="open_all",
                    help="open_all (default: on_track or at_risk), on_track, at_risk, completed, missed, or all")
     p.add_argument("--vendor", default=None)
