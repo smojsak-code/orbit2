@@ -30,11 +30,13 @@ override with ORBIT2_DOCX_SKILL_DIR env var if it moves).
 """
 import base64
 import json
+import mimetypes
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -85,6 +87,45 @@ def run(cmd, **kwargs):
 def b64_file(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("ascii")
+
+
+def build_objective_evidence_files(objective_rows):
+    """Base64-embed the actual evidence_library/ files behind every
+    objective's linked_evidence, so the Objective detail click-through view
+    (Cowork dashboard only — see below) can offer an instant local
+    download/view of the real file, not just its filename as text. Scoped
+    to evidence actually linked to an objective (not the whole evidence
+    library) to keep the artifact's size reasonable.
+
+    Dashboard-only, deliberately: evidence files can hold more sensitive
+    raw content (unredacted spreadsheets, client screenshots) than the
+    metadata already published in snapshot["evidence"] for the scorecard.
+    build_web.py never calls this — the public My Impact detail view shows
+    evidence metadata only, with a note that the file itself lives in the
+    private Cowork dashboard. Returns {evidence_id: {filename, mime, data}}
+    for every resolvable file; an evidence row whose file isn't found on
+    disk (or has no filename) is simply omitted, not an error — the detail
+    view falls back to showing metadata-only for that item, same as it
+    would for any evidence row it can't resolve."""
+    evidence_ids = set()
+    for r in objective_rows:
+        for eid in objectives_mod.split_ids(r.get("linked_evidence")):
+            evidence_ids.add(eid)
+    if not evidence_ids:
+        return {}
+
+    evidence_by_id = objectives_mod._load_evidence_by_id()
+    files = {}
+    for eid in evidence_ids:
+        e = evidence_by_id.get(eid)
+        if not e or not e.get("filename"):
+            continue
+        path = os.path.join(BASE_DIR, "evidence_library", e.get("category") or "", e["filename"])
+        if not os.path.exists(path):
+            continue
+        mime, _ = mimetypes.guess_type(path)
+        files[eid] = {"filename": e["filename"], "mime": mime or "application/octet-stream", "data": b64_file(path)}
+    return files
 
 
 def build_vendor_reports(vendor):
@@ -175,18 +216,38 @@ def load_actions_snapshot():
     return rows, statuses
 
 
-def load_objectives_snapshot():
+def load_objectives_snapshot(evidence_rows=None):
     """Read data/objectives.csv and return rows with computed (not stored)
     progress fields added — official_pct/raw_pct/overachievement_pct/basis,
     from objectives_mod.compute_progress() — so the dashboard's Objectives
     tab and the public site's My Impact "Objectives" section never
     disagree about a given objective's progress. Shared by
     build_dashboard.py and build_web.py, same pattern as
-    load_actions_snapshot() above (R1-T08)."""
+    load_actions_snapshot() above (R1-T08).
+
+    Also attaches a `detail` object per row (objectives_mod.
+    compute_objective_detail()) — the full breakdown + auto-updating
+    narrative summary + linked evidence/activity detail + action points the
+    click-through Objective detail view (dashboard + public My Impact tab)
+    renders from. Computed once here, at build time, so both surfaces and
+    any future downloadable report always agree.
+
+    `evidence_rows`: the same data/evidence_index.csv rows already loaded
+    into snapshot["evidence"] (from scores_snapshot.json) — passed in
+    rather than re-read from disk, so this never disagrees with the
+    Evidence Library the rest of the dashboard already shows. Falls back
+    to reading the file directly if not supplied (e.g. a caller that only
+    wants objectives, not the full snapshot)."""
     rows = objectives_mod.read_objectives()
     journal_by_id = {e.get("activity_id"): e for e in journal_mod.read_journal()}
+    if evidence_rows is None:
+        evidence_by_id = objectives_mod._load_evidence_by_id()
+    else:
+        evidence_by_id = {e.get("evidence_id"): e for e in evidence_rows}
+    generated_at = datetime.now().isoformat(timespec="seconds")
     for r in rows:
         r["progress"] = objectives_mod.compute_progress(r, journal_by_id)
+        r["detail"] = objectives_mod.compute_objective_detail(r, journal_by_id, evidence_by_id, generated_at=generated_at)
     return rows
 
 
@@ -273,7 +334,14 @@ def main():
     # objectives.csv (R1-T08) — the Objectives dashboard view reads this
     # directly; the public site's My Impact "Objectives" section reads the
     # equivalent key built by build_web.py using the same helper.
-    snapshot["objectives"] = load_objectives_snapshot()
+    snapshot["objectives"] = load_objectives_snapshot(snapshot.get("evidence"))
+    # Objective detail click-through view (dashboard-only) — the actual
+    # evidence_library/ files behind linked_evidence, base64-embedded so
+    # they're viewable/downloadable straight from the detail modal with no
+    # chat round-trip. See build_objective_evidence_files()'s own
+    # docstring for why this is dashboard-only (not published to the
+    # public site's web_snapshot.json).
+    snapshot["objective_evidence_files"] = build_objective_evidence_files(snapshot["objectives"])
 
     # Contacts register (Contacts Phase 3, R3-T01) — the dashboard's
     # Contacts tab reads this directly. contact_evidence_fields populates

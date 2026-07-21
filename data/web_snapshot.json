@@ -997,6 +997,56 @@
       "sentiment": "neutral",
       "sentiment_confidence": "medium",
       "summary": "Atlassian Marketplace vendor profile for Elevatic (formerly Communardo Products, bitvoodoo, and Mibex), listing Platinum Marketplace and Solution Partner status and its portfolio of 16+ Confluence/Jira/Bitbucket apps."
+    },
+    {
+      "record_id": "NEWS-0039",
+      "date_found": "2026-07-21",
+      "vendor_context": "Atlassian",
+      "headline": "BU-backed Communardo buys Celix Solutions in Austria",
+      "source_url": "https://www.pehub.com/bu-backed-communardo-buys-celix-solutions-in-austria/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "PE Hub's trade coverage of BU-backed Communardo Group's acquisition of Austrian Atlassian consultancy Celix Solutions, strengthening its DACH-region market position."
+    },
+    {
+      "record_id": "NEWS-0040",
+      "date_found": "2026-07-21",
+      "vendor_context": "Atlassian",
+      "headline": "Paul Hastings advises Bregal on acquisition of Celix by Communardo",
+      "source_url": "https://www.paulhastings.com/news/paul-hastings-advises-bregal-on-acquisition-of-celix-by-communardo",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Law firm Paul Hastings announced it advised Bregal Unternehmerkapital on Communardo's acquisition of Austrian Atlassian partner Celix Solutions."
+    },
+    {
+      "record_id": "NEWS-0041",
+      "date_found": "2026-07-21",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo welcomes celix as a new partner",
+      "source_url": "https://www.bu-partners.com/news/bu-portfolio-company-communardo-welcomes-celix-as-a-new-partner-and-strengthens-its-market-position-in-austria/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "BU Bregal Unternehmerkapital's own coverage of Communardo Group welcoming Austrian Atlassian specialist celix, strengthening its market position in Austria."
+    },
+    {
+      "record_id": "NEWS-0042",
+      "date_found": "2026-07-21",
+      "vendor_context": "Atlassian",
+      "headline": "celix wird zu Communardo Austria (brand transition FAQ)",
+      "source_url": "https://www.celix.at/faq-markenumstellung/",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "celix Solutions' customer FAQ page announcing its rebrand to Communardo Austria GmbH as part of deeper integration into the Communardo Group, with contracts and contacts unchanged."
+    },
+    {
+      "record_id": "NEWS-0043",
+      "date_found": "2026-07-21",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo weitet Europa-Pr\u00e4senz aus",
+      "source_url": "https://www.channelpartner.de/article/4115160/communardo-weitet-europa-prasenz-aus.html",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "ChannelPartner (Jan 12, 2026) reports Communardo expanded into the Netherlands (Prepend) and Finland (Ambientia) in late 2025/early 2026, putting it in nine European countries as it pursues becoming Europe's largest Atlassian partner."
     }
   ],
   "report_files": {
@@ -1168,6 +1218,42 @@
         "official_pct": 0.0,
         "overachievement_pct": 0.0,
         "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0001",
+        "objective": "Establish Atlassian partnership KPIs, reporting structure, and dashboards",
+        "category": "operational",
+        "category_label": "Operational",
+        "period": "2026-Q3",
+        "status": "on_track",
+        "success_measure": "Group Revenue Operations-aligned KPI set, reporting cadence, and dashboard live and adopted by regional teams",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-09-30",
+        "communardo_priority": "high",
+        "atlassian_priority": "medium",
+        "vendor": "Atlassian",
+        "visibility": "communardo_internal",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 1: Partner Lifecycle & Operational Excellence",
+        "created_at": "2026-07-21T17:18:06",
+        "updated_at": "2026-07-21T17:46:26",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [
+          {
+            "text": "From Partner Alliance Manager (Atlassian) JD, Responsibility 1: Partner Lifecycle & Operational Excellence",
+            "source": "notes",
+            "date": "2026-07-21T17:46:26"
+          }
+        ],
+        "summary_text": "Establish Atlassian partnership KPIs, reporting structure, and dashboards \u2014 Operational objective for 2026-Q3.\nSuccess measure: Group Revenue Operations-aligned KPI set, reporting cadence, and dashboard live and adopted by regional teams.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: medium.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-21T22:57:10"
       }
     },
     {
@@ -1204,6 +1290,42 @@
         "official_pct": 0.0,
         "overachievement_pct": 0.0,
         "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0002",
+        "objective": "Stand up rigorous deal registration, licensing, and quoting processes across regions",
+        "category": "operational",
+        "category_label": "Operational",
+        "period": "2026-Q3",
+        "status": "on_track",
+        "success_measure": "Documented, repeatable deal registration/licensing/quoting playbook landed and followed in DACH, Nordics, and Benelux",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-09-30",
+        "communardo_priority": "high",
+        "atlassian_priority": "high",
+        "vendor": "Atlassian",
+        "visibility": "communardo_internal",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 1: Partner Lifecycle & Operational Excellence",
+        "created_at": "2026-07-21T17:18:06",
+        "updated_at": "2026-07-21T17:46:26",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [
+          {
+            "text": "From Partner Alliance Manager (Atlassian) JD, Responsibility 1: Partner Lifecycle & Operational Excellence",
+            "source": "notes",
+            "date": "2026-07-21T17:46:26"
+          }
+        ],
+        "summary_text": "Stand up rigorous deal registration, licensing, and quoting processes across regions \u2014 Operational objective for 2026-Q3.\nSuccess measure: Documented, repeatable deal registration/licensing/quoting playbook landed and followed in DACH, Nordics, and Benelux.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: high.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-21T22:57:10"
       }
     },
     {
@@ -1240,6 +1362,42 @@
         "official_pct": 0.0,
         "overachievement_pct": 0.0,
         "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0003",
+        "objective": "Embed Atlassian partner-driven deals into One CRM with high forecast accuracy",
+        "category": "operational",
+        "category_label": "Operational",
+        "period": "2026-Q3",
+        "status": "on_track",
+        "success_measure": "All Atlassian partner-related deals embedded in One CRM with accurate stage/forecast data; forecast variance tracked against actuals",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-09-30",
+        "communardo_priority": "high",
+        "atlassian_priority": "medium",
+        "vendor": "Atlassian",
+        "visibility": "communardo_internal",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 2: Pipeline, Forecasting & Co-Sell Execution / Success Measures",
+        "created_at": "2026-07-21T17:18:06",
+        "updated_at": "2026-07-21T17:46:26",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [
+          {
+            "text": "From Partner Alliance Manager (Atlassian) JD, Responsibility 2: Pipeline, Forecasting & Co-Sell Execution / Success Measures",
+            "source": "notes",
+            "date": "2026-07-21T17:46:26"
+          }
+        ],
+        "summary_text": "Embed Atlassian partner-driven deals into One CRM with high forecast accuracy \u2014 Operational objective for 2026-Q3.\nSuccess measure: All Atlassian partner-related deals embedded in One CRM with accurate stage/forecast data; forecast variance tracked against actuals.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: medium.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-21T22:57:10"
       }
     },
     {
@@ -1276,6 +1434,42 @@
         "official_pct": 0.0,
         "overachievement_pct": 0.0,
         "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0004",
+        "objective": "Deliver a joint business plan with Atlassian aligned to Group GTM",
+        "category": "strategic",
+        "category_label": "Strategic",
+        "period": "2026-Q3",
+        "status": "on_track",
+        "success_measure": "First quarterly joint business plan completed with Atlassian, with clear growth targets and sign-off on Group GTM alignment",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-09-30",
+        "communardo_priority": "high",
+        "atlassian_priority": "high",
+        "vendor": "Atlassian",
+        "visibility": "communardo_internal",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 3: GTM Alignment & Partner Strategy",
+        "created_at": "2026-07-21T17:18:06",
+        "updated_at": "2026-07-21T17:46:26",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [
+          {
+            "text": "From Partner Alliance Manager (Atlassian) JD, Responsibility 3: GTM Alignment & Partner Strategy",
+            "source": "notes",
+            "date": "2026-07-21T17:46:26"
+          }
+        ],
+        "summary_text": "Deliver a joint business plan with Atlassian aligned to Group GTM \u2014 Strategic objective for 2026-Q3.\nSuccess measure: First quarterly joint business plan completed with Atlassian, with clear growth targets and sign-off on Group GTM alignment.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: high.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-21T22:57:10"
       }
     },
     {
@@ -1312,6 +1506,42 @@
         "official_pct": 0.0,
         "overachievement_pct": 0.0,
         "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0005",
+        "objective": "Grow Atlassian partner-sourced and co-sold revenue contribution",
+        "category": "commercial",
+        "category_label": "Commercial",
+        "period": "2026",
+        "status": "on_track",
+        "success_measure": "Increased partner-sourced and co-sold revenue contribution to the Group commercial engine (12-24 month success measure; 2026 is the first-year checkpoint)",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-12-31",
+        "communardo_priority": "high",
+        "atlassian_priority": "high",
+        "vendor": "Atlassian",
+        "visibility": "communardo_internal",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Success Measures (12-24 months)",
+        "created_at": "2026-07-21T17:18:20",
+        "updated_at": "2026-07-21T17:46:26",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [
+          {
+            "text": "From Partner Alliance Manager (Atlassian) JD, Success Measures (12-24 months)",
+            "source": "notes",
+            "date": "2026-07-21T17:46:26"
+          }
+        ],
+        "summary_text": "Grow Atlassian partner-sourced and co-sold revenue contribution \u2014 Commercial objective for 2026.\nSuccess measure: Increased partner-sourced and co-sold revenue contribution to the Group commercial engine (12-24 month success measure; 2026 is the first-year checkpoint).\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: high.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-21T22:57:10"
       }
     },
     {
@@ -1348,6 +1578,42 @@
         "official_pct": 0.0,
         "overachievement_pct": 0.0,
         "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0006",
+        "objective": "Improve pipeline coverage and conversion rates for Atlassian-related deals",
+        "category": "commercial",
+        "category_label": "Commercial",
+        "period": "2026",
+        "status": "on_track",
+        "success_measure": "Demonstrated improvement in pipeline coverage ratio and win-rate for Atlassian co-sell opportunities vs. 2026 baseline",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-12-31",
+        "communardo_priority": "high",
+        "atlassian_priority": "high",
+        "vendor": "Atlassian",
+        "visibility": "communardo_internal",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 2 / Success Measures (12-24 months)",
+        "created_at": "2026-07-21T17:18:20",
+        "updated_at": "2026-07-21T17:46:26",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [
+          {
+            "text": "From Partner Alliance Manager (Atlassian) JD, Responsibility 2 / Success Measures (12-24 months)",
+            "source": "notes",
+            "date": "2026-07-21T17:46:26"
+          }
+        ],
+        "summary_text": "Improve pipeline coverage and conversion rates for Atlassian-related deals \u2014 Commercial objective for 2026.\nSuccess measure: Demonstrated improvement in pipeline coverage ratio and win-rate for Atlassian co-sell opportunities vs. 2026 baseline.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: high.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-21T22:57:10"
       }
     },
     {
@@ -1384,6 +1650,42 @@
         "official_pct": 0.0,
         "overachievement_pct": 0.0,
         "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0007",
+        "objective": "Drive internal adoption of Atlassian partner motions across all regions",
+        "category": "relationship",
+        "category_label": "Relationship",
+        "period": "2026",
+        "status": "on_track",
+        "success_measure": "Sales, Marketing, and Delivery teams across DACH, Nordics, and Benelux trained and actively using partner-centric selling motions",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-12-31",
+        "communardo_priority": "medium",
+        "atlassian_priority": "medium",
+        "vendor": "Atlassian",
+        "visibility": "communardo_internal",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 5: Internal Enablement & Communication / Success Measures",
+        "created_at": "2026-07-21T17:18:20",
+        "updated_at": "2026-07-21T17:46:26",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [
+          {
+            "text": "From Partner Alliance Manager (Atlassian) JD, Responsibility 5: Internal Enablement & Communication / Success Measures",
+            "source": "notes",
+            "date": "2026-07-21T17:46:26"
+          }
+        ],
+        "summary_text": "Drive internal adoption of Atlassian partner motions across all regions \u2014 Relationship objective for 2026.\nSuccess measure: Sales, Marketing, and Delivery teams across DACH, Nordics, and Benelux trained and actively using partner-centric selling motions.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: medium. Atlassian priority: medium.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-21T22:57:10"
       }
     },
     {
@@ -1420,6 +1722,42 @@
         "official_pct": 0.0,
         "overachievement_pct": 0.0,
         "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0008",
+        "objective": "Elevate Communardo's strategic positioning with Atlassian",
+        "category": "recognition",
+        "category_label": "Recognition",
+        "period": "2026",
+        "status": "on_track",
+        "success_measure": "Recognised by Atlassian as a strategic, high-performing partner; strengthened relationships across Atlassian sales, partner management, and leadership layers",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-12-31",
+        "communardo_priority": "high",
+        "atlassian_priority": "high",
+        "vendor": "Atlassian",
+        "visibility": "communardo_internal",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 6: Partner Relationship Management / Success Measures",
+        "created_at": "2026-07-21T17:18:20",
+        "updated_at": "2026-07-21T17:46:26",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [
+          {
+            "text": "From Partner Alliance Manager (Atlassian) JD, Responsibility 6: Partner Relationship Management / Success Measures",
+            "source": "notes",
+            "date": "2026-07-21T17:46:26"
+          }
+        ],
+        "summary_text": "Elevate Communardo's strategic positioning with Atlassian \u2014 Recognition objective for 2026.\nSuccess measure: Recognised by Atlassian as a strategic, high-performing partner; strengthened relationships across Atlassian sales, partner management, and leadership layers.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: high.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-21T22:57:10"
       }
     }
   ],

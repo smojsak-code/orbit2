@@ -221,6 +221,22 @@
   .obj-category-operational { background: #fffbeb; color: #b45309; }
   .obj-category-recognition { background: #fdf2f8; color: #db2777; }
   .obj-category-uncategorised { background: #f3f4f6; color: #9ca3af; }
+  .obj-name-link { background: none; border: none; padding: 0; font: inherit; color: #2563eb; font-weight: 600; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: transparent; }
+  .obj-name-link:hover { text-decoration-color: #2563eb; }
+  .modal-card.wide { width: 780px; }
+  .obj-detail-section { margin-bottom: 16px; }
+  .obj-detail-section h4 { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin: 0 0 6px; }
+  .obj-detail-summary { font-size: 12.5px; line-height: 1.7; color: #374151; white-space: pre-line; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; }
+  .obj-detail-meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 16px; font-size: 12px; }
+  .obj-detail-meta-grid .label { color: #9ca3af; font-size: 10px; text-transform: uppercase; }
+  .obj-evidence-item, .obj-activity-item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; font-size: 12px; }
+  .obj-evidence-item .filename, .obj-activity-item .title { font-weight: 600; }
+  .obj-evidence-item .meta, .obj-activity-item .meta { color: #9ca3af; font-size: 10.5px; }
+  .obj-evidence-dangling { color: #dc2626; font-style: italic; font-size: 12px; }
+  .obj-action-point { display: flex; gap: 8px; align-items: baseline; font-size: 12px; padding: 5px 0; border-bottom: 1px dashed #eef0f3; }
+  .obj-action-point:last-child { border-bottom: none; }
+  .obj-action-point .source { color: #9ca3af; font-size: 10px; text-transform: uppercase; white-space: nowrap; }
+  .obj-generated-note { font-size: 10.5px; color: #9ca3af; margin-top: 14px; text-align: right; }
   @media print {
     header, .tab-bar, .home-toolbar, .primary-actions, .home-notice, .impact-toolbar .btn-secondary,
     #viewHome, #viewDashboard, #viewActions, #viewContacts, #viewReports, #viewSettings, .footer-note { display: none !important; }
@@ -733,6 +749,17 @@
       <div class="modal-actions">
         <button type="button" class="btn-primary" onclick="closeActivityModal()">Done</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="objectiveDetailModalOverlay" role="dialog" aria-modal="true" aria-labelledby="objectiveDetailTitle">
+  <div class="modal-card wide">
+    <h2 id="objectiveDetailTitle">Objective detail</h2>
+    <div class="modal-sub">Full breakdown, auto-updating summary, and every piece of linked evidence and activity behind this objective's progress.</div>
+    <div id="objectiveDetailBody"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" onclick="closeObjectiveDetailModal()">Close</button>
     </div>
   </div>
 </div>

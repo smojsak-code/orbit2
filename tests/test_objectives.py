@@ -214,3 +214,104 @@ def test_edit_without_category_argument_leaves_it_unchanged(patched_objectives):
     row = {r["objective_id"]: r for r in patched_objectives.read_objectives()}["OBJ-0001"]
     assert row["category"] == "operational"
     assert row["objective"] == "Renamed objective"
+
+
+# ---------------------------------------------------------------------------
+# compute_objective_detail() — full breakdown for the click-through detail
+# view (My Impact tab + Cowork dashboard Objectives tab), 2026-07-21.
+# ---------------------------------------------------------------------------
+
+def _detail_row(**overrides):
+    base = dict(
+        objective_id="OBJ-9001", objective="Test objective", category="commercial",
+        period="2026-Q3", status="on_track", success_measure="Some measure",
+        target="4", target_unit="count", target_date="2026-09-30",
+        communardo_priority="high", atlassian_priority="medium",
+        progress_method="count_linked", progress_pct="",
+        linked_activities="ACT-0001", linked_evidence="EVD-0001",
+        at_risk_reason="", recovery_action="", completed_at="", completion_note="",
+        missed_at="", missed_reason="", vendor="Atlassian", visibility="communardo_internal",
+        created_at="2026-07-01T09:00:00", updated_at="2026-07-01T09:00:00", notes="",
+    )
+    base.update(overrides)
+    return base
+
+
+def test_compute_objective_detail_includes_full_evidence_and_activity_details():
+    row = _detail_row()
+    journal_by_id = {"ACT-0001": {
+        "activity_id": "ACT-0001", "date": "2026-07-10", "type": "meeting",
+        "title": "QBR with Atlassian", "outcome": "Agreed next steps",
+        "next_action": "Send follow-up deck", "organisation": "Atlassian",
+        "contribution_type": "commercial", "value": {"amount": 1000, "currency": "GBP"},
+        "participants": "Jamie Chen", "visibility": "communardo_internal",
+    }}
+    evidence_by_id = {"EVD-0001": {
+        "evidence_id": "EVD-0001", "date_added": "2026-07-11", "category": "sales_performance",
+        "sub_metric": "Bookings", "quarter": "2026-Q3", "filename": "q3_export.xlsx",
+        "description": "Q3 bookings export", "status": "active", "source_type": "spreadsheet",
+    }}
+    detail = objectives_mod.compute_objective_detail(row, journal_by_id, evidence_by_id)
+
+    assert len(detail["linked_evidence"]) == 1
+    ev = detail["linked_evidence"][0]
+    assert ev["found"] is True
+    assert ev["filename"] == "q3_export.xlsx"
+    assert ev["description"] == "Q3 bookings export"
+
+    assert len(detail["linked_activities"]) == 1
+    act = detail["linked_activities"][0]
+    assert act["found"] is True
+    assert act["title"] == "QBR with Atlassian"
+    assert act["next_action"] == "Send follow-up deck"
+
+
+def test_compute_objective_detail_handles_dangling_reference_without_crashing():
+    """Intentional-failure case: a linked_evidence/linked_activities id that
+    doesn't resolve (e.g. later archived out of an export) must not crash
+    the detail assembly — it's surfaced as found=False, not silently
+    dropped or fatal."""
+    row = _detail_row(linked_evidence="EVD-9999", linked_activities="ACT-9999")
+    detail = objectives_mod.compute_objective_detail(row, {}, {})
+    assert detail["linked_evidence"] == [{"evidence_id": "EVD-9999", "found": False}]
+    assert detail["linked_activities"] == [{"activity_id": "ACT-9999", "found": False}]
+
+
+def test_compute_objective_detail_summary_mentions_category_and_progress():
+    row = _detail_row(linked_activities="ACT-0001;ACT-0002;ACT-0003;ACT-0004", linked_evidence="")
+    detail = objectives_mod.compute_objective_detail(row, {}, {})
+    assert "Commercial" in detail["summary_text"]
+    assert "100.0%" in detail["summary_text"] or "100%" in detail["summary_text"]
+    assert detail["category_label"] == "Commercial"
+
+
+def test_compute_objective_detail_summary_notes_no_evidence_when_none_linked():
+    row = _detail_row(linked_activities="", linked_evidence="")
+    detail = objectives_mod.compute_objective_detail(row, {}, {})
+    assert "No evidence or linked activities recorded yet." in detail["summary_text"]
+
+
+def test_compute_objective_detail_action_points_include_at_risk_reason_and_recovery():
+    row = _detail_row(status="at_risk", at_risk_reason="Slipping behind", recovery_action="Escalate to VP")
+    detail = objectives_mod.compute_objective_detail(row, {}, {})
+    texts = [a["text"] for a in detail["action_points"]]
+    assert "Slipping behind" in texts
+    assert "Escalate to VP" in texts
+
+
+def test_compute_objective_detail_action_points_include_linked_activity_next_action():
+    row = _detail_row(linked_evidence="")
+    journal_by_id = {"ACT-0001": {
+        "activity_id": "ACT-0001", "date": "2026-07-10", "next_action": "Send follow-up deck",
+    }}
+    detail = objectives_mod.compute_objective_detail(row, journal_by_id, {})
+    action_texts = [a["text"] for a in detail["action_points"]]
+    assert "Send follow-up deck" in action_texts
+    source = next(a["source"] for a in detail["action_points"] if a["text"] == "Send follow-up deck")
+    assert "ACT-0001" in source
+
+
+def test_compute_objective_detail_uses_passed_generated_at():
+    row = _detail_row()
+    detail = objectives_mod.compute_objective_detail(row, {}, {}, generated_at="2026-07-21T18:00:00")
+    assert detail["generated_at"] == "2026-07-21T18:00:00"

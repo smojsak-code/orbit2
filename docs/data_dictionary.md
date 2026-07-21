@@ -591,6 +591,38 @@ blank rather than guessing. Both the Cowork dashboard's Objectives tab and
 the public site's My Impact "Objectives" section show a colour-coded
 category badge per objective and a category filter dropdown.
 
+**Objective detail click-through view (added 2026-07-21, Steve's
+request).** Clicking any objective's name — in the Cowork dashboard's
+Objectives tab, or the public site's My Impact "Objectives" section —
+opens a detail modal: full breakdown (category, period, target, priorities,
+vendor), the progress bar/basis, an auto-updating narrative summary, every
+piece of linked evidence and linked activity with its own detail (not just
+bare ids), and an "action points" list (at-risk reason/recovery action,
+completion/miss note, the objective's own notes, and every linked
+activity's own `next_action`). All of this comes from `scripts/
+objectives.py`'s `compute_objective_detail(row, journal_by_id,
+evidence_by_id)` — a pure function, computed once per objective at build
+time by `load_objectives_snapshot()` and embedded as each row's `detail`
+key, so the dashboard, the public site, and any future downloadable report
+never disagree. The summary is "auto-updating" because it's regenerated
+fresh from whatever's currently linked every time this runs (i.e. after
+any edit + the required rebuild) — never a stored, potentially stale
+field.
+
+**Evidence file access is dashboard-only, not published to the public
+site.** `build_dashboard.py`'s `build_objective_evidence_files()`
+base64-embeds the real `evidence_library/` files behind every objective's
+`linked_evidence` (scoped to evidence actually linked to an objective, not
+the whole library) as `snapshot["objective_evidence_files"]`, so the
+Cowork dashboard's detail modal offers an instant local "View file"
+download. `build_web.py` never calls this — the public detail modal shows
+the same evidence metadata (filename, description, category/sub-metric,
+date, status — already public via `snapshot["evidence"]`, unchanged from
+R1) but not the file itself, with a note that it lives in the private
+dashboard. This mirrors the Contacts Phase 4 precedent (public mirror
+stricter than the private view) since evidence files can carry more
+sensitive raw content than their metadata.
+
 **Objective review export (instruction #52).** `objectives.py export
 [--period <period>]` writes a deterministic Markdown file to
 `reports/Objective_Review_<period>.md` — plain string templates over

@@ -113,6 +113,10 @@ YEAR_RE = re.compile(r"^\d{4}$")
 # where it belongs) but validate_data.py warns on it, and `create` refuses
 # to leave it blank.
 VALID_CATEGORY = {"relationship", "commercial", "strategic", "operational", "recognition"}
+CATEGORY_LABELS = {
+    "relationship": "Relationship", "commercial": "Commercial", "strategic": "Strategic",
+    "operational": "Operational", "recognition": "Recognition",
+}
 
 VALID_STATUS = {"on_track", "at_risk", "completed", "missed"}
 TERMINAL_STATUSES = {"completed", "missed"}
@@ -267,6 +271,171 @@ def compute_progress(row, journal_by_id=None):
         "official_pct": round(official, 1),
         "overachievement_pct": round(overachievement, 1),
         "basis": basis,
+    }
+
+
+def _load_evidence_by_id():
+    """data/evidence_index.csv, keyed by evidence_id. Own light reader
+    rather than importing scripts/evidence_ingest.py — that module owns
+    writes (file/remove commands); this is read-only lookup for
+    compute_objective_detail(), same "own light reader, no cross-module
+    write coupling" choice _load_journal_by_id() makes for journal.py."""
+    path = os.path.join(DATA_DIR, "evidence_index.csv")
+    if not os.path.exists(path):
+        return {}
+    with open(path, newline="") as f:
+        return {r.get("evidence_id"): r for r in csv.DictReader(f)}
+
+
+def compute_objective_detail(row, journal_by_id=None, evidence_by_id=None, generated_at=None):
+    """Full breakdown for one objective — the shared data source for both
+    the click-through detail view (Cowork dashboard + public My Impact tab)
+    and the future downloadable progress report (both consumers must never
+    disagree, same "compute once, embed in the snapshot" discipline as
+    compute_progress()/compute_profile_summary()).
+
+    Returns a dict:
+      objective_id, objective, category, period, status, success_measure,
+      target/target_unit/target_date, communardo_priority/atlassian_priority,
+      vendor, visibility, notes, created_at, updated_at,
+      progress: compute_progress()'s own output,
+      linked_evidence: [{evidence_id, date_added, category, sub_metric,
+        quarter, filename, description, status, source_type, found}, ...]
+        — full data/evidence_index.csv rows for every id in
+        row['linked_evidence'], not just the bare ids. found=False for a
+        dangling reference (validate_data.py also catches these separately;
+        this just never crashes the detail view over one bad id).
+      linked_activities: [{activity_id, date, type, title, outcome,
+        next_action, organisation, contribution_type, value, participants,
+        visibility, found}, ...] — full data/value_journal.jsonl entries.
+      action_points: [{text, source, date}, ...] — at_risk_reason/
+        recovery_action, completion_note, missed_reason, the objective's
+        own notes, and every linked activity's own non-empty next_action,
+        each tagged with where it came from so the UI can show provenance.
+      summary_text: a deterministic, template-generated narrative (same
+        no-AI-call discipline as compute_profile_summary()/impact.py's
+        narrative) — regenerated fresh from current linked evidence/
+        activities every time this is called, so it's automatically
+        up to date after any edit + rebuild, never a stored/stale field.
+      generated_at: ISO timestamp this detail was assembled (build time,
+        not request time — this whole app has no live backend).
+
+    This function is pure (no file I/O) — callers pass in already-read
+    journal_by_id/evidence_by_id maps, same pattern compute_progress()
+    already uses for journal_by_id.
+    """
+    journal_by_id = journal_by_id or {}
+    evidence_by_id = evidence_by_id or {}
+    progress = compute_progress(row, journal_by_id)
+
+    linked_evidence = []
+    for eid in split_ids(row.get("linked_evidence")):
+        e = evidence_by_id.get(eid)
+        if e:
+            linked_evidence.append({
+                "evidence_id": eid, "date_added": e.get("date_added", ""),
+                "category": e.get("category", ""), "sub_metric": e.get("sub_metric", ""),
+                "quarter": e.get("quarter", ""), "filename": e.get("filename", ""),
+                "description": e.get("description", ""), "status": e.get("status", ""),
+                "source_type": e.get("source_type", ""), "found": True,
+            })
+        else:
+            linked_evidence.append({"evidence_id": eid, "found": False})
+    linked_evidence.sort(key=lambda e: e.get("date_added", ""), reverse=True)
+
+    linked_activities = []
+    for aid in split_ids(row.get("linked_activities")):
+        a = journal_by_id.get(aid)
+        if a:
+            linked_activities.append({
+                "activity_id": aid, "date": a.get("date", ""), "type": a.get("type", ""),
+                "title": a.get("title", ""), "outcome": a.get("outcome", ""),
+                "next_action": a.get("next_action", ""), "organisation": a.get("organisation", ""),
+                "contribution_type": a.get("contribution_type", ""), "value": a.get("value") or {},
+                "participants": a.get("participants", ""), "visibility": a.get("visibility", ""),
+                "found": True,
+            })
+        else:
+            linked_activities.append({"activity_id": aid, "found": False})
+    linked_activities.sort(key=lambda a: a.get("date", ""), reverse=True)
+
+    action_points = []
+    if row.get("status") == "at_risk" and row.get("at_risk_reason"):
+        action_points.append({"text": row.get("at_risk_reason"), "source": "at-risk reason", "date": row.get("updated_at", "")})
+    if row.get("status") == "at_risk" and row.get("recovery_action"):
+        action_points.append({"text": row.get("recovery_action"), "source": "recovery action", "date": row.get("updated_at", "")})
+    if row.get("status") == "completed" and row.get("completion_note"):
+        action_points.append({"text": row.get("completion_note"), "source": "completion note", "date": row.get("completed_at", "")})
+    if row.get("status") == "missed" and row.get("missed_reason"):
+        action_points.append({"text": row.get("missed_reason"), "source": "missed reason", "date": row.get("missed_at", "")})
+    if row.get("notes"):
+        action_points.append({"text": row.get("notes"), "source": "notes", "date": row.get("updated_at", "")})
+    for a in linked_activities:
+        if a.get("found") and (a.get("next_action") or "").strip():
+            action_points.append({"text": a["next_action"], "source": f"next action from {a['activity_id']}", "date": a.get("date", "")})
+
+    # --- Summary narrative (deterministic, no AI call) ---
+    category_label = CATEGORY_LABELS.get(row.get("category") or "", "Uncategorised")
+    over_note = f" (+{progress['overachievement_pct']}% overachievement)" if progress["overachievement_pct"] > 0 else ""
+    lines = [
+        f"{row.get('objective', '')} — {category_label} objective for {row.get('period', '?')}.",
+    ]
+    if row.get("success_measure"):
+        lines.append(f"Success measure: {row.get('success_measure')}.")
+    lines.append(
+        f"Status: {(row.get('status') or 'on_track').replace('_', ' ')}. "
+        f"{progress['official_pct']}% complete{over_note} — {progress['basis']}."
+    )
+    if row.get("communardo_priority") or row.get("atlassian_priority"):
+        lines.append(
+            f"Communardo priority: {row.get('communardo_priority') or 'not set'}. "
+            f"Atlassian priority: {row.get('atlassian_priority') or 'not set'}."
+        )
+    found_evidence = [e for e in linked_evidence if e.get("found")]
+    found_activities = [a for a in linked_activities if a.get("found")]
+    if found_evidence or found_activities:
+        parts = []
+        if found_evidence:
+            parts.append(f"{len(found_evidence)} piece{'s' if len(found_evidence) != 1 else ''} of evidence")
+        if found_activities:
+            parts.append(f"{len(found_activities)} linked activit{'ies' if len(found_activities) != 1 else 'y'}")
+        lines.append(f"Supported by {' and '.join(parts)}.")
+        if found_evidence:
+            latest = found_evidence[0]
+            lines.append(f"Most recent evidence: {latest.get('filename') or latest.get('evidence_id')}"
+                          + (f" — {latest.get('description')}" if latest.get("description") else "") + ".")
+    else:
+        lines.append("No evidence or linked activities recorded yet.")
+    if row.get("status") == "at_risk":
+        lines.append(f"At risk: {row.get('at_risk_reason') or 'no reason on file'}. "
+                      f"Recovery plan: {row.get('recovery_action') or 'none on file'}.")
+    if row.get("status") == "completed":
+        lines.append(f"Completed {row.get('completed_at') or ''}"
+                      + (f" — {row.get('completion_note')}" if row.get("completion_note") else "") + ".")
+    if row.get("status") == "missed":
+        lines.append(f"Missed {row.get('missed_at') or ''} — {row.get('missed_reason') or 'no reason on file'}.")
+
+    return {
+        "objective_id": row.get("objective_id"),
+        "objective": row.get("objective"),
+        "category": row.get("category") or "",
+        "category_label": category_label,
+        "period": row.get("period"),
+        "status": row.get("status") or "on_track",
+        "success_measure": row.get("success_measure") or "",
+        "target": row.get("target") or "", "target_unit": row.get("target_unit") or "",
+        "target_date": row.get("target_date") or "",
+        "communardo_priority": row.get("communardo_priority") or "",
+        "atlassian_priority": row.get("atlassian_priority") or "",
+        "vendor": row.get("vendor") or "", "visibility": row.get("visibility") or "",
+        "notes": row.get("notes") or "",
+        "created_at": row.get("created_at") or "", "updated_at": row.get("updated_at") or "",
+        "progress": progress,
+        "linked_evidence": linked_evidence,
+        "linked_activities": linked_activities,
+        "action_points": action_points,
+        "summary_text": "\n".join(lines),
+        "generated_at": generated_at or datetime.now().isoformat(timespec="seconds"),
     }
 
 

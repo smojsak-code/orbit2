@@ -175,7 +175,7 @@ function renderImpactObjectives() {
     row.className = 'obj-status-row';
     row.innerHTML = `
       <div>
-        <div class="obj-title">${esc(o.objective)} ${impactCategoryBadge(o.category)}</div>
+        <button type="button" class="obj-name-link obj-title" onclick="openObjectiveDetailModal('${esc(o.objective_id)}')">${esc(o.objective)}</button> ${impactCategoryBadge(o.category)}
         <div class="obj-meta">${esc(o.period)}${o.target_date ? ' · due ' + esc(o.target_date) : ''}</div>
       </div>
       <div class="obj-progress-wrap">
@@ -190,6 +190,110 @@ function renderImpactObjectives() {
 function setupImpactObjectivesFilter() {
   const sel = document.getElementById('impactObjFilterCategory');
   if (sel) sel.addEventListener('change', renderImpactObjectives);
+}
+
+// --- Objective detail click-through view (2026-07-21) ---
+// Same SNAPSHOT.objectives[].detail every objective carries (computed
+// once at build time by scripts/objectives.py's compute_objective_detail(),
+// shared verbatim with the Cowork dashboard's own detail modal — see
+// dashboard.html's renderObjectiveDetailHtml() for the twin implementation
+// and its own doc comment). The only difference here: evidence is
+// metadata-only (no file download) — the actual evidence_library/ files
+// stay inside the private Cowork dashboard, never published to this
+// public page. filesAvailable=false below is what drives that.
+function objectiveCategoryBadge(category) {
+  return impactCategoryBadge(category);
+}
+
+function openObjectiveDetailModal(objectiveId) {
+  const o = (SNAPSHOT.objectives || []).find(x => x.objective_id === objectiveId);
+  if (!o || !o.detail) return;
+  document.getElementById('objectiveDetailTitle').textContent = o.detail.objective || objectiveId;
+  document.getElementById('objectiveDetailBody').innerHTML = renderObjectiveDetailHtml(o.detail, false);
+  document.getElementById('objectiveDetailModalOverlay').classList.add('open');
+  document.querySelector('.wrap').setAttribute('inert', '');
+  document.addEventListener('keydown', objectiveDetailModalKeydown);
+}
+
+function closeObjectiveDetailModal() {
+  document.getElementById('objectiveDetailModalOverlay').classList.remove('open');
+  document.querySelector('.wrap').removeAttribute('inert');
+  document.removeEventListener('keydown', objectiveDetailModalKeydown);
+}
+
+function objectiveDetailModalKeydown(e) {
+  if (e.key === 'Escape') closeObjectiveDetailModal();
+}
+
+function renderObjectiveDetailHtml(d, filesAvailable) {
+  const p = d.progress || { official_pct: 0, overachievement_pct: 0, basis: '' };
+  const fillClass = d.status === 'completed' ? 'completed' : (d.status === 'at_risk' ? 'at-risk' : '');
+  const overBadge = p.overachievement_pct > 0 ? `<span class="obj-over-badge">+${p.overachievement_pct}% over</span>` : '';
+
+  const metaGrid = `
+    <div class="obj-detail-meta-grid">
+      <div><div class="label">Category</div>${objectiveCategoryBadge(d.category)}</div>
+      <div><div class="label">Period</div>${esc(d.period)}</div>
+      <div><div class="label">Status</div><span class="objective-status-pill objective-status-${esc(d.status)}">${esc(d.status.replace('_', ' '))}</span></div>
+      <div><div class="label">Target date</div>${esc(d.target_date) || '—'}</div>
+      <div><div class="label">Target</div>${d.target ? esc(d.target) + ' ' + esc(d.target_unit || '') : '—'}</div>
+      <div><div class="label">Communardo priority</div>${esc(d.communardo_priority) || '—'}</div>
+      <div><div class="label">Atlassian priority</div>${esc(d.atlassian_priority) || '—'}</div>
+      <div><div class="label">Vendor</div>${esc(d.vendor) || '—'}</div>
+    </div>`;
+
+  const evidenceHtml = d.linked_evidence.length ? d.linked_evidence.map(e => {
+    if (!e.found) return `<div class="obj-evidence-item"><span class="obj-evidence-dangling">${esc(e.evidence_id)} — no longer on file</span></div>`;
+    return `<div class="obj-evidence-item">
+      <div class="filename">${esc(e.evidence_id)} — ${esc(e.description) || esc(e.filename)}</div>
+      <div class="meta">${esc(e.filename)} · ${esc(e.category)} / ${esc(e.sub_metric)} · ${esc(e.quarter)} · added ${esc(e.date_added)} · ${esc(e.status)}</div>
+      ${filesAvailable ? '' : `<div class="meta" style="margin-top:4px;">File stays inside the private Cowork dashboard.</div>`}
+    </div>`;
+  }).join('') : '<div class="empty">No evidence linked yet.</div>';
+
+  const activityHtml = d.linked_activities.length ? d.linked_activities.map(a => {
+    if (!a.found) return `<div class="obj-activity-item"><span class="obj-evidence-dangling">${esc(a.activity_id)} — no longer on file</span></div>`;
+    const value = a.value && a.value.amount ? `${a.value.amount} ${a.value.currency || ''} (${a.value.status || ''})` : '';
+    return `<div class="obj-activity-item">
+      <div class="title">${esc(a.title) || a.activity_id}</div>
+      <div class="meta">${esc(a.date)} · ${esc(a.type) || ''} ${a.organisation ? '· ' + esc(a.organisation) : ''} ${value ? '· ' + esc(value) : ''}</div>
+      ${a.outcome ? `<div style="margin-top:4px;">${esc(a.outcome)}</div>` : ''}
+      ${a.next_action ? `<div class="meta" style="margin-top:2px;">Next: ${esc(a.next_action)}</div>` : ''}
+    </div>`;
+  }).join('') : '<div class="empty">No activities linked yet.</div>';
+
+  const actionPointsHtml = d.action_points.length ? d.action_points.map(a => `
+    <div class="obj-action-point">
+      <span class="source">${esc(a.source)}${a.date ? ' · ' + esc(a.date) : ''}</span>
+      <span>${esc(a.text)}</span>
+    </div>`).join('') : '<div class="empty">No open action points.</div>';
+
+  return `
+    ${metaGrid}
+    <div class="obj-detail-section" style="margin-top:16px;">
+      <h4>Progress</h4>
+      <div class="obj-progress-wrap" style="min-width:100%;">
+        <div class="obj-progress-track"><div class="obj-progress-fill ${fillClass}" style="width:${p.official_pct}%"></div></div>
+        <div class="obj-progress-label">${p.official_pct}%${overBadge} — ${esc(p.basis)}</div>
+      </div>
+    </div>
+    <div class="obj-detail-section">
+      <h4>Summary</h4>
+      <div class="obj-detail-summary">${esc(d.summary_text)}</div>
+    </div>
+    <div class="obj-detail-section">
+      <h4>Evidence (${d.linked_evidence.length})</h4>
+      ${evidenceHtml}
+    </div>
+    <div class="obj-detail-section">
+      <h4>Linked activities (${d.linked_activities.length})</h4>
+      ${activityHtml}
+    </div>
+    <div class="obj-detail-section">
+      <h4>Action points</h4>
+      ${actionPointsHtml}
+    </div>
+    <div class="obj-generated-note">Generated ${esc(d.generated_at)}</div>`;
 }
 
 function renderImpactView() {
