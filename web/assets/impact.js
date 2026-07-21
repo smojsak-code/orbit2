@@ -144,17 +144,27 @@ function renderImpactFinancial(financial) {
  * (e.g. "2026-Q3") is a fixed assignment, not a rolling window, so it isn't
  * re-filtered by week/month/quarter/year the way journal-derived sections
  * are. */
+function impactCategoryBadge(category) {
+  const c = category || '';
+  const cls = ['relationship', 'commercial', 'strategic', 'operational', 'recognition'].includes(c) ? c : 'uncategorised';
+  const label = c || 'uncategorised';
+  return `<span class="obj-category-badge obj-category-${cls}">${esc(label)}</span>`;
+}
+
 function renderImpactObjectives() {
   const list = document.getElementById('impactObjectivesList');
   if (!list) return;
   const all = SNAPSHOT.objectives || [];
+  const categorySel = document.getElementById('impactObjFilterCategory');
+  const category = categorySel ? categorySel.value : '';
   const active = all
     .filter(o => o.status === 'on_track' || o.status === 'at_risk')
+    .filter(o => !category || o.category === category)
     .sort((a, b) => (a.target_date || '9999-99-99').localeCompare(b.target_date || '9999-99-99'));
 
   list.innerHTML = '';
   if (!active.length) {
-    list.innerHTML = '<div class="home-empty">No active objectives on file. Add one from the Objectives tab in Cowork.</div>';
+    list.innerHTML = '<div class="home-empty">No active objectives match this filter. Add one from the Objectives tab in Cowork.</div>';
     return;
   }
   active.forEach(o => {
@@ -165,7 +175,7 @@ function renderImpactObjectives() {
     row.className = 'obj-status-row';
     row.innerHTML = `
       <div>
-        <div class="obj-title">${esc(o.objective)}</div>
+        <div class="obj-title">${esc(o.objective)} ${impactCategoryBadge(o.category)}</div>
         <div class="obj-meta">${esc(o.period)}${o.target_date ? ' · due ' + esc(o.target_date) : ''}</div>
       </div>
       <div class="obj-progress-wrap">
@@ -175,6 +185,11 @@ function renderImpactObjectives() {
       <span class="objective-status-pill objective-status-${esc(o.status)}">${esc(o.status.replace('_', ' '))}</span>`;
     list.appendChild(row);
   });
+}
+
+function setupImpactObjectivesFilter() {
+  const sel = document.getElementById('impactObjFilterCategory');
+  if (sel) sel.addEventListener('change', renderImpactObjectives);
 }
 
 function renderImpactView() {

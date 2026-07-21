@@ -195,6 +195,13 @@
   .objective-status-missed { background: #f3f4f6; color: #9ca3af; }
   .obj-priority-tag { font-size: 9.5px; padding: 1px 6px; border-radius: 999px; background: #f3f4f6; color: #6b7280; margin-right: 3px; }
   .obj-priority-tag.high { background: #fffbeb; color: #b45309; }
+  .obj-category-badge { font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
+  .obj-category-relationship { background: #f5f3ff; color: #7c3aed; }
+  .obj-category-commercial { background: #ecfdf5; color: #059669; }
+  .obj-category-strategic { background: #eff6ff; color: #2563eb; }
+  .obj-category-operational { background: #fffbeb; color: #b45309; }
+  .obj-category-recognition { background: #fdf2f8; color: #db2777; }
+  .obj-category-uncategorised { background: #f3f4f6; color: #9ca3af; }
   .obj-inline-form { display: flex; flex-direction: column; gap: 4px; min-width: 200px; }
   .obj-inline-form input, .obj-inline-form select, .obj-inline-form textarea { font-size: 11px; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; }
   .obj-btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -461,6 +468,14 @@
           <option value="missed">Missed</option>
           <option value="all">All statuses</option>
         </select>
+        <select id="objFilterCategory">
+          <option value="" selected>All categories</option>
+          <option value="relationship">Relationship</option>
+          <option value="commercial">Commercial</option>
+          <option value="strategic">Strategic</option>
+          <option value="operational">Operational</option>
+          <option value="recognition">Recognition</option>
+        </select>
         <button class="btn-primary" onclick="openObjectiveModal()">+ Add Objective</button>
         <button class="btn-secondary" onclick="startExportObjectives()">Export review</button>
       </div>
@@ -643,9 +658,21 @@
         <div class="modal-error">Please describe the objective.</div>
       </div>
       <div class="modal-field" id="fieldObjPeriod">
-        <label for="objPeriod">Period * <span class="toggle-hint" style="display:inline;">'2026-Q3' for a quarter, or '2026' for the full year</span></label>
+        <label for="objPeriod">Period * <span class="toggle-hint" style="display:inline;">'2026-Q3' for a quarter, or '2026' for the full year — independent of the category, each objective spans its own period</span></label>
         <input type="text" id="objPeriod" placeholder="2026-Q3">
         <div class="modal-error">Please enter a valid quarter (YYYY-Q1..4) or year (YYYY).</div>
+      </div>
+      <div class="modal-field" id="fieldObjCategory">
+        <label for="objCategory">Category * <span class="toggle-hint" style="display:inline;">which section this belongs in</span></label>
+        <select id="objCategory">
+          <option value="" selected disabled>— choose one —</option>
+          <option value="relationship">Relationship</option>
+          <option value="commercial">Commercial</option>
+          <option value="strategic">Strategic</option>
+          <option value="operational">Operational</option>
+          <option value="recognition">Recognition</option>
+        </select>
+        <div class="modal-error">Please choose a category.</div>
       </div>
       <div class="modal-field">
         <label for="objSuccessMeasure">Success measure</label>
@@ -1780,14 +1807,23 @@ function populateObjectivePeriodFilter() {
   if (periods.includes(current)) sel.value = current;
 }
 
+function categoryBadge(category) {
+  const c = category || '';
+  const cls = ['relationship', 'commercial', 'strategic', 'operational', 'recognition'].includes(c) ? c : 'uncategorised';
+  const label = c || 'uncategorised';
+  return `<span class="obj-category-badge obj-category-${cls}">${esc(label)}</span>`;
+}
+
 function renderObjectivesView() {
   populateObjectivePeriodFilter();
   const all = SNAPSHOT.objectives || [];
   const period = document.getElementById('objFilterPeriod').value;
   const status = document.getElementById('objFilterStatus').value;
+  const category = document.getElementById('objFilterCategory').value;
 
   const filtered = all.filter(o => {
     if (period && o.period !== period) return false;
+    if (category && o.category !== category) return false;
     if (status === 'open_all') { if (o.status === 'completed' || o.status === 'missed') return false; }
     else if (status !== 'all' && o.status !== status) return false;
     return true;
@@ -1802,7 +1838,7 @@ function renderObjectivesView() {
   }
 
   table.innerHTML = `
-    <tr><th>Objective</th><th>Period</th><th>Priority</th><th>Progress</th><th>Status</th><th>Target date</th><th>Actions</th></tr>
+    <tr><th>Objective</th><th>Category</th><th>Period</th><th>Priority</th><th>Progress</th><th>Status</th><th>Target date</th><th>Actions</th></tr>
     ${filtered.map(o => {
       const p = o.progress || { official_pct: 0, overachievement_pct: 0, basis: '' };
       const fillClass = o.status === 'completed' ? 'completed' : (o.status === 'at_risk' ? 'at-risk' : '');
@@ -1827,6 +1863,7 @@ function renderObjectivesView() {
       }
       return `<tr>
         <td title="${esc(o.objective)}">${esc(o.objective)}${o.success_measure ? `<div class="empty" style="padding:0;">${esc(o.success_measure)}</div>` : ''}</td>
+        <td>${categoryBadge(o.category)}</td>
         <td>${esc(o.period)}</td>
         <td>${priorities || '—'}</td>
         <td>
@@ -1845,7 +1882,7 @@ function renderObjectivesView() {
 }
 
 function setupObjectivesFilters() {
-  ['objFilterPeriod', 'objFilterStatus'].forEach(id =>
+  ['objFilterPeriod', 'objFilterStatus', 'objFilterCategory'].forEach(id =>
     document.getElementById(id).addEventListener('change', renderObjectivesView));
 }
 
@@ -1973,6 +2010,7 @@ function closeObjectiveModal() {
   document.getElementById('objectiveForm').reset();
   document.getElementById('fieldObjText').classList.remove('error');
   document.getElementById('fieldObjPeriod').classList.remove('error');
+  document.getElementById('fieldObjCategory').classList.remove('error');
 }
 
 function objectiveModalKeydown(e) {
@@ -1985,13 +2023,16 @@ function submitObjectiveForm(evt) {
   evt.preventDefault();
   const objective = document.getElementById('objText').value.trim();
   const period = document.getElementById('objPeriod').value.trim();
+  const category = document.getElementById('objCategory').value;
   let hasError = false;
   document.getElementById('fieldObjText').classList.toggle('error', !objective);
   document.getElementById('fieldObjPeriod').classList.toggle('error', !OBJ_PERIOD_RE.test(period));
+  document.getElementById('fieldObjCategory').classList.toggle('error', !category);
   if (!objective) hasError = true;
   if (!OBJ_PERIOD_RE.test(period)) hasError = true;
+  if (!category) hasError = true;
   if (hasError) {
-    document.getElementById(objective ? 'objPeriod' : 'objText').focus();
+    document.getElementById(!objective ? 'objText' : (!OBJ_PERIOD_RE.test(period) ? 'objPeriod' : 'objCategory')).focus();
     return false;
   }
 
@@ -2011,7 +2052,7 @@ function submitObjectiveForm(evt) {
 
   const esc2 = s => (s || '').replace(/"/g, '\\"');
   let cmd = `scripts/objectives.py create --objective "${esc2(objective)}" --period "${esc2(period)}"` +
-    ` --progress-method ${progressMethod}`;
+    ` --category ${category} --progress-method ${progressMethod}`;
   if (successMeasure) cmd += ` --success-measure "${esc2(successMeasure)}"`;
   if (target) cmd += ` --target ${target}`;
   if (targetUnit) cmd += ` --target-unit "${esc2(targetUnit)}"`;

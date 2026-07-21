@@ -204,12 +204,22 @@
   .objective-status-at_risk { background: #fef2f2; color: #dc2626; }
   .objective-status-completed { background: #ecfdf5; color: #059669; }
   .objective-status-missed { background: #f3f4f6; color: #9ca3af; }
+  .obj-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .obj-filter-bar select { padding: 6px 9px; border-radius: 6px; border: 1px solid #d1d5db; background: #fff; font-size: 12px; }
+  .obj-category-badge { font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; flex-shrink: 0; }
+  .obj-category-relationship { background: #f5f3ff; color: #7c3aed; }
+  .obj-category-commercial { background: #ecfdf5; color: #059669; }
+  .obj-category-strategic { background: #eff6ff; color: #2563eb; }
+  .obj-category-operational { background: #fffbeb; color: #b45309; }
+  .obj-category-recognition { background: #fdf2f8; color: #db2777; }
+  .obj-category-uncategorised { background: #f3f4f6; color: #9ca3af; }
   @media print {
     header, .tab-bar, .home-toolbar, .primary-actions, .home-notice, .impact-toolbar .btn-secondary,
     #viewHome, #viewDashboard, #viewActions, #viewContacts, #viewReports, #viewSettings, .footer-note { display: none !important; }
     #viewImpact { display: block !important; }
     body { background: #fff; padding: 0; }
     .impact-cat-card, .impact-financial-card, .impact-narrative, .impact-objectives-card, .card { break-inside: avoid; }
+    .obj-filter-bar { display: none !important; }
   }
 
   .modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
@@ -360,6 +370,16 @@
 
     <div class="card impact-objectives-card">
       <h3>Objectives <span class="toggle-hint" style="font-weight:400;">quarterly/annual role objectives — independent of the period selector above, each spans its own period</span></h3>
+      <div class="obj-filter-bar">
+        <select id="impactObjFilterCategory">
+          <option value="" selected>All categories</option>
+          <option value="relationship">Relationship</option>
+          <option value="commercial">Commercial</option>
+          <option value="strategic">Strategic</option>
+          <option value="operational">Operational</option>
+          <option value="recognition">Recognition</option>
+        </select>
+      </div>
       <div id="impactObjectivesList"></div>
     </div>
 
@@ -1416,6 +1436,7 @@ fetch('data/web_snapshot.json', { cache: 'no-store' })
     setupHomeControls();
     renderImpactView();
     setupImpactControls();
+    setupImpactObjectivesFilter();
     renderContactsView();
   })
   .catch(err => {
