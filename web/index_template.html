@@ -104,6 +104,25 @@
   #viewActions { display: none; }
   #viewSettings { display: none; }
   #viewImpact { display: none; }
+  #viewContacts { display: none; }
+  .contacts-org-map { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+  .contacts-org-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 14px; min-width: 220px; flex: 1 1 240px; background: #fafbfc; }
+  .contacts-org-card h4 { font-size: 12.5px; font-weight: 700; margin: 0 0 8px; color: #374151; }
+  .contacts-chip { display: flex; align-items: center; gap: 6px; font-size: 11.5px; padding: 4px 0; border-bottom: 1px dashed #eef0f3; }
+  .contacts-chip:last-child { border-bottom: none; }
+  .contacts-influence-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: #d1d5db; }
+  .contacts-influence-critical { background: #dc2626; }
+  .contacts-influence-high { background: #d97706; }
+  .contacts-influence-medium { background: #2563eb; }
+  .contacts-influence-low { background: #9ca3af; }
+  .contacts-chip-meta { color: #9ca3af; }
+  .contacts-strength-badge { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 999px; text-transform: uppercase; margin-left: auto; }
+  .contacts-strength-strong { background: #ecfdf5; color: #059669; }
+  .contacts-strength-developing { background: #eff6ff; color: #2563eb; }
+  .contacts-strength-weak { background: #f3f4f6; color: #9ca3af; }
+  .contacts-strength-at_risk { background: #fef2f2; color: #dc2626; }
+  .contacts-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 10.5px; color: #6b7280; margin-bottom: 14px; }
+  .contacts-legend span { display: flex; align-items: center; gap: 4px; }
   .action-checkbox-row { display: flex; align-items: center; gap: 8px; margin: 4px 0 12px; font-size: 13px; color: #374151; }
   .action-checkbox-row input { width: auto; }
   .action-subfields { display: none; }
@@ -187,7 +206,7 @@
   .objective-status-missed { background: #f3f4f6; color: #9ca3af; }
   @media print {
     header, .tab-bar, .home-toolbar, .primary-actions, .home-notice, .impact-toolbar .btn-secondary,
-    #viewHome, #viewDashboard, #viewActions, #viewReports, #viewSettings, .footer-note { display: none !important; }
+    #viewHome, #viewDashboard, #viewActions, #viewContacts, #viewReports, #viewSettings, .footer-note { display: none !important; }
     #viewImpact { display: block !important; }
     body { background: #fff; padding: 0; }
     .impact-cat-card, .impact-financial-card, .impact-narrative, .impact-objectives-card, .card { break-inside: avoid; }
@@ -253,6 +272,7 @@
     <button class="tab-btn" id="tabImpact" onclick="switchView('impact')">My Impact</button>
     <button class="tab-btn" id="tabDashboard" onclick="switchView('dashboard')">Dashboard</button>
     <button class="tab-btn" id="tabActions" onclick="switchView('actions')">Actions</button>
+    <button class="tab-btn" id="tabContacts" onclick="switchView('contacts')">Contacts</button>
     <button class="tab-btn" id="tabReports" onclick="switchView('reports')">Reports</button>
     <button class="tab-btn" id="tabSettings" onclick="switchView('settings')">Settings</button>
   </div>
@@ -511,6 +531,16 @@
       </div>
       <table class="data-table" id="actionsTable"></table>
       <div class="dz-empty-hint" id="actionsHint" style="font-size:10.5px;color:#9ca3af;margin-top:6px;"></div>
+    </section>
+  </div>
+
+  <div id="viewContacts">
+    <section class="block card">
+      <h2>Contacts <span class="toggle-hint">org / influence map — shows only contacts explicitly cleared for external sharing; everything else stays inside the private Cowork dashboard</span></h2>
+      <div id="contactsEmptyState" class="dz-empty-hint" style="display:none;"></div>
+      <div id="contactsOrgMap" class="contacts-org-map"></div>
+      <h3 style="font-size:13px;margin:22px 0 8px;">All cleared contacts</h3>
+      <table class="data-table" id="contactsTable"></table>
     </section>
   </div>
 
@@ -939,7 +969,7 @@ function render(vendorName) {
 // Note: #viewReports and #viewSettings both have a hard `display: none` in the stylesheet, so
 // showing one needs an explicit 'block' — setting style.display = '' just falls back to that CSS
 // rule and leaves it hidden even though nothing errors.
-const VIEWS = ['home', 'impact', 'dashboard', 'actions', 'reports', 'settings'];
+const VIEWS = ['home', 'impact', 'dashboard', 'actions', 'contacts', 'reports', 'settings'];
 function switchView(view) {
   VIEWS.forEach(v => {
     const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
@@ -1288,6 +1318,67 @@ function downloadReport(format) {
   return true; // let the browser follow the href/download attribute normally
 }
 
+// --- Contacts (Phase 4, R3-T01) — read-only public mirror ---
+// SNAPSHOT.contacts here is already the privacy-filtered, slim public
+// view build_web.py's compute_public_contacts()/contacts.py's
+// public_contact_view() produced — only contacts explicitly cleared for
+// external sharing, with sensitive/subjective evidence and direct contact
+// details already stripped server-side. This code never re-decides what's
+// safe to show; it only renders what's already in the snapshot.
+function renderContactsView() {
+  const contacts = SNAPSHOT.contacts || [];
+  const emptyState = document.getElementById('contactsEmptyState');
+  const mapEl = document.getElementById('contactsOrgMap');
+  const table = document.getElementById('contactsTable');
+
+  if (!contacts.length) {
+    emptyState.style.display = '';
+    emptyState.textContent = 'No contacts are currently cleared for external sharing. Contacts stay ' +
+      'inside the private Cowork dashboard until someone sets a contact\'s visibility to ' +
+      'atlassian_shareable, customer_approved, anonymised, or public.';
+    mapEl.innerHTML = '';
+    table.innerHTML = '';
+    return;
+  }
+  emptyState.style.display = 'none';
+
+  const byCompany = {};
+  contacts.forEach(c => {
+    const key = c.company || c.affiliation || 'Unaffiliated';
+    (byCompany[key] = byCompany[key] || []).push(c);
+  });
+
+  const legend = `<div class="contacts-legend">
+    <span><span class="contacts-influence-dot contacts-influence-critical"></span>Critical influence</span>
+    <span><span class="contacts-influence-dot contacts-influence-high"></span>High</span>
+    <span><span class="contacts-influence-dot contacts-influence-medium"></span>Medium</span>
+    <span><span class="contacts-influence-dot contacts-influence-low"></span>Low / unknown</span>
+  </div>`;
+
+  mapEl.innerHTML = legend + Object.entries(byCompany).map(([company, rows]) => `
+    <div class="contacts-org-card">
+      <h4>${esc(company)}</h4>
+      ${rows.map(c => `
+        <div class="contacts-chip">
+          <span class="contacts-influence-dot contacts-influence-${esc(c.influence_level || 'low')}"></span>
+          <span>${esc(c.canonical_name)}</span>
+          <span class="contacts-chip-meta">${esc(c.title || c.stakeholder_role || '')}</span>
+          ${c.relationship_strength ? `<span class="contacts-strength-badge contacts-strength-${esc(c.relationship_strength)}">${esc(c.relationship_strength.replace('_', ' '))}</span>` : ''}
+        </div>`).join('')}
+    </div>`).join('');
+
+  table.innerHTML = `
+    <tr><th>Name</th><th>Title / Company</th><th>Affiliation</th><th>Region</th><th>Influence / Strength</th></tr>
+    ${contacts.slice().sort((a, b) => (a.canonical_name || '').localeCompare(b.canonical_name || '')).map(c => `
+      <tr>
+        <td>${esc(c.canonical_name)}</td>
+        <td>${esc(c.title) || '—'}${c.company ? ' @ ' + esc(c.company) : ''}</td>
+        <td>${esc(c.affiliation) || '—'}</td>
+        <td>${esc(c.region) || esc(c.country) || '—'}</td>
+        <td>${esc(c.influence_level) || '—'} / ${esc(c.relationship_strength) || '—'}</td>
+      </tr>`).join('')}`;
+}
+
 function setupVendorSelect() {
   const sel = document.getElementById('vendorSelect');
   sel.innerHTML = '';
@@ -1325,6 +1416,7 @@ fetch('data/web_snapshot.json', { cache: 'no-store' })
     setupHomeControls();
     renderImpactView();
     setupImpactControls();
+    renderContactsView();
   })
   .catch(err => {
     document.getElementById('loadingState').style.display = 'none';

@@ -413,6 +413,74 @@ def _current_evidence_for_field(contact_id, field, evidence_rows):
     return sorted(rows, key=lambda e: e.get("extracted_at", ""), reverse=True)
 
 
+# ---------------------------------------------------------------------------
+# Public-site visibility (Contacts Phase 4). The GitHub Pages site is a
+# genuinely public URL, and contacts carry real people's PII — this is a
+# categorically bigger exposure risk than a Steve-only Cowork dashboard, so
+# it gets its own, stricter allow-list rather than reusing
+# build_web.py's `_visible_for_homepage()` (which only excludes the single
+# `personal_only` value — fine for Steve's own activity log, not fine for
+# third parties' profile data). Confirmed with Steve: default is EXCLUDE.
+# A contact only appears on the public site once someone deliberately sets
+# its `visibility` to one of PUBLIC_VISIBILITY_TIERS; every contact's
+# default (`communardo_internal`, set by find-or-create/create) stays
+# internal-only unless explicitly changed via `edit --visibility`.
+# ---------------------------------------------------------------------------
+
+PUBLIC_VISIBILITY_TIERS = {"atlassian_shareable", "customer_approved", "anonymised", "public"}
+
+
+def is_public_visible(row):
+    """True only if this contact's own `visibility` field explicitly marks
+    it cleared for external/public sharing (see PUBLIC_VISIBILITY_TIERS
+    above). personal_only/communardo_internal/communardo_management —
+    including every contact's default — are never public."""
+    return (row.get("visibility") or "") in PUBLIC_VISIBILITY_TIERS
+
+
+def public_contact_view(row, evidence_rows):
+    """Slim, privacy-conscious public-site rendering of one contact — NOT
+    the same thing as compute_profile_summary(), which is Steve's full
+    internal view (confirmed/probable/subjective evidence, missing-info
+    flags, alias history, possible_duplicate review flags) and never
+    leaves the Cowork dashboard. This public view deliberately omits:
+    direct contact details (email, phone — even for an explicitly cleared
+    contact, business-card details aren't published without a separate,
+    explicit ask); any evidence flagged sensitivity 'sensitive' or
+    'subjective' (opinions/observations about a real person have no place
+    on a public page); system/internal-only fields (relationship_owner,
+    notes, raw_extracted_name/alias history, possible_duplicate flags —
+    Steve's working notes, not public-facing); and the merge/system audit
+    trail. What's left is business-card-level identity plus objective
+    relationship signals (title, company, affiliation, region, influence
+    level, stakeholder role) — enough for an org/influence map, nothing
+    more. Caller is responsible for only passing rows that already pass
+    is_public_visible()."""
+    contact_id = row.get("contact_id")
+    public_facts = []
+    for e in evidence_rows:
+        if e.get("contact_id") != contact_id or e.get("superseded_by"):
+            continue
+        if e.get("sensitivity") in ("sensitive", "subjective"):
+            continue
+        if e.get("field") in ("merge_event", "possible_duplicate"):
+            continue
+        public_facts.append({"field": e.get("field"), "value": e.get("value"), "confidence": e.get("confidence")})
+    return {
+        "contact_id": contact_id,
+        "canonical_name": row.get("canonical_name") or row.get("raw_extracted_name") or contact_id,
+        "title": row.get("title") or "",
+        "company": row.get("company") or "",
+        "affiliation": row.get("affiliation") or "",
+        "region": row.get("region") or "",
+        "country": row.get("country") or "",
+        "stakeholder_role": row.get("stakeholder_role") or "",
+        "influence_level": row.get("influence_level") or "",
+        "relationship_strength": row.get("relationship_strength") or "",
+        "public_facts": public_facts,
+    }
+
+
 def possible_duplicate_flags(contact_id, evidence_rows):
     """Structured view of this contact's unresolved possible_duplicate
     evidence (Phase 2 batch ingest). compute_profile_summary() lists these

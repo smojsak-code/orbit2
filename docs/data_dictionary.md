@@ -853,6 +853,49 @@ Contact" opens a modal for `contacts.py create` (skips identity
 resolution — for an unsure case, ask Claude in chat to run
 `find-or-create` instead, which checks for a match first).
 
+### Contacts register — public-site mirror (Contacts Phase 4)
+The GitHub Pages site is a genuinely public URL — a categorically bigger
+exposure surface than the Steve-only Cowork dashboard, and contacts carry
+real people's PII. Confirmed with Steve before building this: the public
+mirror uses a **stricter, separate, allow-list policy**, not the
+`_visible_for_homepage()`/`_visible_for_impact()` bar the rest of the
+public site uses (which only excludes `personal_only` — fine for Steve's
+own activity log, not fine for third parties' profile data).
+
+`scripts/contacts.py`'s `PUBLIC_VISIBILITY_TIERS = {"atlassian_shareable",
+"customer_approved", "anonymised", "public"}` / `is_public_visible(row)`:
+a contact only appears on the public site once someone deliberately sets
+its `visibility` to one of those four values — every contact's real
+default (`communardo_internal`, set by `create`/`find-or-create`) stays
+internal-only unless explicitly changed via `edit --visibility`. Terminal
+contacts (`merged`/`archived`) never appear regardless of visibility.
+
+`public_contact_view(row, evidence_rows)` then strips even a cleared
+contact down further before it's published: no `email`/`phone` (business-
+card details aren't published without a separate, explicit ask), no
+evidence with `sensitivity` = `sensitive` or `subjective` (opinions about
+a real person have no place on a public page), no `merge_event`/
+`possible_duplicate` system rows, and none of Steve's internal working
+fields (`relationship_owner`, `notes`, `raw_extracted_name`/alias history).
+What remains is business-card identity plus objective relationship
+signals — `canonical_name`, `title`, `company`, `affiliation`, `region`,
+`country`, `stakeholder_role`, `influence_level`, `relationship_strength`,
+and any non-sensitive/non-subjective evidence facts — the minimum needed
+for an org/influence map.
+
+`scripts/build_web.py`'s `compute_public_contacts()` calls both functions
+and writes the result to `web_snapshot.json`'s `contacts` key (a
+completely different, much slimmer payload than the Cowork dashboard's
+`SNAPSHOT.contacts` — same key name, two different files, never confused
+at runtime since the dashboard embeds its own snapshot directly and the
+public site fetches `web_snapshot.json` separately). `web/index_template.html`'s
+Contacts tab renders this read-only: an org/influence map (contacts
+grouped into cards by company, each entry showing an influence-coloured
+dot and a relationship-strength badge) plus a flat table. There are no
+write actions here — the public mirror has no `sendPrompt`-equivalent (no
+chat context exists on a plain public webpage); to change what's visible,
+edit a contact's `visibility` from the Cowork dashboard or CLI.
+
 ### Generated files (not sources of truth — do not hand-edit)
 - `scores_snapshot.json` — output of `scripts/scoring.py`. `scripts/build_dashboard.py` loads this and augments it in memory (adding `actions`, `objectives`, `app_config`, etc.) before embedding the result as the Cowork dashboard artifact's `SNAPSHOT` — the augmented version is never written back to `scores_snapshot.json` on disk.
 - `web_snapshot.json` — output of `scripts/build_web.py`, fetched at runtime by the public GitHub Pages site. Includes the `homepage` (R1-T06), `impact` (R1-T07), and `objectives` (R1-T08) keys documented above.

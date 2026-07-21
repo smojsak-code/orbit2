@@ -36,6 +36,7 @@ import build_dashboard as bd  # reuses run() + build_vendor_reports() — same g
 import journal as journal_mod  # scripts/journal.py — read_journal(), reused for R1-T06's homepage
 import actions as actions_mod  # scripts/actions.py — today_london(), reused for period math
 import impact as impact_mod  # scripts/impact.py — compute_impact_aggregates() (R1-T07)
+import contacts as contacts_mod  # scripts/contacts.py — Contacts Phase 4 public-site mirror (R3-T01)
 
 # --- R1-T06: Daily Alliance Manager homepage aggregation ---
 #
@@ -189,6 +190,26 @@ def compute_homepage_aggregates(scores_snapshot, action_rows, journal_entries, e
     }
 
 
+def compute_public_contacts():
+    """Contacts Phase 4 — the public-site mirror. Deliberately stricter than
+    every other public-site filter in this file: contacts carry real
+    people's PII, and this file's output is fetched by a genuinely public
+    GitHub Pages URL, not just a Steve-only Cowork session. See
+    contacts.py's PUBLIC_VISIBILITY_TIERS/is_public_visible()/
+    public_contact_view() docstrings for the full policy (confirmed with
+    Steve): only contacts whose own `visibility` field was explicitly set
+    to an external-sharing tier appear here, terminal (merged/archived)
+    contacts never do, and even a cleared contact's sensitive/subjective
+    evidence and direct contact details are stripped before publishing."""
+    contacts = contacts_mod.read_contacts()
+    evidence = contacts_mod.read_evidence()
+    visible = [
+        r for r in contacts
+        if r.get("status") in ("provisional", "confirmed") and contacts_mod.is_public_visible(r)
+    ]
+    return [contacts_mod.public_contact_view(r, evidence) for r in visible]
+
+
 def main():
     print("Re-running scoring engine...")
     bd.run(["python3", os.path.join(BASE_DIR, "scripts", "scoring.py")])
@@ -256,6 +277,11 @@ def main():
     # My Impact dashboard (R1-T07) — same journal_entries as the homepage
     # above; see scripts/impact.py module docstring for the full design.
     snapshot["impact"] = impact_mod.compute_impact_aggregates(journal_entries)
+
+    # Contacts register — public-site mirror (Contacts Phase 4, R3-T01).
+    # See compute_public_contacts() above for the visibility policy — this
+    # is NOT the same data the Cowork dashboard's Contacts tab embeds.
+    snapshot["contacts"] = compute_public_contacts()
 
     out_path = os.path.join(DATA_DIR, "web_snapshot.json")
     with open(out_path, "w") as f:

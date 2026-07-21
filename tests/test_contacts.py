@@ -444,6 +444,57 @@ def test_compute_profile_summary_surfaces_unresolved_possible_duplicate(patched_
 
 
 # ---------------------------------------------------------------------------
+# Phase 4: public-site visibility filtering (is_public_visible() /
+# public_contact_view()) — the public GitHub Pages mirror's privacy gate.
+# ---------------------------------------------------------------------------
+
+def test_is_public_visible_excludes_internal_default():
+    assert contacts_mod.is_public_visible({"visibility": "communardo_internal"}) is False
+    assert contacts_mod.is_public_visible({"visibility": "personal_only"}) is False
+    assert contacts_mod.is_public_visible({"visibility": "communardo_management"}) is False
+    assert contacts_mod.is_public_visible({"visibility": ""}) is False
+    assert contacts_mod.is_public_visible({}) is False
+
+
+def test_is_public_visible_includes_explicit_external_tiers():
+    for tier in ("atlassian_shareable", "customer_approved", "anonymised", "public"):
+        assert contacts_mod.is_public_visible({"visibility": tier}) is True
+
+
+def test_public_contact_view_strips_sensitive_and_subjective_evidence():
+    row = {"contact_id": "CONT-0001", "canonical_name": "Jamie Chen", "title": "Director",
+           "company": "Atlassian", "visibility": "atlassian_shareable"}
+    evidence = [
+        {"contact_id": "CONT-0001", "field": "title", "value": "Director", "confidence": "confirmed", "sensitivity": "standard", "superseded_by": ""},
+        {"contact_id": "CONT-0001", "field": "personality_cue", "value": "Loves golf", "confidence": "probable", "sensitivity": "subjective", "superseded_by": ""},
+        {"contact_id": "CONT-0001", "field": "phone", "value": "555-1234", "confidence": "confirmed", "sensitivity": "sensitive", "superseded_by": ""},
+    ]
+    view = contacts_mod.public_contact_view(row, evidence)
+    fields = {f["field"] for f in view["public_facts"]}
+    assert fields == {"title"}, "subjective and sensitive evidence must never reach the public view"
+
+
+def test_public_contact_view_never_includes_email_or_phone_columns():
+    row = {"contact_id": "CONT-0001", "canonical_name": "Jamie Chen", "email": "jamie@atlassian.com", "phone": "555-1234", "visibility": "public"}
+    view = contacts_mod.public_contact_view(row, [])
+    assert "email" not in view
+    assert "phone" not in view
+    assert "relationship_owner" not in view
+    assert "notes" not in view
+
+
+def test_public_contact_view_excludes_superseded_and_system_evidence():
+    row = {"contact_id": "CONT-0001", "canonical_name": "Jamie Chen", "visibility": "public"}
+    evidence = [
+        {"contact_id": "CONT-0001", "field": "title", "value": "Old Title", "confidence": "confirmed", "sensitivity": "standard", "superseded_by": "CEV-0002"},
+        {"contact_id": "CONT-0001", "field": "merge_event", "value": "Merged into CONT-0002", "confidence": "confirmed", "sensitivity": "standard", "superseded_by": ""},
+        {"contact_id": "CONT-0001", "field": "possible_duplicate", "value": "Possibly CONT-0003", "confidence": "low_confidence", "sensitivity": "standard", "superseded_by": ""},
+    ]
+    view = contacts_mod.public_contact_view(row, evidence)
+    assert view["public_facts"] == []
+
+
+# ---------------------------------------------------------------------------
 # Phase 3: possible_duplicate_flags() — structured view for the dashboard UI
 # ---------------------------------------------------------------------------
 
