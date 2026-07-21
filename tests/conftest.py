@@ -137,7 +137,22 @@ def patched_metric_manager(monkeypatch, fixture_data_dir, patched_config, patche
 
 
 @pytest.fixture
-def patched_validate_data(monkeypatch, fixture_data_dir, patched_config, patched_metric_results):
+def patched_contacts(monkeypatch, fixture_data_dir, patched_config):
+    """contacts.py (Contacts Phase 1 / R3-T01), pointed at the isolated
+    fixture copy. Depends on patched_config too — default_owner()-equivalent
+    helpers (_default_user()/_default_vendor()) call config.load_config()
+    with no path argument."""
+    import contacts as contacts_mod
+    monkeypatch.setattr(contacts_mod, "DATA_DIR", fixture_data_dir)
+    monkeypatch.setattr(contacts_mod, "CONTACTS_PATH", os.path.join(fixture_data_dir, "contacts.csv"))
+    monkeypatch.setattr(contacts_mod, "ALIASES_PATH", os.path.join(fixture_data_dir, "contact_aliases.csv"))
+    monkeypatch.setattr(contacts_mod, "EVIDENCE_PATH", os.path.join(fixture_data_dir, "contact_evidence.jsonl"))
+    monkeypatch.setattr(contacts_mod, "EVIDENCE_FIELDS_PATH", os.path.join(fixture_data_dir, "contact_evidence_fields.json"))
+    return contacts_mod
+
+
+@pytest.fixture
+def patched_validate_data(monkeypatch, fixture_data_dir, patched_config, patched_metric_results, patched_contacts):
     """validate_data.py, pointed at the isolated fixture copy. Depends on
     patched_config too — validate_app_config() calls config.load_config()
     with no path argument, which (per patched_config's own docstring)
@@ -145,7 +160,10 @@ def patched_validate_data(monkeypatch, fixture_data_dir, patched_config, patched
     attribute patch, to actually resolve against the fixture. Depends on
     patched_metric_results too — validate_metric_results_history() (R2-T01)
     calls metric_results_mod.valid_verification_levels(), which reads
-    VERIFICATION_LEVELS_PATH from disk."""
+    VERIFICATION_LEVELS_PATH from disk. Depends on patched_contacts too —
+    validate_contact_evidence() (Contacts Phase 1) calls
+    contacts_mod.load_evidence_fields(), which reads EVIDENCE_FIELDS_PATH
+    from disk."""
     import validate_data as validate_data_mod
     monkeypatch.setattr(validate_data_mod, "DATA_DIR", fixture_data_dir)
     return validate_data_mod

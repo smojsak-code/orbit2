@@ -245,3 +245,50 @@ def test_migration_002_intentional_failure_skips_rows_with_no_record_id(tmp_path
     assert "migrated" not in summary.lower(), f"no row should have been reported as migrated: {summary}"
     rows = read_csv_rows(os.path.join(str(d), "metric_results_history.csv"))
     assert rows == [], "a row with no record_id must never be migrated"
+
+
+# ---------------------------------------------------------------------------
+# Migration 003: Contacts register (Phase 1 / R3-T01)
+# ---------------------------------------------------------------------------
+# Pure file-creation migration — nothing to backfill from any existing
+# register — so a bare empty tmp_path directory is sufficient, no need for
+# fixture_data_dir's pre-populated category CSVs etc.
+
+def test_migration_003_creates_all_four_contacts_files(tmp_path):
+    import migration_003_contacts as migration
+
+    d = tmp_path / "data"
+    d.mkdir()
+    for f in ("contacts.csv", "contact_aliases.csv", "contact_evidence.jsonl", "contact_evidence_fields.json"):
+        assert not os.path.exists(d / f)
+
+    summary = migration.apply(str(d))
+    assert "created" in summary.lower()
+    for f in ("contacts.csv", "contact_aliases.csv", "contact_evidence.jsonl", "contact_evidence_fields.json"):
+        assert os.path.exists(d / f), f"{f} should have been created"
+
+    assert read_csv_rows(str(d / "contacts.csv")) == []
+    assert read_csv_rows(str(d / "contact_aliases.csv")) == []
+    assert (d / "contact_evidence.jsonl").read_text() == ""
+
+    with open(d / "contact_evidence_fields.json") as f:
+        fields = json.load(f)
+    assert "title" in fields and "commitment" in fields
+
+
+def test_migration_003_is_idempotent_and_never_overwrites_existing_data(tmp_path):
+    import migration_003_contacts as migration
+
+    d = tmp_path / "data"
+    d.mkdir()
+    migration.apply(str(d))
+
+    # Simulate real usage having happened between two migration runner
+    # passes (e.g. a fresh checkout that already has real contacts on file).
+    with open(d / "contacts.csv", "a", newline="") as f:
+        f.write("CONT-0001,confirmed,Real Person,Real Person,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n")
+
+    second_summary = migration.apply(str(d))
+    assert "no files needed creating" in second_summary.lower()
+    rows = read_csv_rows(str(d / "contacts.csv"))
+    assert len(rows) == 1 and rows[0]["contact_id"] == "CONT-0001", "an existing contacts.csv must never be touched/reset by a second migration run"

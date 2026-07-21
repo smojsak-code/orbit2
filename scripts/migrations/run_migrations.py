@@ -51,6 +51,14 @@ MIGRATIONS = [
         "(R2-T01); migrate existing category sub-metric rows into a "
         "period-indexed, append-only result history without changing scoring.",
     ),
+    (
+        "003_contacts",
+        "migration_003_contacts",
+        "1.3.0",
+        "Add data/contacts.csv, data/contact_aliases.csv, "
+        "data/contact_evidence.jsonl and data/contact_evidence_fields.json "
+        "(Contacts Phase 1 / R3-T01) — new registers, nothing to backfill.",
+    ),
 ]
 
 

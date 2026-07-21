@@ -29,6 +29,9 @@ def _run_full_validation(patched_validate_data):
     vd.validate_actions(report, activity_ids, set(metric_ids))
     vd.validate_objectives(report, activity_ids, evidence_ids)
     vd.validate_metric_results_history(report, categories, set(metric_ids), evidence_ids)
+    contact_ids = vd.validate_contacts(report) or set()
+    vd.validate_contact_aliases(report, contact_ids)
+    vd.validate_contact_evidence(report, contact_ids, activity_ids)
     return report
 
 
@@ -292,3 +295,142 @@ def test_metric_results_history_unknown_category_is_caught(patched_validate_data
     categories.pop("_comment", None)
     patched_validate_data.validate_metric_results_history(report, categories, {"MET-0001"}, {"EVD-0001"})
     assert any("unknown category" in e for e in report.errors)
+
+
+# ---------------------------------------------------------------------------
+# Contacts register validators (Phase 1 / R3-T01)
+# ---------------------------------------------------------------------------
+
+def _read_write_csv(path):
+    with open(path, newline="") as f:
+        rows = list(csv.DictReader(f))
+        fieldnames = list(rows[0].keys())
+    return rows, fieldnames
+
+
+def _write_csv(path, fieldnames, rows):
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w.writeheader()
+        w.writerows(rows)
+
+
+def test_contacts_duplicate_contact_id_is_caught(patched_validate_data, fixture_data_dir):
+    path = os.path.join(fixture_data_dir, "contacts.csv")
+    rows, fieldnames = _read_write_csv(path)
+    rows.append(dict(rows[0]))
+    _write_csv(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contacts(report)
+    assert any("duplicate contact_id" in e for e in report.errors)
+
+
+def test_contacts_merged_status_without_merged_into_is_caught(patched_validate_data, fixture_data_dir):
+    path = os.path.join(fixture_data_dir, "contacts.csv")
+    rows, fieldnames = _read_write_csv(path)
+    rows[0]["status"] = "merged"
+    rows[0]["merged_into"] = ""
+    _write_csv(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contacts(report)
+    assert any("no merged_into" in e for e in report.errors)
+
+
+def test_contacts_merged_into_unknown_contact_is_caught(patched_validate_data, fixture_data_dir):
+    path = os.path.join(fixture_data_dir, "contacts.csv")
+    rows, fieldnames = _read_write_csv(path)
+    rows[0]["status"] = "merged"
+    rows[0]["merged_into"] = "CONT-9999"
+    _write_csv(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contacts(report)
+    assert any("does not exist" in e for e in report.errors)
+
+
+def test_contacts_invalid_affiliation_is_caught(patched_validate_data, fixture_data_dir):
+    path = os.path.join(fixture_data_dir, "contacts.csv")
+    rows, fieldnames = _read_write_csv(path)
+    rows[0]["affiliation"] = "not_a_real_affiliation"
+    _write_csv(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contacts(report)
+    assert any("invalid affiliation" in e for e in report.errors)
+
+
+def test_contact_aliases_reference_unknown_contact_is_caught(patched_validate_data, fixture_data_dir):
+    path = os.path.join(fixture_data_dir, "contact_aliases.csv")
+    rows, fieldnames = _read_write_csv(path)
+    rows[0]["contact_id"] = "CONT-9999"
+    _write_csv(path, fieldnames, rows)
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contact_aliases(report, {"CONT-0001"})
+    assert any("unknown contact_id" in e for e in report.errors)
+
+
+def test_contact_evidence_unknown_contact_id_is_caught(patched_validate_data, fixture_data_dir):
+    path = os.path.join(fixture_data_dir, "contact_evidence.jsonl")
+    lines = [json.loads(l) for l in open(path) if l.strip()]
+    lines[0]["contact_id"] = "CONT-9999"
+    with open(path, "w") as f:
+        for e in lines:
+            f.write(json.dumps(e) + "\n")
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contact_evidence(report, {"CONT-0001"}, set())
+    assert any("unknown contact_id" in e for e in report.errors)
+
+
+def test_contact_evidence_invalid_confidence_is_caught(patched_validate_data, fixture_data_dir):
+    path = os.path.join(fixture_data_dir, "contact_evidence.jsonl")
+    lines = [json.loads(l) for l in open(path) if l.strip()]
+    lines[0]["confidence"] = "pretty_sure_probably"
+    with open(path, "w") as f:
+        for e in lines:
+            f.write(json.dumps(e) + "\n")
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contact_evidence(report, {"CONT-0001"}, set())
+    assert any("invalid confidence" in e for e in report.errors)
+
+
+def test_contact_evidence_dangling_superseded_by_is_caught(patched_validate_data, fixture_data_dir):
+    """Intentional-failure case: superseded_by must point at a real
+    evidence_id that exists somewhere in the file — a dangling reference
+    (e.g. from a hand-edit) must be flagged, not silently accepted."""
+    path = os.path.join(fixture_data_dir, "contact_evidence.jsonl")
+    lines = [json.loads(l) for l in open(path) if l.strip()]
+    lines[0]["superseded_by"] = "CEV-9999"
+    with open(path, "w") as f:
+        for e in lines:
+            f.write(json.dumps(e) + "\n")
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contact_evidence(report, {"CONT-0001"}, set())
+    assert any("does not exist anywhere in the file" in e for e in report.errors)
+
+
+def test_contact_evidence_valid_forward_superseded_by_is_not_flagged(patched_validate_data, fixture_data_dir):
+    """A superseded_by reference to a LATER line in the file (a completely
+    normal case — the newer evidence is appended after the one it
+    supersedes) must not be flagged as dangling."""
+    path = os.path.join(fixture_data_dir, "contact_evidence.jsonl")
+    lines = [json.loads(l) for l in open(path) if l.strip()]
+    lines[0]["superseded_by"] = "CEV-0002"
+    lines.append({
+        "evidence_id": "CEV-0002", "contact_id": "CONT-0001", "extracted_at": "2026-07-15",
+        "source_type": "manual_note", "source_ref": "", "field": "title", "value": "Senior Director",
+        "confidence": "confirmed", "sensitivity": "standard", "reviewer_status": "unreviewed",
+        "superseded_by": "", "rationale": "", "meeting_ref": "", "created_by": "Test User",
+    })
+    with open(path, "w") as f:
+        for e in lines:
+            f.write(json.dumps(e) + "\n")
+
+    report = patched_validate_data.Report()
+    patched_validate_data.validate_contact_evidence(report, {"CONT-0001"}, set())
+    assert not any("superseded_by" in e for e in report.errors)

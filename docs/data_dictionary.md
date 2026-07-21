@@ -32,6 +32,9 @@ changes when a title, name, or quarter changes:
 | `actions.csv` | `action_id` | `ACTN-` | Own file (R1-T05) — deliberately distinct from `ACT-` so the journal and actions registers are never visually confused |
 | `objectives.csv` | `objective_id` | `OBJ-` | Own file (R1-T08) |
 | `metric_results_history.csv` | `record_id` | `RES-` | Own file (R2-T01) — every row already carries the source category-CSV row's `MET-` id in `source_record_id`, but has its own independent `RES-` counter since it can also hold results with no category-CSV row behind them in future releases |
+| `contacts.csv` | `contact_id` | `CONT-` | Own file (Contacts Phase 1 / R3-T01) — never reused or renumbered, including for merged/archived contacts |
+| `contact_aliases.csv` | `alias_id` | `ALIAS-` | Own file (Contacts Phase 1 / R3-T01) |
+| `contact_evidence.jsonl` | `evidence_id` | `CEV-` | Own file (Contacts Phase 1 / R3-T01) — distinct from `evidence_index.csv`'s `EVD-` prefix, since these are different kinds of evidence (an Evidence Library file vs. one extracted contact fact) |
 
 IDs are assigned once and never reused or renumbered, including by
 migrations run more than once (`scripts/migrations/migration_001_add_record_ids.py`
@@ -249,7 +252,10 @@ don't conflate them:**
 
 Fields: `activity_id` (`ACT-` prefix, stable), `date`, `type` (controlled,
 `data/activity_types.json`), `title`, `description`, `participants` (array
-of free-text names — there's no contacts register yet, see R3-T01),
+of free-text names — the Contacts register now exists (see "Contacts
+register" below), but linking `participants` entries to real `contact_id`s
+is deliberately out of scope for Contacts Phase 1 and remains a follow-on
+task; `participants` is still free text today),
 `organisation`, `customer_account`, `contribution_type` (controlled,
 `data/contribution_types.json`), `outcome`, `next_action`, `metric_links`
 (array of `record_id`s from the category CSVs), `opportunity_links` (array —
@@ -579,6 +585,151 @@ overachievement, never hidden), priorities, linked activities, and any
 at-risk/completion/miss detail. Triggered from the Cowork dashboard's
 Objectives tab via an "Export review" button (same "stage locally, confirm
 via chat" pattern as every other Objectives action).
+
+### Contacts register (Contacts Phase 1 / R3-T01)
+Stakeholder identity resolution and profile history — Steve requested this
+pulled forward ahead of its original roadmap sequence position (it was
+reserved as a future R3 task; see the `participants` field note above).
+Three files, each with one job, mirroring the "current view vs. append-only
+evidence trail" split R2-T01 established for `metric_results_history.csv`:
+
+- `contacts.csv` — one row per contact, the CURRENT profile view only.
+- `contact_aliases.csv` — known name spellings/variants per contact.
+- `contact_evidence.jsonl` — append-only. One row per extracted fact or
+  observation, ever. Never edited or deleted.
+- `contact_evidence_fields.json` — config, not a register. Controlled
+  vocabulary for evidence `field` values, grouped for the summary (see
+  below): `identity` (title, company, email, ...), `engagement` (topics,
+  priorities, concerns, objectives, blockers, interests), `personal`
+  (likes, dislikes, preferences, communication style, personality cues),
+  `relationship` (influence level, stakeholder role, relationship strength
+  signals, key dates), `actions` (commitments, follow-ups). Add a field by
+  editing this file — no code change needed.
+
+**Why a contact's "current value" for a field is derived, not stored
+directly.** `contacts.csv`'s columns (title, company, email, ...) are a
+*cache*, refreshed by `contacts.py add-evidence` — the actual source of
+truth is always the most recent non-`superseded_by` evidence row for that
+`(contact_id, field)` in `contact_evidence.jsonl`. This is what makes
+"preserve all prior evidence... even when the current profile view
+changes" true by construction rather than by discipline: nothing in this
+codebase ever deletes or rewrites an evidence row, it only marks an older
+one's `superseded_by` when a newer, at-least-as-well-supported piece of
+evidence for the same field arrives (`CONFIDENCE_RANK`:
+`low_confidence` < `probable` < `confirmed`). A lower-confidence update
+never overwrites a higher-confidence existing value.
+
+`contacts.csv` columns: `contact_id, status, canonical_name,
+raw_extracted_name, title, seniority, department, business_unit, company,
+affiliation, region, country, location, email, phone, relationship_owner,
+stakeholder_role, influence_level, relationship_strength, vendor,
+visibility, merged_into, first_seen_at, last_interaction_at, summary,
+summary_updated_at, created_at, updated_at, created_by, updated_by, notes`
+
+- `status`: `provisional` (created via `find-or-create` when no confident
+  match exists) → `confirmed` (via `confirm`) → terminal `merged` (via
+  `merge`/`resolve-match`, `merged_into` set) or `archived`. Same
+  discipline as `actions.csv`/`objectives.csv`: `edit` can only move a
+  contact between `provisional`/`confirmed`; every other transition goes
+  through its own command.
+- `affiliation`: `communardo`, `atlassian`, `customer`, `partner`, `other`,
+  or blank.
+- `influence_level`: `low`/`medium`/`high`/`critical`, or blank.
+- `relationship_strength`: `weak`/`developing`/`strong`/`at_risk`, or blank.
+- A merged contact's row is **never deleted or rewritten** — `merged_into`
+  points at the surviving `contact_id`, and every evidence/alias row that
+  referenced the merged-away id keeps doing so unchanged.
+  `contacts.py`'s `resolve_canonical()` follows the `merged_into` chain to
+  find where a given id's history now lives.
+
+`contact_evidence.jsonl` fields: `evidence_id, contact_id, extracted_at,
+source_type, source_ref, field, value, confidence, sensitivity,
+reviewer_status, superseded_by, rationale, meeting_ref, created_by`
+
+- `source_type`: `meeting_note`, `transcript`, `audio_summary`, `document`,
+  `slide_deck`, `pdf`, `spreadsheet`, `email_summary`, `manual_note`.
+- `confidence`: `confirmed`, `probable`, `low_confidence` — this is a
+  three-way split, deliberately simpler than `value_journal.jsonl`'s
+  four-value `confidence` scale (`confirmed`/`supported`/`estimated`/
+  `unverified`), because it needs to double as an ordered rank
+  (`CONFIDENCE_RANK`) for the supersession comparison above; a fourth tier
+  would need a judgement call about where it ranks that isn't obviously
+  correct either way.
+- `sensitivity`: `standard`, `subjective`, `sensitive`. `subjective` is
+  what separates an opinion/observation ("prefers concise updates") from a
+  fact ("title: VP Partnerships") in the generated summary — see the
+  Profile Summary section below. `sensitive` is a placeholder for
+  governance policy to act on; nothing in Phase 1 auto-restricts a
+  `sensitive`-flagged row yet, this is future review-queue/redaction work.
+- `reviewer_status`: `unreviewed` (default on every new evidence row —
+  nothing is auto-confirmed), `confirmed`, `rejected`. Phase 1 has no UI
+  for a human to change this yet (that's Phase 3's Contacts tab); the
+  field exists now so Phase 3 has somewhere to write to.
+- `superseded_by`: blank, or another row's `evidence_id` — set
+  automatically by `add-evidence` when a new value for the same field
+  displaces the previous current value. `validate_data.py` checks this
+  points at a real `evidence_id` that exists somewhere in the file.
+
+**Identity resolution (`scripts/contacts.py find_candidate_matches()` /
+`match_contact()`).** Plain-stdlib name similarity
+(`difflib.SequenceMatcher`, no external fuzzy-matching dependency — this
+project has near-zero third-party Python dependencies and this didn't
+seem worth breaking that for) combined with corroborating signals:
+
+- An exact `email` match auto-matches on its own (score 1.0) regardless of
+  name similarity — the strongest possible signal.
+- A name match alone auto-matches only at/above `AUTO_MATCH_THRESHOLD`
+  (0.90) — in practice this means a near-exact name spelling PLUS a
+  matching company or title pushing the combined score over the bar, not
+  fuzzy name similarity by itself.
+- Anything at/above `REVIEW_THRESHOLD` (0.55) but below the auto-match bar
+  is `needs_review` — surfaced for a human decision (`resolve-match`),
+  never silently merged.
+- Below `REVIEW_THRESHOLD`, or no name-similar contact at all, becomes a
+  new provisional contact via `find-or-create`.
+
+This is the concrete mechanism behind two acceptance rules that could
+otherwise pull in opposite directions: "must not treat spelling
+differences alone as a new person when other evidence suggests the same
+identity" (handled by the corroborating-signal boost) and — the necessary
+corollary neither rule states explicitly but that any identity-resolution
+system has to get right — ambiguous evidence must not be silently treated
+as the *same* person either (handled by `needs_review` never auto-acting).
+
+**Profile summary (`compute_profile_summary()`).** Deterministic,
+template-generated from already-computed evidence — no AI call, same
+discipline as `impact.py`'s narrative and `objectives.py`'s export.
+Explicitly separates confirmed facts, probable/unconfirmed evidence, and
+`subjective`-flagged observations into three distinct lists (never
+blended into one paragraph), states the "originally extracted as X, later
+confirmed as Y" alias history when `raw_extracted_name` and
+`canonical_name` differ, lists open `commitment`/`action`/`follow_up`
+evidence as open actions, and flags which of `title`/`company`/`email`
+are still missing. `contacts.py summary --contact-id <id> --save` writes
+the rendered text to `contacts.csv`'s `summary` column.
+
+**Privacy / data minimisation.** No field is hard-excluded in Phase 1 —
+Steve's explicit direction was that the `sensitivity`/`reviewer_status`
+flag-for-review mechanism above is sufficient for now rather than
+hard-blocking specific categories of personal information (health,
+family, beliefs, etc.) at extraction time. `visibility` reuses the
+existing platform-wide scale (`personal_only` through `public`) so
+contacts participate in whatever centralised visibility enforcement
+R2-T04 ("Implement controlled visibility and redaction rules") ends up
+building, rather than inventing a parallel scheme.
+
+**What Phase 1 deliberately does NOT include yet** (see
+`scripts/contacts.py`'s module docstring and the phased plan agreed with
+Steve): a "read this document and extract everyone in it" ingestion
+command (Phase 2 — Phase 1 only provides the identity-resolution/evidence
+engine those extractions will call into); a Contacts tab in the Cowork
+dashboard or public site (Phase 3); an org chart / influence map view
+(Phase 4); and wiring `value_journal.jsonl`'s `participants` field to real
+`contact_id`s (noted above, a natural Phase 2/3 follow-on, not committed
+to a specific phase yet). Raw audio transcription is also out of scope
+end-to-end — Phase 2's extraction command will need already-transcribed
+text (a summary, a transcript export, etc.), not a raw audio file, since
+no speech-to-text tool is available in this environment.
 
 ### Generated files (not sources of truth — do not hand-edit)
 - `scores_snapshot.json` — output of `scripts/scoring.py`. `scripts/build_dashboard.py` loads this and augments it in memory (adding `actions`, `objectives`, `app_config`, etc.) before embedding the result as the Cowork dashboard artifact's `SNAPSHOT` — the augmented version is never written back to `scores_snapshot.json` on disk.

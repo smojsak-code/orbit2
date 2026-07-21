@@ -40,6 +40,7 @@ import config as app_config  # scripts/config.py — validates data/app_config.j
 import actions as actions_mod  # scripts/actions.py — reuses its enums so validation never drifts from what the CLI accepts
 import objectives as objectives_mod  # scripts/objectives.py — same reasoning, for data/objectives.csv (R1-T08)
 import metric_results as metric_results_mod  # scripts/metric_results.py — same reasoning, for data/metric_results_history.csv (R2-T01)
+import contacts as contacts_mod  # scripts/contacts.py — same reasoning, for the Contacts register (Phase 1 / R3-T01)
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 QUARTER_RE = re.compile(r"^\d{4}-Q[1-4]$")
@@ -611,6 +612,205 @@ def validate_metric_results_history(report, category_registry, metric_ids, evide
         check_date(report, label, r.get("recorded_date"), "recorded_date", row_desc, required=False)
 
 
+def validate_contacts(report):
+    """data/contacts.csv (Contacts Phase 1 / R3-T01). Returns the set of
+    valid contact_ids for validate_contact_aliases()/validate_contact_evidence()
+    to check references against."""
+    path = os.path.join(DATA_DIR, "contacts.csv")
+    label = "data/contacts.csv"
+    fieldnames, rows = read_csv(path)
+    check_columns(report, label, fieldnames, contacts_mod.FIELDNAMES)
+    if fieldnames is None:
+        return set()
+
+    seen_ids = set()
+    for i, r in enumerate(rows, start=2):
+        cid = (r.get("contact_id") or "").strip()
+        row_desc = f"row {i} ({cid or '?'})"
+        if not cid:
+            report.error(f"{label}: {row_desc} has no contact_id")
+        elif cid in seen_ids:
+            report.error(f"{label}: duplicate contact_id '{cid}'")
+        else:
+            seen_ids.add(cid)
+
+        if not (r.get("canonical_name") or "").strip():
+            report.error(f"{label}: {row_desc} is missing 'canonical_name'")
+
+        status = (r.get("status") or "").strip()
+        if status and status not in contacts_mod.VALID_STATUS:
+            report.error(f"{label}: {row_desc} has an invalid status '{status}' (expected one of {sorted(contacts_mod.VALID_STATUS)})")
+
+        affiliation = (r.get("affiliation") or "").strip()
+        if affiliation and affiliation not in contacts_mod.VALID_AFFILIATION:
+            report.error(f"{label}: {row_desc} has an invalid affiliation '{affiliation}' (expected one of {sorted(contacts_mod.VALID_AFFILIATION)})")
+
+        influence = (r.get("influence_level") or "").strip()
+        if influence and influence not in contacts_mod.VALID_INFLUENCE:
+            report.error(f"{label}: {row_desc} has an invalid influence_level '{influence}' (expected one of {sorted(contacts_mod.VALID_INFLUENCE)})")
+
+        strength = (r.get("relationship_strength") or "").strip()
+        if strength and strength not in contacts_mod.VALID_RELATIONSHIP_STRENGTH:
+            report.error(f"{label}: {row_desc} has an invalid relationship_strength '{strength}' (expected one of {sorted(contacts_mod.VALID_RELATIONSHIP_STRENGTH)})")
+
+        visibility = (r.get("visibility") or "").strip()
+        if visibility and visibility not in VALID_VISIBILITY:
+            report.error(f"{label}: {row_desc} has an invalid visibility '{visibility}' (expected one of {sorted(VALID_VISIBILITY)})")
+
+        # Status-consistency: mirrors the discipline validate_actions()/
+        # validate_objectives() already apply — a hand-edited row that
+        # bypassed the CLI still gets caught.
+        if status == "merged" and not (r.get("merged_into") or "").strip():
+            report.error(f"{label}: {row_desc} has status 'merged' but no merged_into contact_id")
+
+        for field in ("first_seen_at", "last_interaction_at", "summary_updated_at", "created_at", "updated_at"):
+            value = (r.get(field) or "").strip()
+            if value and not DATE_RE.match(value[:10]):
+                report.error(f"{label}: {row_desc} has a malformed '{field}' timestamp: {value!r}")
+
+    # Second pass: merged_into must point at a real (and ideally non-merged)
+    # contact_id — checked after the full id set is known.
+    for i, r in enumerate(rows, start=2):
+        merged_into = (r.get("merged_into") or "").strip()
+        if not merged_into:
+            continue
+        row_desc = f"row {i} ({r.get('contact_id', '?')})"
+        if merged_into not in seen_ids:
+            report.error(f"{label}: {row_desc} has merged_into '{merged_into}' which does not exist")
+        elif merged_into == r.get("contact_id"):
+            report.error(f"{label}: {row_desc} has merged_into pointing at itself")
+
+    return seen_ids
+
+
+def validate_contact_aliases(report, contact_ids):
+    path = os.path.join(DATA_DIR, "contact_aliases.csv")
+    label = "data/contact_aliases.csv"
+    fieldnames, rows = read_csv(path)
+    check_columns(report, label, fieldnames, contacts_mod.ALIAS_FIELDNAMES)
+    if fieldnames is None:
+        return
+
+    seen_ids = set()
+    for i, r in enumerate(rows, start=2):
+        aid = (r.get("alias_id") or "").strip()
+        row_desc = f"row {i} ({aid or '?'})"
+        if not aid:
+            report.error(f"{label}: {row_desc} has no alias_id")
+        elif aid in seen_ids:
+            report.error(f"{label}: duplicate alias_id '{aid}'")
+        else:
+            seen_ids.add(aid)
+
+        cid = (r.get("contact_id") or "").strip()
+        if not cid:
+            report.error(f"{label}: {row_desc} is missing 'contact_id'")
+        elif cid not in contact_ids:
+            report.error(f"{label}: {row_desc} references unknown contact_id '{cid}'")
+
+        if not (r.get("alias") or "").strip():
+            report.error(f"{label}: {row_desc} is missing 'alias'")
+
+        alias_type = (r.get("alias_type") or "").strip()
+        if alias_type and alias_type not in contacts_mod.VALID_ALIAS_TYPE:
+            report.error(f"{label}: {row_desc} has an invalid alias_type '{alias_type}' (expected one of {sorted(contacts_mod.VALID_ALIAS_TYPE)})")
+
+        check_date(report, label, r.get("added_at"), "added_at", row_desc, required=False)
+
+
+def validate_contact_evidence(report, contact_ids, activity_ids):
+    path = os.path.join(DATA_DIR, "contact_evidence.jsonl")
+    label = "data/contact_evidence.jsonl"
+    if not os.path.exists(path):
+        report.error(f"{label}: file is missing entirely")
+        return
+
+    evidence_fields = contacts_mod.load_evidence_fields()
+
+    # Pre-scan once to collect every evidence_id in the file up front, so
+    # superseded_by (which legitimately points from an older line to a
+    # newer one further down the file) can be checked against the complete
+    # set in a single pass below, instead of a forward-reference false
+    # positive followed by a second corrective pass.
+    all_ids = set()
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                e = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            eid = (e.get("evidence_id") or "").strip()
+            if eid:
+                all_ids.add(eid)
+
+    seen_ids = set()
+    with open(path) as f:
+        for i, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            row_desc = f"line {i}"
+            try:
+                e = json.loads(line)
+            except json.JSONDecodeError as err:
+                report.error(f"{label}: {row_desc} is not valid JSON ({err})")
+                continue
+
+            eid = (e.get("evidence_id") or "").strip()
+            if eid:
+                row_desc = f"{row_desc} ({eid})"
+            if not eid:
+                report.error(f"{label}: {row_desc} has no evidence_id")
+            elif eid in seen_ids:
+                report.error(f"{label}: {row_desc} has duplicate evidence_id '{eid}'")
+            else:
+                seen_ids.add(eid)
+
+            cid = (e.get("contact_id") or "").strip()
+            if not cid:
+                report.error(f"{label}: {row_desc} is missing 'contact_id'")
+            elif cid not in contact_ids:
+                report.error(f"{label}: {row_desc} references unknown contact_id '{cid}'")
+
+            field = (e.get("field") or "").strip()
+            if not field:
+                report.error(f"{label}: {row_desc} is missing 'field'")
+            elif evidence_fields and field not in evidence_fields:
+                report.warn(f"{label}: {row_desc} has field '{field}' not in data/contact_evidence_fields.json")
+
+            if not str(e.get("value", "")).strip():
+                report.error(f"{label}: {row_desc} is missing 'value'")
+
+            source_type = (e.get("source_type") or "").strip()
+            if source_type and source_type not in contacts_mod.VALID_SOURCE_TYPE:
+                report.error(f"{label}: {row_desc} has an invalid source_type '{source_type}' (expected one of {sorted(contacts_mod.VALID_SOURCE_TYPE)})")
+
+            confidence = (e.get("confidence") or "").strip()
+            if confidence and confidence not in contacts_mod.VALID_CONFIDENCE:
+                report.error(f"{label}: {row_desc} has an invalid confidence '{confidence}' (expected one of {sorted(contacts_mod.VALID_CONFIDENCE)})")
+
+            sensitivity = (e.get("sensitivity") or "").strip()
+            if sensitivity and sensitivity not in contacts_mod.VALID_SENSITIVITY:
+                report.error(f"{label}: {row_desc} has an invalid sensitivity '{sensitivity}' (expected one of {sorted(contacts_mod.VALID_SENSITIVITY)})")
+
+            reviewer_status = (e.get("reviewer_status") or "").strip()
+            if reviewer_status and reviewer_status not in contacts_mod.VALID_REVIEWER_STATUS:
+                report.error(f"{label}: {row_desc} has an invalid reviewer_status '{reviewer_status}' (expected one of {sorted(contacts_mod.VALID_REVIEWER_STATUS)})")
+
+            superseded_by = (e.get("superseded_by") or "").strip()
+            if superseded_by and superseded_by not in all_ids:
+                report.error(f"{label}: {row_desc} has superseded_by '{superseded_by}' which does not exist anywhere in the file")
+
+            check_date(report, label, e.get("extracted_at"), "extracted_at", row_desc, required=False)
+
+            meeting_ref = (e.get("meeting_ref") or "").strip()
+            if meeting_ref and activity_ids and meeting_ref not in activity_ids:
+                report.warn(f"{label}: {row_desc} has meeting_ref '{meeting_ref}' not found in data/value_journal.jsonl")
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -632,6 +832,9 @@ def main():
     validate_actions(report, activity_ids, set(metric_ids))
     validate_objectives(report, activity_ids, evidence_ids)
     validate_metric_results_history(report, categories, set(metric_ids), evidence_ids)
+    contact_ids = validate_contacts(report) or set()
+    validate_contact_aliases(report, contact_ids)
+    validate_contact_evidence(report, contact_ids, activity_ids)
 
     print(f"Orbit2 data validation — {len(report.errors)} error(s), {len(report.warnings)} warning(s)\n")
     if report.errors:
