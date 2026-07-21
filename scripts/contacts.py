@@ -64,6 +64,15 @@ Commands:
   archive             Mark a contact archived (never deletes).
   summary             Print the generated profile summary for one contact.
   list                List contacts with optional filters.
+  ingest              Phase 2: batch-load a whole document's worth of
+                    extracted people + evidence facts in one call (JSON
+                    payload via --file). Resolves each person (matched /
+                    needs_review / new), always assigns a usable contact_id
+                    (a needs_review match gets its own new provisional
+                    contact plus a 'possible_duplicate' evidence flag,
+                    never a silent merge), and records every fact. Whole
+                    payload is validated up front — invalid input writes
+                    nothing. Supports --dry-run.
 
 Every command prints what it did. Run scripts/validate_data.py afterwards.
 """
@@ -411,16 +420,26 @@ def compute_profile_summary(contact_id, contacts, evidence_rows, aliases):
     contacts_map = contacts_by_id(contacts)
     row = contacts_map.get(contact_id)
     if not row:
-        return {"text": f"No contact found for {contact_id}.", "confirmed": [], "probable": [], "subjective": [], "missing": [], "open_actions": [], "aliases_note": ""}
+        return {"text": f"No contact found for {contact_id}.", "confirmed": [], "probable": [], "subjective": [], "missing": [], "open_actions": [], "aliases_note": "", "possible_duplicates": []}
 
     evidence_fields = load_evidence_fields()
     own_evidence = [e for e in evidence_rows if e.get("contact_id") == contact_id]
+
+    # Unresolved possible-duplicate flags (Phase 2 batch ingest) must never
+    # be buried — a provisional contact's ambiguous-match status is exactly
+    # the kind of thing a human needs to see before trusting the rest of
+    # the profile, so it's surfaced separately and near the top of the
+    # rendered text rather than mixed in with ordinary evidence.
+    possible_duplicates = [
+        e.get("value", "") for e in sorted(own_evidence, key=lambda e: e.get("extracted_at", ""), reverse=True)
+        if e.get("field") == "possible_duplicate" and not e.get("superseded_by")
+    ]
 
     confirmed, probable, subjective = [], [], []
     for e in sorted(own_evidence, key=lambda e: e.get("extracted_at", ""), reverse=True):
         if e.get("superseded_by"):
             continue
-        if e.get("field") == "merge_event":
+        if e.get("field") in ("merge_event", "possible_duplicate"):
             continue
         label = evidence_fields.get(e.get("field", ""), {}).get("label", e.get("field", ""))
         line = f"{label}: {e.get('value', '')}"
@@ -455,6 +474,8 @@ def compute_profile_summary(contact_id, contacts, evidence_rows, aliases):
         + (f" at {row.get('company')}" if row.get("company") else "")
         + f". Status: {row.get('status')}.",
     ]
+    if possible_duplicates:
+        lines.append("NEEDS REVIEW — possible duplicate: " + "; ".join(possible_duplicates))
     if aliases_note:
         lines.append(aliases_note)
     if row.get("influence_level") or row.get("relationship_strength"):
@@ -477,12 +498,35 @@ def compute_profile_summary(contact_id, contacts, evidence_rows, aliases):
         "text": "\n".join(lines),
         "confirmed": confirmed, "probable": probable, "subjective": subjective,
         "missing": missing, "open_actions": open_actions, "aliases_note": aliases_note,
+        "possible_duplicates": possible_duplicates,
     }
 
 
 # ---------------------------------------------------------------------------
 # CLI commands
 # ---------------------------------------------------------------------------
+
+def _new_provisional_row(contacts, name, company=None, title=None, email=None, vendor=None, visibility=None):
+    """Build (but do not append/write) a new provisional contact row. Shared
+    by cmd_find_or_create (interactive, single-contact) and
+    resolve_or_create_for_ingest (batch document ingestion, Phase 2) so the
+    "what does a freshly-created provisional contact look like" definition
+    lives in exactly one place."""
+    now = _now_iso()
+    contact_id = next_contact_id(contacts)
+    row = {k: "" for k in FIELDNAMES}
+    row.update({
+        "contact_id": contact_id, "status": "provisional",
+        "canonical_name": name, "raw_extracted_name": name,
+        "company": company or "", "title": title or "", "email": email or "",
+        "relationship_owner": _default_user(), "vendor": vendor or _default_vendor(),
+        "visibility": visibility or "communardo_internal",
+        "first_seen_at": now, "last_interaction_at": now,
+        "created_at": now, "updated_at": now,
+        "created_by": _default_user(), "updated_by": _default_user(),
+    })
+    return row
+
 
 def cmd_find_or_create(args):
     contacts = read_contacts()
@@ -499,25 +543,53 @@ def cmd_find_or_create(args):
         return decision
 
     # decision == "new"
-    now = _now_iso()
-    contact_id = next_contact_id(contacts)
-    row = {k: "" for k in FIELDNAMES}
-    row.update({
-        "contact_id": contact_id, "status": "provisional",
-        "canonical_name": args.name, "raw_extracted_name": args.name,
-        "company": args.company or "", "title": args.title or "", "email": args.email or "",
-        "relationship_owner": _default_user(), "vendor": args.vendor or _default_vendor(),
-        "visibility": args.visibility or "communardo_internal",
-        "first_seen_at": now, "last_interaction_at": now,
-        "created_at": now, "updated_at": now,
-        "created_by": _default_user(), "updated_by": _default_user(),
-    })
+    row = _new_provisional_row(contacts, args.name, company=args.company, title=args.title,
+                                email=args.email, vendor=args.vendor, visibility=args.visibility)
+    contact_id = row["contact_id"]
     contacts.append(row)
     write_contacts(contacts)
     print(f"Created new provisional contact {contact_id} for '{args.name}'."
           + (f" ({len(decision['candidates'])} other loosely-similar contact(s) found but below review threshold.)" if decision["candidates"] else ""))
     decision["contact_id"] = contact_id
     return decision
+
+
+def resolve_or_create_for_ingest(name, contacts, contacts_map, *, company=None, title=None,
+                                  email=None, vendor=None, visibility=None):
+    """Identity resolution for batch document ingestion (Phase 2). Unlike
+    find-or-create — which only reports on ambiguous/matched cases and
+    leaves the decision to a human — this ALWAYS returns a usable
+    contact_id for every person mentioned in an ingested document, so a
+    whole document's worth of extracted facts is never dropped or blocked
+    by one ambiguous name. A needs_review candidate still gets its OWN new
+    provisional contact_id (never silently merged into the candidate); the
+    caller is expected to also log a 'possible_duplicate' evidence entry
+    (see cmd_ingest) so the ambiguity is preserved for human review via
+    resolve-match rather than silently resolved either way.
+
+    Mutates `contacts` (appends) and `contacts_map` (adds) in place when a
+    new contact is created. Returns one of:
+      {"contact_id", "decision": "matched", "score", "reasons"}
+      {"contact_id", "decision": "needs_review", "candidate_id", "score", "reasons"}
+      {"contact_id", "decision": "new", "candidates"}
+    """
+    decision = match_contact(name, company=company, title=title, email=email, contacts=contacts)
+
+    if decision["decision"] == "matched":
+        return {"contact_id": decision["contact_id"], "decision": "matched",
+                "score": decision["score"], "reasons": decision["reasons"]}
+
+    row = _new_provisional_row(contacts, name, company=company, title=title, email=email,
+                                vendor=vendor, visibility=visibility)
+    contact_id = row["contact_id"]
+    contacts.append(row)
+    contacts_map[contact_id] = row
+
+    if decision["decision"] == "needs_review":
+        return {"contact_id": contact_id, "decision": "needs_review",
+                "candidate_id": decision["contact_id"], "score": decision["score"],
+                "reasons": decision["reasons"]}
+    return {"contact_id": contact_id, "decision": "new", "candidates": decision.get("candidates", [])}
 
 
 def cmd_create(args):
@@ -628,6 +700,56 @@ def cmd_add_alias(args):
     print(f"Added alias '{args.alias}' ({args.alias_type}) for {args.contact_id}.")
 
 
+def record_evidence_row(contacts_map, evidence, *, contact_id, field, value, source_type,
+                         source_ref="", confidence, sensitivity="standard", rationale="",
+                         meeting_ref="", extracted_at=None, recorded_by=None):
+    """Pure, file-I/O-free core of add-evidence. Appends one evidence row to
+    `evidence` (mutated in place) and, if `field` maps to a contacts.csv
+    column and the new evidence is at least as well-supported as what's
+    currently on file for that field (same rule as before: "update the
+    contact profile only where the new evidence is relevant, more recent,
+    more complete, or better supported"), refreshes
+    contacts_map[contact_id] in place and marks the prior evidence for that
+    field superseded (never deleted).
+
+    Both cmd_add_evidence (single-fact CLI) and cmd_ingest (Phase 2 batch
+    document ingestion) call this, so the supersession rule lives in
+    exactly one place and files are read/written once per batch rather
+    than once per fact.
+
+    Returns {"evidence_id", "applied_to_profile", "column"}."""
+    row = contacts_map[contact_id]
+    new_id = next_evidence_id(evidence)
+    now_date = extracted_at or _today_iso()
+    recorded_by = recorded_by or _default_user()
+    new_entry = {
+        "evidence_id": new_id, "contact_id": contact_id, "extracted_at": now_date,
+        "source_type": source_type, "source_ref": source_ref or "",
+        "field": field, "value": value,
+        "confidence": confidence, "sensitivity": sensitivity,
+        "reviewer_status": "unreviewed", "superseded_by": "",
+        "rationale": rationale or "", "meeting_ref": meeting_ref or "",
+        "created_by": recorded_by,
+    }
+
+    applied_to_profile = False
+    prior = _current_evidence_for_field(contact_id, field, evidence)
+    column = FIELD_TO_CONTACT_COLUMN.get(field)
+    if column:
+        if not prior or CONFIDENCE_RANK.get(confidence, 0) >= CONFIDENCE_RANK.get(prior[0].get("confidence"), 0):
+            for p in prior:
+                p["superseded_by"] = new_id
+            row[column] = value
+            row["updated_at"] = _now_iso()
+            row["updated_by"] = recorded_by
+            applied_to_profile = True
+
+    row["last_interaction_at"] = max(row.get("last_interaction_at") or "", now_date)
+
+    evidence.append(new_entry)
+    return {"evidence_id": new_id, "applied_to_profile": applied_to_profile, "column": column}
+
+
 def cmd_add_evidence(args):
     contacts = read_contacts()
     contacts_map = {r["contact_id"]: r for r in contacts}
@@ -641,46 +763,19 @@ def cmd_add_evidence(args):
               f"but consider adding it to the controlled list.")
 
     evidence = read_evidence()
-    row = contacts_map[args.contact_id]
+    result = record_evidence_row(
+        contacts_map, evidence, contact_id=args.contact_id, field=args.field, value=args.value,
+        source_type=args.source_type, source_ref=args.source_ref, confidence=args.confidence,
+        sensitivity=args.sensitivity, rationale=args.rationale, meeting_ref=args.meeting_ref,
+        extracted_at=args.extracted_at,
+    )
 
-    new_id = next_evidence_id(evidence)
-    now_date = args.extracted_at or _today_iso()
-    new_entry = {
-        "evidence_id": new_id, "contact_id": args.contact_id, "extracted_at": now_date,
-        "source_type": args.source_type, "source_ref": args.source_ref or "",
-        "field": args.field, "value": args.value,
-        "confidence": args.confidence, "sensitivity": args.sensitivity,
-        "reviewer_status": "unreviewed", "superseded_by": "",
-        "rationale": args.rationale or "", "meeting_ref": args.meeting_ref or "",
-        "created_by": _default_user(),
-    }
-
-    # Supersede the prior current evidence for this exact field, and refresh
-    # the contacts.csv cached column, only if the new evidence is at least
-    # as well-supported (acceptance rule: "update the contact profile only
-    # where the new evidence is relevant, more recent, more complete, or
-    # better supported"). A field with no prior evidence always applies.
-    applied_to_profile = False
-    prior = _current_evidence_for_field(args.contact_id, args.field, evidence)
-    column = FIELD_TO_CONTACT_COLUMN.get(args.field)
-    if column:
-        if not prior or CONFIDENCE_RANK.get(args.confidence, 0) >= CONFIDENCE_RANK.get(prior[0].get("confidence"), 0):
-            for p in prior:
-                p["superseded_by"] = new_id
-            row[column] = args.value
-            row["updated_at"] = _now_iso()
-            row["updated_by"] = _default_user()
-            applied_to_profile = True
-
-    row["last_interaction_at"] = max(row.get("last_interaction_at") or "", now_date)
-
-    evidence.append(new_entry)
     write_evidence(evidence)
     write_contacts(contacts)
 
-    print(f"Logged evidence {new_id} ({args.field}={args.value!r}, confidence={args.confidence}) for {args.contact_id}."
-          + (f" Updated contacts.csv '{column}'." if applied_to_profile else
-             (" Did not overwrite the current profile value (existing evidence is equally or better supported)." if column else "")))
+    print(f"Logged evidence {result['evidence_id']} ({args.field}={args.value!r}, confidence={args.confidence}) for {args.contact_id}."
+          + (f" Updated contacts.csv '{result['column']}'." if result["applied_to_profile"] else
+             (" Did not overwrite the current profile value (existing evidence is equally or better supported)." if result["column"] else "")))
 
 
 def cmd_resolve_match(args):
@@ -795,6 +890,198 @@ def cmd_list(args):
               f"  —  owner: {r.get('relationship_owner') or '?'}")
 
 
+# ---------------------------------------------------------------------------
+# Batch document ingestion (Phase 2)
+# ---------------------------------------------------------------------------
+#
+# Payload schema (JSON file passed via --file):
+#   {
+#     "source_type": "meeting_note",       // required, one of VALID_SOURCE_TYPE
+#     "source_ref": "2026-07-21 QBR notes", // optional, default source_ref for every evidence row
+#     "extracted_at": "2026-07-21",         // optional, default extracted_at for every evidence row
+#     "people": [
+#       {
+#         "name": "Jamie Chen",             // required
+#         "company": "...", "title": "...", "email": "...",   // optional, used for identity resolution
+#         "vendor": "...", "visibility": "...",                // optional, only used if a new contact is created
+#         "evidence": [
+#           {
+#             "field": "priority", "value": "Wants a joint QBR next quarter",
+#             "confidence": "probable",       // required, one of VALID_CONFIDENCE
+#             "sensitivity": "standard",      // optional, default "standard"
+#             "rationale": "...", "meeting_ref": "...",
+#             "source_ref": "...", "extracted_at": "..."   // optional per-fact overrides
+#           }
+#         ]
+#       }
+#     ]
+#   }
+#
+# The whole payload is validated up front — a malformed payload writes
+# NOTHING (all-or-nothing), so a batch never leaves a document half-ingested.
+
+def load_ingest_payload(path):
+    with open(path) as f:
+        return json.load(f)
+
+
+def validate_ingest_payload(payload):
+    """Returns a list of human-readable error strings; empty means valid.
+    Validates the WHOLE payload before cmd_ingest writes anything, per the
+    all-or-nothing rule — a single malformed fact anywhere in a document
+    must not cause a partially-applied batch."""
+    errors = []
+    if not isinstance(payload, dict):
+        return ["Payload must be a JSON object."]
+
+    source_type = payload.get("source_type")
+    if not source_type:
+        errors.append("Top-level 'source_type' is required.")
+    elif source_type not in VALID_SOURCE_TYPE:
+        errors.append(f"Top-level 'source_type' {source_type!r} is not one of {sorted(VALID_SOURCE_TYPE)}.")
+
+    people = payload.get("people")
+    if not people or not isinstance(people, list):
+        errors.append("Top-level 'people' must be a non-empty list.")
+        people = []
+
+    for i, person in enumerate(people):
+        label = f"people[{i}]"
+        if not isinstance(person, dict):
+            errors.append(f"{label} must be an object.")
+            continue
+        if not (person.get("name") or "").strip():
+            errors.append(f"{label}.name is required.")
+        visibility = person.get("visibility")
+        if visibility and visibility not in VALID_VISIBILITY:
+            errors.append(f"{label}.visibility {visibility!r} is not one of {sorted(VALID_VISIBILITY)}.")
+
+        evidence_list = person.get("evidence", [])
+        if evidence_list and not isinstance(evidence_list, list):
+            errors.append(f"{label}.evidence must be a list.")
+            evidence_list = []
+        for j, ev in enumerate(evidence_list):
+            elabel = f"{label}.evidence[{j}]"
+            if not isinstance(ev, dict):
+                errors.append(f"{elabel} must be an object.")
+                continue
+            if not (ev.get("field") or "").strip():
+                errors.append(f"{elabel}.field is required.")
+            if ev.get("value") in (None, ""):
+                errors.append(f"{elabel}.value is required.")
+            confidence = ev.get("confidence")
+            if confidence not in VALID_CONFIDENCE:
+                errors.append(f"{elabel}.confidence must be one of {sorted(VALID_CONFIDENCE)}, got {confidence!r}.")
+            sensitivity = ev.get("sensitivity")
+            if sensitivity and sensitivity not in VALID_SENSITIVITY:
+                errors.append(f"{elabel}.sensitivity {sensitivity!r} is not one of {sorted(VALID_SENSITIVITY)}.")
+
+    return errors
+
+
+def cmd_ingest(args):
+    try:
+        payload = load_ingest_payload(args.file)
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"Could not read/parse '{args.file}': {e}")
+        return
+
+    errors = validate_ingest_payload(payload)
+    if errors:
+        print(f"Ingest payload '{args.file}' is invalid — nothing was recorded (all-or-nothing validation):")
+        for e in errors:
+            print(f"  - {e}")
+        return
+
+    contacts = read_contacts()
+    contacts_map = contacts_by_id(contacts)
+    evidence = read_evidence()
+    evidence_fields = load_evidence_fields()
+
+    source_type = payload["source_type"]
+    default_source_ref = payload.get("source_ref", "")
+    default_extracted_at = payload.get("extracted_at")
+
+    matched_count = new_count = needs_review_count = 0
+    evidence_count = 0
+    needs_review_flags = []
+    unknown_fields = set()
+    results = []
+
+    for person in payload["people"]:
+        name = person["name"].strip()
+        res = resolve_or_create_for_ingest(
+            name, contacts, contacts_map,
+            company=person.get("company"), title=person.get("title"),
+            email=person.get("email"), vendor=person.get("vendor"),
+            visibility=person.get("visibility"),
+        )
+        contact_id = res["contact_id"]
+        decision = res["decision"]
+        if decision == "matched":
+            matched_count += 1
+        elif decision == "needs_review":
+            needs_review_count += 1
+            needs_review_flags.append({
+                "contact_id": contact_id, "candidate_id": res["candidate_id"],
+                "score": res["score"], "reasons": res["reasons"], "name": name,
+            })
+            # Never silently merge AND never drop the ambiguity: log it as
+            # evidence on the new provisional contact so it's on file and
+            # surfaced by compute_profile_summary until a human resolves it.
+            record_evidence_row(
+                contacts_map, evidence, contact_id=contact_id, field="possible_duplicate",
+                value=f"Possibly the same person as {res['candidate_id']} "
+                      f"(score {res['score']}, {', '.join(res['reasons'])})",
+                source_type=source_type, source_ref=default_source_ref,
+                confidence="low_confidence", sensitivity="standard",
+                rationale="Auto-flagged during batch ingest — below auto-match threshold.",
+                extracted_at=default_extracted_at,
+            )
+            evidence_count += 1
+        else:
+            new_count += 1
+
+        for ev in person.get("evidence", []):
+            field = ev["field"]
+            if evidence_fields and field not in evidence_fields:
+                unknown_fields.add(field)
+            record_evidence_row(
+                contacts_map, evidence, contact_id=contact_id, field=field, value=ev["value"],
+                source_type=source_type, source_ref=ev.get("source_ref", default_source_ref),
+                confidence=ev["confidence"], sensitivity=ev.get("sensitivity", "standard"),
+                rationale=ev.get("rationale", ""), meeting_ref=ev.get("meeting_ref", ""),
+                extracted_at=ev.get("extracted_at", default_extracted_at),
+            )
+            evidence_count += 1
+
+        results.append((name, contact_id, decision))
+
+    if args.dry_run:
+        print(f"DRY RUN — nothing was written. Would process {len(payload['people'])} people from '{args.file}':")
+    else:
+        write_contacts(contacts)
+        write_evidence(evidence)
+        print(f"Ingested '{args.file}': {len(payload['people'])} people processed.")
+
+    for name, contact_id, decision in results:
+        print(f"  {contact_id}  [{decision}]  {name}")
+
+    print(f"Summary: {matched_count} matched existing contact(s), {new_count} new provisional contact(s), "
+          f"{needs_review_count} needs-review (new provisional contact created, flagged as possible_duplicate), "
+          f"{evidence_count} evidence fact(s) logged.")
+
+    if needs_review_flags:
+        print("\nNeeds review — check each, then run 'resolve-match' once confirmed:")
+        for flag in needs_review_flags:
+            print(f"  {flag['contact_id']} ('{flag['name']}') vs {flag['candidate_id']} "
+                  f"(score {flag['score']}, {', '.join(flag['reasons'])})")
+
+    if unknown_fields:
+        print(f"\nWARNING: evidence field(s) not in data/contact_evidence_fields.json: {', '.join(sorted(unknown_fields))} "
+              f"— allowed anyway, but consider adding them to the controlled list.")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="command", required=True)
@@ -881,6 +1168,12 @@ def main():
     p.add_argument("--company", default=None)
     p.add_argument("--vendor", default=None)
     p.set_defaults(func=cmd_list)
+
+    p = sub.add_parser("ingest")
+    p.add_argument("--file", required=True, help="Path to a JSON extraction payload — see the "
+                    "'Batch document ingestion' section near the top of this module for the schema.")
+    p.add_argument("--dry-run", action="store_true", dest="dry_run")
+    p.set_defaults(func=cmd_ingest)
 
     args = ap.parse_args()
     args.func(args)

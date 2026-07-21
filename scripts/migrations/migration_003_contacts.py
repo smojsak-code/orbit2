@@ -72,6 +72,7 @@ DEFAULT_EVIDENCE_FIELDS = {
     "key_date": {"label": "Key date", "group": "relationship"},
     "general_note": {"label": "General note", "group": "engagement"},
     "merge_event": {"label": "Merge/identity-resolution event (system-generated audit entry, not extracted content)", "group": "system"},
+    "possible_duplicate": {"label": "Possible duplicate contact flagged for review (system-generated during batch ingest, not extracted content)", "group": "system"},
 }
 
 

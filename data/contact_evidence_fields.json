@@ -1,126 +1,35 @@
 {
-  "name": {
-    "label": "Name (as extracted)",
-    "group": "identity"
-  },
-  "title": {
-    "label": "Title / job role",
-    "group": "identity"
-  },
-  "seniority": {
-    "label": "Seniority",
-    "group": "identity"
-  },
-  "department": {
-    "label": "Department",
-    "group": "identity"
-  },
-  "business_unit": {
-    "label": "Business unit",
-    "group": "identity"
-  },
-  "company": {
-    "label": "Company",
-    "group": "identity"
-  },
-  "region": {
-    "label": "Region",
-    "group": "identity"
-  },
-  "country": {
-    "label": "Country",
-    "group": "identity"
-  },
-  "location": {
-    "label": "Location",
-    "group": "identity"
-  },
-  "email": {
-    "label": "Email address",
-    "group": "identity"
-  },
-  "phone": {
-    "label": "Phone number",
-    "group": "identity"
-  },
-  "topic_discussed": {
-    "label": "Topic discussed",
-    "group": "engagement"
-  },
-  "priority": {
-    "label": "Priority",
-    "group": "engagement"
-  },
-  "concern": {
-    "label": "Concern",
-    "group": "engagement"
-  },
-  "objective": {
-    "label": "Objective",
-    "group": "engagement"
-  },
-  "blocker": {
-    "label": "Blocker",
-    "group": "engagement"
-  },
-  "interest": {
-    "label": "Interest",
-    "group": "engagement"
-  },
-  "like": {
-    "label": "Like",
-    "group": "personal"
-  },
-  "dislike": {
-    "label": "Dislike",
-    "group": "personal"
-  },
-  "preference": {
-    "label": "Preference",
-    "group": "personal"
-  },
-  "communication_style": {
-    "label": "Communication style",
-    "group": "personal"
-  },
-  "personality_cue": {
-    "label": "Personality cue",
-    "group": "personal"
-  },
-  "influence_level": {
-    "label": "Influence level signal",
-    "group": "relationship"
-  },
-  "stakeholder_role": {
-    "label": "Stakeholder role",
-    "group": "relationship"
-  },
-  "relationship_strength_signal": {
-    "label": "Relationship strength signal",
-    "group": "relationship"
-  },
-  "commitment": {
-    "label": "Commitment",
-    "group": "actions"
-  },
-  "action": {
-    "label": "Action / follow-up",
-    "group": "actions"
-  },
-  "follow_up": {
-    "label": "Follow-up needed",
-    "group": "actions"
-  },
-  "key_date": {
-    "label": "Key date",
-    "group": "relationship"
-  },
-  "general_note": {
-    "label": "General note",
-    "group": "engagement"
-  },
-  "merge_event": {
-    "label": "Merge/identity-resolution event (system-generated audit entry, not extracted content)",
-    "group": "system"
-  }
+  "_comment": "Controlled vocabulary for contact_evidence.jsonl's 'field' — which dimension of a contact profile one piece of extracted evidence is about. Add a new field type here (plus a matching entry in FIELD_GROUPS in scripts/contacts.py if it belongs in a specific summary section) — no other code change needed. 'group' controls which section of the generated profile summary the evidence appears under.",
+  "name": { "label": "Name (as extracted)", "group": "identity" },
+  "title": { "label": "Title / job role", "group": "identity" },
+  "seniority": { "label": "Seniority", "group": "identity" },
+  "department": { "label": "Department", "group": "identity" },
+  "business_unit": { "label": "Business unit", "group": "identity" },
+  "company": { "label": "Company", "group": "identity" },
+  "region": { "label": "Region", "group": "identity" },
+  "country": { "label": "Country", "group": "identity" },
+  "location": { "label": "Location", "group": "identity" },
+  "email": { "label": "Email address", "group": "identity" },
+  "phone": { "label": "Phone number", "group": "identity" },
+  "topic_discussed": { "label": "Topic discussed", "group": "engagement" },
+  "priority": { "label": "Priority", "group": "engagement" },
+  "concern": { "label": "Concern", "group": "engagement" },
+  "objective": { "label": "Objective", "group": "engagement" },
+  "blocker": { "label": "Blocker", "group": "engagement" },
+  "interest": { "label": "Interest", "group": "engagement" },
+  "like": { "label": "Like", "group": "personal" },
+  "dislike": { "label": "Dislike", "group": "personal" },
+  "preference": { "label": "Preference", "group": "personal" },
+  "communication_style": { "label": "Communication style", "group": "personal" },
+  "personality_cue": { "label": "Personality cue", "group": "personal" },
+  "influence_level": { "label": "Influence level signal", "group": "relationship" },
+  "stakeholder_role": { "label": "Stakeholder role", "group": "relationship" },
+  "relationship_strength_signal": { "label": "Relationship strength signal", "group": "relationship" },
+  "commitment": { "label": "Commitment", "group": "actions" },
+  "action": { "label": "Action / follow-up", "group": "actions" },
+  "follow_up": { "label": "Follow-up needed", "group": "actions" },
+  "key_date": { "label": "Key date", "group": "relationship" },
+  "general_note": { "label": "General note", "group": "engagement" },
+  "merge_event": { "label": "Merge/identity-resolution event (system-generated audit entry, not extracted content)", "group": "system" },
+  "possible_duplicate": { "label": "Possible duplicate contact flagged for review (system-generated during batch ingest, not extracted content)", "group": "system" }
 }

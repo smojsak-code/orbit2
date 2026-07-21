@@ -603,8 +603,10 @@ evidence trail" split R2-T01 established for `metric_results_history.csv`:
   priorities, concerns, objectives, blockers, interests), `personal`
   (likes, dislikes, preferences, communication style, personality cues),
   `relationship` (influence level, stakeholder role, relationship strength
-  signals, key dates), `actions` (commitments, follow-ups). Add a field by
-  editing this file — no code change needed.
+  signals, key dates), `actions` (commitments, follow-ups), `system`
+  (system-generated audit/review entries, never extracted content —
+  `merge_event`, `possible_duplicate`; see the Phase 2 section below).
+  Add a field by editing this file — no code change needed.
 
 **Why a contact's "current value" for a field is derived, not stored
 directly.** `contacts.csv`'s columns (title, company, email, ...) are a
@@ -718,18 +720,115 @@ contacts participate in whatever centralised visibility enforcement
 R2-T04 ("Implement controlled visibility and redaction rules") ends up
 building, rather than inventing a parallel scheme.
 
-**What Phase 1 deliberately does NOT include yet** (see
-`scripts/contacts.py`'s module docstring and the phased plan agreed with
-Steve): a "read this document and extract everyone in it" ingestion
-command (Phase 2 — Phase 1 only provides the identity-resolution/evidence
-engine those extractions will call into); a Contacts tab in the Cowork
-dashboard or public site (Phase 3); an org chart / influence map view
-(Phase 4); and wiring `value_journal.jsonl`'s `participants` field to real
-`contact_id`s (noted above, a natural Phase 2/3 follow-on, not committed
-to a specific phase yet). Raw audio transcription is also out of scope
-end-to-end — Phase 2's extraction command will need already-transcribed
-text (a summary, a transcript export, etc.), not a raw audio file, since
-no speech-to-text tool is available in this environment.
+**What Phase 1 deliberately did NOT include** (now built in Phase 2 unless
+noted): a "read this document and extract everyone in it" ingestion
+command. Still not built: a Contacts tab in the Cowork dashboard or public
+site (Phase 3); an org chart / influence map view (Phase 4); and wiring
+`value_journal.jsonl`'s `participants` field to real `contact_id`s (noted
+above, a natural Phase 2/3 follow-on, not committed to a specific phase
+yet). Raw audio transcription is still out of scope end-to-end — `ingest`
+needs already-transcribed text (a summary, a transcript export, etc.), not
+a raw audio file, since no speech-to-text tool is available in this
+environment.
+
+### Contacts register — batch document ingestion (Contacts Phase 2)
+The `ingest` command lets a whole document's worth of extracted people and
+facts be recorded in one call, instead of one `add-evidence` call per
+fact. It reuses Phase 1's identity-resolution and evidence-recording logic
+directly — `scripts/contacts.py`'s `record_evidence_row()` is the same
+pure, file-I/O-free function `add-evidence` calls, and `cmd_ingest` reads
+`contacts.csv`/`contact_evidence.jsonl` once per batch rather than once
+per fact.
+
+**Practical workflow.** When Steve shares a meeting note, transcript,
+slide deck, PDF, or other document in a Cowork session, Claude reads it,
+identifies every person mentioned plus whatever facts/observations were
+said about them, builds a JSON payload matching the schema below, and runs
+`python3 scripts/contacts.py ingest --file <payload>.json` (with
+`--dry-run` first to preview, matching this project's usual
+draft-then-apply discipline). This is the concrete implementation of
+"automatic" extraction promised in the original spec — automatic in the
+sense that Claude does the reading/structuring/CLI call, not that an
+unattended background job watches for new files (this platform has no
+backend server to run one).
+
+**Payload schema** (JSON file passed via `--file`):
+
+```json
+{
+  "source_type": "meeting_note",
+  "source_ref": "2026-07-21 QBR notes",
+  "extracted_at": "2026-07-21",
+  "people": [
+    {
+      "name": "Jamie Chen",
+      "company": "Acme", "title": "VP Partnerships", "email": "...",
+      "vendor": "...", "visibility": "...",
+      "evidence": [
+        {
+          "field": "priority", "value": "Wants a joint QBR next quarter",
+          "confidence": "probable", "sensitivity": "standard",
+          "rationale": "...", "meeting_ref": "..."
+        }
+      ]
+    }
+  ]
+}
+```
+
+`source_type` and top-level `source_ref`/`extracted_at` are defaults every
+evidence fact inherits unless it sets its own. `company`/`title`/`email`
+on a person are used only for identity resolution and (if a new contact is
+created) the initial profile row — they are not themselves recorded as
+evidence facts; log them explicitly under `evidence` too (field `title`,
+`company`, etc.) if they should also appear in the evidence trail.
+
+**Validation is all-or-nothing.** `validate_ingest_payload()` checks the
+*entire* payload — every person's name, every evidence item's `field`/
+`value`/`confidence` (must be one of `VALID_CONFIDENCE`), every
+`source_type`/`visibility`/`sensitivity` against their controlled
+vocabularies — before `cmd_ingest` writes anything. One malformed fact
+anywhere in a document rejects the whole batch rather than silently
+applying part of it; a completion report/error list is printed instead.
+
+**Identity resolution per person** (`resolve_or_create_for_ingest()`):
+unlike `find-or-create` — which only *reports* on an ambiguous match and
+waits for a human — `ingest` always assigns a usable `contact_id` to every
+person, since a whole document's worth of facts must not be dropped or
+blocked by one ambiguous name:
+- `matched` (score ≥ `AUTO_MATCH_THRESHOLD`): reuses the existing
+  `contact_id`, no new row.
+- `needs_review` (score ≥ `REVIEW_THRESHOLD` but below auto-match): gets
+  its **own new provisional contact** — never silently merged into the
+  candidate — plus a `possible_duplicate` evidence row on the new contact
+  naming the candidate `contact_id`, score, and reasons. This is how the
+  "never drop the ambiguity, never silently resolve it either way" rule is
+  implemented for batch ingest specifically.
+- `new`: an ordinary new provisional contact, same as `find-or-create`.
+
+Run `contacts.py resolve-match --contact-id <new> --matched-contact-id
+<candidate> --verdict same|different` once a `needs_review` flag has been
+checked — `same` merges the two (via the existing `merge` logic), keeping
+both records' evidence history; `different` just records the verdict.
+
+**`possible_duplicate` evidence field** (added to
+`contact_evidence_fields.json`'s `system` group, alongside `merge_event`):
+a system-generated review flag, not extracted content. `compute_profile_summary()`
+lists any *unresolved* (`superseded_by` blank) `possible_duplicate`
+evidence as a `NEEDS REVIEW` line near the top of the rendered summary —
+right after the identity line, before aliases/confirmed/probable/
+subjective — and returns it separately as `possible_duplicates` in the
+structured result, so a provisional contact's ambiguous-match status is
+never buried under ordinary profile content. It is excluded from the
+confirmed/probable/subjective evidence lists (same treatment as
+`merge_event`) since it isn't a fact about the person.
+
+**`--dry-run`**: runs the full identity-resolution and evidence-recording
+logic in memory (so the preview shows the actual `contact_id`s/decisions
+that would result) but skips the final `write_contacts()`/`write_evidence()`
+calls — nothing is persisted. Provisional `contact_id`s shown in a dry run
+are a preview, not a reservation; running for real afterward assigns the
+next available id at that time.
 
 ### Generated files (not sources of truth — do not hand-edit)
 - `scores_snapshot.json` — output of `scripts/scoring.py`. `scripts/build_dashboard.py` loads this and augments it in memory (adding `actions`, `objectives`, `app_config`, etc.) before embedding the result as the Cowork dashboard artifact's `SNAPSHOT` — the augmented version is never written back to `scores_snapshot.json` on disk.

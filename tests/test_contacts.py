@@ -238,3 +238,223 @@ def test_compute_profile_summary_unknown_contact_does_not_crash(patched_contacts
     contacts = contacts_mod.read_contacts()
     summary = contacts_mod.compute_profile_summary("CONT-9999", contacts, [], [])
     assert "No contact found" in summary["text"]
+
+
+# ---------------------------------------------------------------------------
+# Phase 2: record_evidence_row / resolve_or_create_for_ingest (pure, no I/O)
+# ---------------------------------------------------------------------------
+
+def test_record_evidence_row_updates_profile_and_supersedes_prior():
+    contacts_map = {"CONT-0001": {"contact_id": "CONT-0001", "title": "Old Title", "last_interaction_at": "2026-01-01"}}
+    evidence = [{
+        "evidence_id": "CEV-0001", "contact_id": "CONT-0001", "field": "title", "value": "Old Title",
+        "confidence": "confirmed", "extracted_at": "2026-01-01", "superseded_by": "",
+    }]
+    result = contacts_mod.record_evidence_row(
+        contacts_map, evidence, contact_id="CONT-0001", field="title", value="New Title",
+        source_type="transcript", confidence="confirmed", extracted_at="2026-07-21",
+    )
+    assert result["applied_to_profile"] is True
+    assert result["column"] == "title"
+    assert contacts_map["CONT-0001"]["title"] == "New Title"
+    assert evidence[0]["superseded_by"] == result["evidence_id"]
+    assert len(evidence) == 2, "must append, never remove, a row"
+
+
+def test_record_evidence_row_no_column_never_touches_profile():
+    contacts_map = {"CONT-0001": {"contact_id": "CONT-0001", "last_interaction_at": ""}}
+    evidence = []
+    result = contacts_mod.record_evidence_row(
+        contacts_map, evidence, contact_id="CONT-0001", field="topic_discussed", value="Renewal timeline",
+        source_type="meeting_note", confidence="probable", extracted_at="2026-07-21",
+    )
+    assert result["applied_to_profile"] is False
+    assert result["column"] is None
+    assert len(evidence) == 1
+
+
+def test_resolve_or_create_for_ingest_matched_reuses_existing_contact_id(patched_contacts):
+    contacts = contacts_mod.read_contacts()
+    contacts_map = contacts_mod.contacts_by_id(contacts)
+    res = contacts_mod.resolve_or_create_for_ingest(
+        "Jaime Chen", contacts, contacts_map, company="TestVendor", title="Director of Partnerships",
+    )
+    assert res["decision"] == "matched"
+    assert res["contact_id"] == "CONT-0001"
+    assert len(contacts) == 1, "a matched person must not create a new row"
+
+
+def test_resolve_or_create_for_ingest_needs_review_creates_new_contact_not_a_merge(patched_contacts):
+    contacts = contacts_mod.read_contacts()
+    contacts_map = contacts_mod.contacts_by_id(contacts)
+    res = contacts_mod.resolve_or_create_for_ingest("Jamie Chung", contacts, contacts_map)
+    assert res["decision"] == "needs_review"
+    assert res["candidate_id"] == "CONT-0001"
+    assert res["contact_id"] != "CONT-0001", "needs_review must get its OWN new contact_id, never silently merged"
+    assert res["contact_id"] in contacts_map
+    assert len(contacts) == 2
+
+
+def test_resolve_or_create_for_ingest_new_creates_provisional_contact(patched_contacts):
+    contacts = contacts_mod.read_contacts()
+    contacts_map = contacts_mod.contacts_by_id(contacts)
+    res = contacts_mod.resolve_or_create_for_ingest("Someone Entirely New", contacts, contacts_map)
+    assert res["decision"] == "new"
+    assert contacts_map[res["contact_id"]]["status"] == "provisional"
+
+
+# ---------------------------------------------------------------------------
+# Phase 2: cmd_ingest (batch document ingestion)
+# ---------------------------------------------------------------------------
+
+def _write_payload(tmp_path, payload, name="payload.json"):
+    import json
+    path = tmp_path / name
+    path.write_text(json.dumps(payload))
+    return str(path)
+
+
+def test_ingest_matched_person_records_evidence_without_new_contact(patched_contacts, tmp_path):
+    payload = {
+        "source_type": "meeting_note", "source_ref": "QBR notes", "extracted_at": "2026-07-21",
+        "people": [{
+            "name": "Jaime Chen", "company": "TestVendor", "title": "Director of Partnerships",
+            "evidence": [{"field": "topic_discussed", "value": "Renewal timeline", "confidence": "probable"}],
+        }],
+    }
+    path = _write_payload(tmp_path, payload)
+    contacts_mod.cmd_ingest(SimpleNamespace(file=path, dry_run=False))
+
+    contacts = contacts_mod.read_contacts()
+    assert len(contacts) == 1, "a matched person must not create a duplicate contact"
+    evidence = contacts_mod.read_evidence()
+    assert any(e["field"] == "topic_discussed" and e["value"] == "Renewal timeline" and e["contact_id"] == "CONT-0001" for e in evidence)
+
+
+def test_ingest_new_person_creates_provisional_contact_and_evidence(patched_contacts, tmp_path):
+    payload = {
+        "source_type": "transcript",
+        "people": [{
+            "name": "Brand New Person", "company": "Acme",
+            "evidence": [{"field": "priority", "value": "Wants a joint roadmap review", "confidence": "confirmed"}],
+        }],
+    }
+    path = _write_payload(tmp_path, payload)
+    contacts_mod.cmd_ingest(SimpleNamespace(file=path, dry_run=False))
+
+    contacts = contacts_mod.read_contacts()
+    assert len(contacts) == 2
+    new_row = next(r for r in contacts if r["canonical_name"] == "Brand New Person")
+    assert new_row["status"] == "provisional"
+    evidence = contacts_mod.read_evidence()
+    assert any(e["field"] == "priority" and e["contact_id"] == new_row["contact_id"] for e in evidence)
+
+
+def test_ingest_needs_review_person_gets_new_contact_plus_possible_duplicate_flag(patched_contacts, tmp_path):
+    payload = {
+        "source_type": "document",
+        "people": [{"name": "Jamie Chung", "evidence": []}],
+    }
+    path = _write_payload(tmp_path, payload)
+    contacts_mod.cmd_ingest(SimpleNamespace(file=path, dry_run=False))
+
+    contacts = contacts_mod.read_contacts()
+    assert len(contacts) == 2, "needs_review must create its own new contact, never silently merge into CONT-0001"
+    new_row = next(r for r in contacts if r["contact_id"] != "CONT-0001")
+    assert new_row["status"] == "provisional"
+
+    evidence = contacts_mod.read_evidence()
+    flag = next(e for e in evidence if e["field"] == "possible_duplicate" and e["contact_id"] == new_row["contact_id"])
+    assert "CONT-0001" in flag["value"]
+    assert not flag["superseded_by"]
+
+
+def test_ingest_dry_run_writes_nothing(patched_contacts, tmp_path):
+    contacts_before = contacts_mod.read_contacts()
+    evidence_before = contacts_mod.read_evidence()
+
+    payload = {
+        "source_type": "manual_note",
+        "people": [{"name": "Should Not Persist", "evidence": [{"field": "general_note", "value": "x", "confidence": "probable"}]}],
+    }
+    path = _write_payload(tmp_path, payload)
+    contacts_mod.cmd_ingest(SimpleNamespace(file=path, dry_run=True))
+
+    assert contacts_mod.read_contacts() == contacts_before
+    assert contacts_mod.read_evidence() == evidence_before
+
+
+def test_ingest_malformed_payload_is_rejected_all_or_nothing(patched_contacts, tmp_path):
+    """Intentional-failure case: one bad fact anywhere in the payload must
+    reject the WHOLE batch and write nothing, not partially apply it."""
+    contacts_before = contacts_mod.read_contacts()
+    evidence_before = contacts_mod.read_evidence()
+
+    payload = {
+        "source_type": "meeting_note",
+        "people": [
+            {"name": "Valid Person", "evidence": [{"field": "priority", "value": "ok", "confidence": "confirmed"}]},
+            {"name": "Bad Evidence Person", "evidence": [{"field": "priority", "value": "ok", "confidence": "not_a_real_confidence"}]},
+        ],
+    }
+    path = _write_payload(tmp_path, payload)
+    contacts_mod.cmd_ingest(SimpleNamespace(file=path, dry_run=False))
+
+    assert contacts_mod.read_contacts() == contacts_before, "nothing must be written when any part of the payload is invalid"
+    assert contacts_mod.read_evidence() == evidence_before
+
+
+def test_validate_ingest_payload_rejects_missing_source_type():
+    errors = contacts_mod.validate_ingest_payload({"people": [{"name": "X"}]})
+    assert any("source_type" in e for e in errors)
+
+
+def test_validate_ingest_payload_rejects_empty_people():
+    errors = contacts_mod.validate_ingest_payload({"source_type": "manual_note", "people": []})
+    assert any("people" in e for e in errors)
+
+
+def test_validate_ingest_payload_accepts_minimal_valid_payload():
+    errors = contacts_mod.validate_ingest_payload({"source_type": "manual_note", "people": [{"name": "X"}]})
+    assert errors == []
+
+
+# ---------------------------------------------------------------------------
+# Phase 2: possible_duplicate surfaced in compute_profile_summary
+# ---------------------------------------------------------------------------
+
+def test_compute_profile_summary_surfaces_unresolved_possible_duplicate(patched_contacts, tmp_path):
+    payload = {"source_type": "document", "people": [{"name": "Jamie Chung", "evidence": []}]}
+    path = _write_payload(tmp_path, payload)
+    contacts_mod.cmd_ingest(SimpleNamespace(file=path, dry_run=False))
+
+    contacts = contacts_mod.read_contacts()
+    new_row = next(r for r in contacts if r["contact_id"] != "CONT-0001")
+    evidence = contacts_mod.read_evidence()
+    aliases = contacts_mod.read_aliases()
+
+    summary = contacts_mod.compute_profile_summary(new_row["contact_id"], contacts, evidence, aliases)
+    assert summary["possible_duplicates"], "unresolved possible_duplicate evidence must be surfaced"
+    assert "CONT-0001" in summary["possible_duplicates"][0]
+    assert "NEEDS REVIEW" in summary["text"]
+    # Must appear near the top of the rendered text, not buried after
+    # ordinary evidence sections.
+    lines = summary["text"].split("\n")
+    assert "NEEDS REVIEW" in lines[1]
+
+
+def test_compute_profile_summary_possible_duplicate_excluded_from_probable_section(patched_contacts, tmp_path):
+    """possible_duplicate is a system-generated review flag, not extracted
+    content — it must not also leak into the ordinary probable/confirmed
+    evidence lines."""
+    payload = {"source_type": "document", "people": [{"name": "Jamie Chung", "evidence": []}]}
+    path = _write_payload(tmp_path, payload)
+    contacts_mod.cmd_ingest(SimpleNamespace(file=path, dry_run=False))
+
+    contacts = contacts_mod.read_contacts()
+    new_row = next(r for r in contacts if r["contact_id"] != "CONT-0001")
+    evidence = contacts_mod.read_evidence()
+    aliases = contacts_mod.read_aliases()
+    summary = contacts_mod.compute_profile_summary(new_row["contact_id"], contacts, evidence, aliases)
+    assert not any("Possibly the same person" in line for line in summary["probable"])
+    assert not any("Possibly the same person" in line for line in summary["confirmed"])
