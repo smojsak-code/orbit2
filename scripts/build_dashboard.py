@@ -193,6 +193,71 @@ def build_vendor_reports(vendor):
     }
 
 
+def build_objectives_report(objective_rows):
+    """Generates the Objectives Progress Report (Word + PDF) from the
+    already-computed objective detail rows (each row carries `detail` from
+    objectives_mod.compute_objective_detail(), attached by
+    load_objectives_snapshot()). Writes those rows to a throwaway temp JSON
+    file so scripts_node/generate_objectives_report.js can render them
+    without reimplementing compute_progress()/compute_objective_detail() in
+    JS — same "compute once in Python, node only renders" discipline
+    build_vendor_reports() already uses via scores_snapshot.json.
+
+    Returns {"docx": {filename, data}, "pdf": {filename, data},
+    "generated_at": iso timestamp} for embedding into dashboard_rendered.html,
+    or None if there are no objectives to report on (fresh install with an
+    empty objectives.csv) — the dashboard JS treats a missing key as
+    "not built yet" and prompts to regenerate, same as an unbuilt vendor
+    report.
+    """
+    if not objective_rows:
+        return None
+    print("Building Objectives Progress Report...")
+    generated_at = datetime.now().isoformat(timespec="seconds")
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        snapshot_path = os.path.join(tmp_dir, "objectives_for_report.json")
+        with open(snapshot_path, "w") as f:
+            json.dump({"objectives": objective_rows, "app_config": app_config.load_config()}, f)
+        run(["node", os.path.join(SCRIPTS_NODE_DIR, "generate_objectives_report.js"), snapshot_path])
+
+    docx_candidates = sorted(
+        f for f in os.listdir(REPORTS_DIR)
+        if f.startswith("Orbit2_Objectives_Progress_Report_") and f.endswith(".docx")
+    )
+    if not docx_candidates:
+        raise RuntimeError("generate_objectives_report.js did not produce a .docx")
+    docx_path = os.path.join(REPORTS_DIR, docx_candidates[-1])
+
+    # PDF conversion — same temp-dir-then-copy pattern as build_vendor_reports(),
+    # sidesteps a sandbox permission quirk on in-place LibreOffice overwrites.
+    soffice_script = find_soffice_script()
+    pdf_path = os.path.splitext(docx_path)[0] + ".pdf"
+    with tempfile.TemporaryDirectory() as tmp_pdf_dir:
+        run([
+            "python3", soffice_script, "--headless", "--convert-to", "pdf",
+            "--outdir", tmp_pdf_dir, docx_path,
+        ])
+        tmp_pdf_path = os.path.join(tmp_pdf_dir, os.path.basename(pdf_path))
+        if not os.path.exists(tmp_pdf_path):
+            raise RuntimeError(f"PDF conversion did not produce {tmp_pdf_path}")
+        with open(tmp_pdf_path, "rb") as src:
+            pdf_bytes = src.read()
+        try:
+            with open(pdf_path, "wb") as dst:
+                dst.write(pdf_bytes)
+        except OSError:
+            shutil.copyfile(tmp_pdf_path, pdf_path)
+    if not os.path.exists(pdf_path):
+        raise RuntimeError(f"PDF conversion did not produce {pdf_path}")
+
+    return {
+        "docx": {"filename": os.path.basename(docx_path), "data": b64_file(docx_path)},
+        "pdf": {"filename": os.path.basename(pdf_path), "data": b64_file(pdf_path)},
+        "generated_at": generated_at,
+    }
+
+
 def load_actions_snapshot():
     """Read data/actions.csv and data/action_statuses.json and return
     (action_rows, action_statuses) ready to embed in a snapshot. Each row
@@ -343,6 +408,14 @@ def main():
     # public site's web_snapshot.json).
     snapshot["objective_evidence_files"] = build_objective_evidence_files(snapshot["objectives"])
 
+    # Objectives Progress Report (tasks #29/#30) — a downloadable, timestamped
+    # Word/PDF report grouped by category with evidence/example references and
+    # action points, built fresh every time this pipeline runs so it's never
+    # more than one rebuild stale. Embedded separately from report_files
+    # (which is per-vendor scorecard reports) since this spans all vendors'
+    # objectives and isn't part of that per-vendor loop.
+    objectives_report_files = build_objectives_report(snapshot["objectives"])
+
     # Contacts register (Contacts Phase 3, R3-T01) — the dashboard's
     # Contacts tab reads this directly. contact_evidence_fields populates
     # the "Add evidence" form's field dropdown (excluding the 'system'
@@ -359,6 +432,7 @@ def main():
         html = f.read()
     html = html.replace("__SNAPSHOT_JSON__", json.dumps(snapshot, indent=2))
     html = html.replace("__REPORT_FILES_JSON__", json.dumps(report_files))
+    html = html.replace("__OBJECTIVES_REPORT_FILES_JSON__", json.dumps(objectives_report_files))
 
     out_path = os.path.join(BASE_DIR, "dashboard_rendered.html")
     with open(out_path, "w") as f:

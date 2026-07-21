@@ -72,6 +72,66 @@ def test_report_files_picks_the_most_recently_named_file_when_multiple_exist(tmp
     assert ok is True, detail
 
 
+def test_objectives_report_exists_happy_path(tmp_path):
+    reports_dir = str(tmp_path)
+    _touch(os.path.join(reports_dir, "Orbit2_Objectives_Progress_Report_2026-07-21_2300.docx"))
+    _touch(os.path.join(reports_dir, "Orbit2_Objectives_Progress_Report_2026-07-21_2300.pdf"))
+
+    ok, detail = validate_release.check_objectives_report_exists(reports_dir)
+    assert ok is True, detail
+
+
+def test_objectives_report_intentional_failure_missing_pdf(tmp_path):
+    reports_dir = str(tmp_path)
+    _touch(os.path.join(reports_dir, "Orbit2_Objectives_Progress_Report_2026-07-21_2300.docx"))
+    # No .pdf file created.
+
+    ok, detail = validate_release.check_objectives_report_exists(reports_dir)
+    assert ok is False
+    assert "pdf" in detail.lower()
+
+
+def test_objectives_report_intentional_failure_missing_docx(tmp_path):
+    reports_dir = str(tmp_path)
+    _touch(os.path.join(reports_dir, "Orbit2_Objectives_Progress_Report_2026-07-21_2300.pdf"))
+    # No .docx file created.
+
+    ok, detail = validate_release.check_objectives_report_exists(reports_dir)
+    assert ok is False
+    assert "docx" in detail.lower()
+
+
+def test_objectives_report_intentional_failure_empty_docx(tmp_path):
+    reports_dir = str(tmp_path)
+    _touch(os.path.join(reports_dir, "Orbit2_Objectives_Progress_Report_2026-07-21_2300.docx"), size=0)
+    _touch(os.path.join(reports_dir, "Orbit2_Objectives_Progress_Report_2026-07-21_2300.pdf"))
+
+    ok, detail = validate_release.check_objectives_report_exists(reports_dir)
+    assert ok is False
+    assert "empty" in detail.lower()
+
+
+def test_objectives_report_intentional_failure_no_reports_dir():
+    ok, detail = validate_release.check_objectives_report_exists("/nonexistent/path/xyz")
+    assert ok is False
+    assert "no objectives progress report" in detail.lower()
+
+
+def test_objectives_report_picks_the_most_recently_named_file_when_multiple_exist(tmp_path):
+    """Every regeneration writes a NEW timestamped file rather than
+    overwriting (deliberate — Steve asked for a report he can generate 'at
+    any time' to build a dated history), so confirm the check tolerates
+    multiple runs on disk and still passes as long as at least one
+    non-empty pair exists."""
+    reports_dir = str(tmp_path)
+    _touch(os.path.join(reports_dir, "Orbit2_Objectives_Progress_Report_2026-07-21_2200.docx"), size=0)  # older, empty
+    _touch(os.path.join(reports_dir, "Orbit2_Objectives_Progress_Report_2026-07-21_2300.docx"), size=10)  # newer, populated
+    _touch(os.path.join(reports_dir, "Orbit2_Objectives_Progress_Report_2026-07-21_2300.pdf"), size=10)
+
+    ok, detail = validate_release.check_objectives_report_exists(reports_dir)
+    assert ok is True, detail
+
+
 def test_run_step_catches_an_exception_as_a_failure_not_a_crash():
     def _boom():
         raise RuntimeError("fixture failure")

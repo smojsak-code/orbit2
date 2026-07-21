@@ -504,6 +504,17 @@
         <button class="btn-primary" onclick="openObjectiveModal()">+ Add Objective</button>
         <button class="btn-secondary" onclick="startExportObjectives()">Export review</button>
       </div>
+      <div class="report-header">
+        <div>
+          <div class="report-title">Objectives Progress Report</div>
+          <div class="report-sub" id="objReportGeneratedNote">Dated, timestamped record of progress, evidence, examples and action points for every objective — generate on demand.</div>
+        </div>
+        <div class="download-row">
+          <button class="btn-primary" id="downloadObjWordBtn" onclick="downloadObjectivesReport('docx')">Download Word (.docx)</button>
+          <button class="btn-primary" id="downloadObjPdfBtn" onclick="downloadObjectivesReport('pdf')">Download PDF</button>
+          <button class="btn-secondary" onclick="sendPrompt('Please regenerate the objectives progress report now with the latest data.')">Regenerate now</button>
+        </div>
+      </div>
       <table class="data-table" id="objectivesTable"></table>
       <div class="dz-empty-hint" id="objectivesHint"></div>
     </section>
@@ -867,6 +878,10 @@ const SNAPSHOT = __SNAPSHOT_JSON__;
 // Pre-built report files (docx/pdf/pptx), base64-encoded, per vendor — generated ahead of time by
 // scripts/build_dashboard.py so downloads are instant and fully local: no chat round-trip.
 const REPORT_FILES = __REPORT_FILES_JSON__;
+// Pre-built Objectives Progress Report (docx/pdf), base64-encoded — generated ahead of time by
+// scripts/build_dashboard.py (scripts_node/generate_objectives_report.js), same instant-local-download
+// pattern as REPORT_FILES above. generated_at is the build-time timestamp shown next to the buttons.
+const OBJECTIVES_REPORT_FILES = __OBJECTIVES_REPORT_FILES_JSON__;
 
 function bandFor(score) {
   if (score === null || score === undefined) return { cls: 'band-neutral', label: 'No data' };
@@ -1506,6 +1521,39 @@ function downloadReport(format) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
+
+// Objectives Progress Report — same instant local-download pattern as downloadReport()
+// above, reading from OBJECTIVES_REPORT_FILES instead of REPORT_FILES.
+function downloadObjectivesReport(format) {
+  const btnId = { docx: 'downloadObjWordBtn', pdf: 'downloadObjPdfBtn' }[format];
+  const btn = document.getElementById(btnId);
+  const mimeMap = {
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    pdf: 'application/pdf',
+  };
+  const file = OBJECTIVES_REPORT_FILES ? OBJECTIVES_REPORT_FILES[format] : null;
+  if (!file) {
+    const original = btn.textContent;
+    btn.textContent = 'Not built yet — click "Regenerate now"';
+    setTimeout(() => { btn.textContent = original; }, 3000);
+    return;
+  }
+  const blob = base64ToBlob(file.data, mimeMap[format]);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const note = document.getElementById('objReportGeneratedNote');
+  if (note && OBJECTIVES_REPORT_FILES && OBJECTIVES_REPORT_FILES.generated_at) {
+    note.textContent = `Last generated ${OBJECTIVES_REPORT_FILES.generated_at.replace('T', ' ')}. Click "Regenerate now" for a fresh, dated snapshot.`;
+  }
+});
 
 // --- Drag & drop staging (Evidence Library + Manage Metrics import) ---
 // Files are staged on drop/select and only sent to Claude when the Submit button is clicked —

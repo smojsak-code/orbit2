@@ -964,6 +964,51 @@ write actions here — the public mirror has no `sendPrompt`-equivalent (no
 chat context exists on a plain public webpage); to change what's visible,
 edit a contact's `visibility` from the Cowork dashboard or CLI.
 
+### Objectives Progress Report (tasks #29/#30, 2026-07-21)
+A downloadable, timestamped Word/PDF report covering every objective's
+progress, evidence, examples, and action points — grouped into the same
+five sections (Relationship, Commercial, Strategic, Operational,
+Recognition) as the Objectives tab's own category filter. Generated fresh
+on every `build_dashboard.py`/`build_web.py` run, and again on demand from
+either surface, so Steve can produce a dated snapshot of his progress at
+any time (his own words: "a report ... that I can create at anytime to
+show my progress").
+
+- `scripts_node/generate_objectives_report.js` renders the docx. It never
+  recomputes progress or the narrative summary itself — it reads a
+  pre-computed snapshot (each objective row's `detail`, from
+  `objectives.py`'s `compute_objective_detail()`) passed in as a JSON file,
+  same "compute once in Python, node only renders" discipline
+  `generate_report.js` already uses for `scores_snapshot.json`. This is
+  what keeps the report, the dashboard's Objectives tab, and the public My
+  Impact tab's click-through detail view from ever disagreeing.
+- `build_dashboard.py`'s `build_objectives_report()` writes that JSON to a
+  throwaway temp file, runs the node script, converts the result to PDF
+  (same LibreOffice pipeline as the vendor scorecard reports), and returns
+  base64-embedded bytes for the dashboard artifact — same instant,
+  no-chat-round-trip download pattern as `REPORT_FILES`, exposed via a new
+  `OBJECTIVES_REPORT_FILES` JS global and a "Download Word (.docx)" /
+  "Download PDF" / "Regenerate now" button row on the Objectives tab.
+- `build_web.py` calls the same `build_objectives_report()` function but
+  only publishes the resulting **filenames** (`objectives_report_files` in
+  `web_snapshot.json`) — the actual docx/pdf bytes are reused on disk in
+  `reports/` and served as plain static downloads, same "manifest, not
+  embed" pattern the per-vendor `report_files` manifest already uses. The
+  public My Impact tab's Objectives card links to these files directly.
+  Unlike evidence *files* (dashboard-only, see below), the report itself
+  is published on both surfaces — it only ever contains evidence
+  *metadata* (filename/description/date), the same tier already public via
+  the Evidence Library, never the underlying file content.
+- **Every regeneration writes a new, distinct timestamped file** — deliberately
+  not overwritten in place, unlike the per-vendor scorecard reports (whose
+  filename is quarter-based, so a same-quarter rebuild replaces the file).
+  This means `reports/` accumulates a dated history of objectives progress
+  reports over time; that's intentional, not a cleanup gap.
+- `scripts/validate_release.py`'s `check_objectives_report_exists()` smoke-tests
+  that the most recent report's docx and PDF both exist and are non-empty,
+  as part of the same step 4 (web build) that already smoke-tests the
+  per-vendor reports.
+
 ### Generated files (not sources of truth — do not hand-edit)
 - `scores_snapshot.json` — output of `scripts/scoring.py`. `scripts/build_dashboard.py` loads this and augments it in memory (adding `actions`, `objectives`, `app_config`, etc.) before embedding the result as the Cowork dashboard artifact's `SNAPSHOT` — the augmented version is never written back to `scores_snapshot.json` on disk.
 - `web_snapshot.json` — output of `scripts/build_web.py`, fetched at runtime by the public GitHub Pages site. Includes the `homepage` (R1-T06), `impact` (R1-T07), and `objectives` (R1-T08) keys documented above.

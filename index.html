@@ -34,6 +34,7 @@
     font-size: 12.5px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block;
   }
   .btn-secondary:hover { background: #eff6ff; }
+  .btn-secondary[disabled], .btn-secondary.disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
   .top-grid { display: grid; grid-template-columns: 280px 1fr; gap: 16px; margin-bottom: 16px; }
   @media (max-width: 820px) { .top-grid { grid-template-columns: 1fr; } }
   .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px; }
@@ -403,7 +404,10 @@
           <option value="operational">Operational</option>
           <option value="recognition">Recognition</option>
         </select>
+        <a id="downloadObjReportWordBtn" class="btn-secondary disabled" href="#">Download progress report (Word)</a>
+        <a id="downloadObjReportPdfBtn" class="btn-secondary disabled" href="#">Download progress report (PDF)</a>
       </div>
+      <div class="report-sub" id="objReportGeneratedNotePublic"></div>
       <div id="impactObjectivesList"></div>
     </div>
 
@@ -1539,6 +1543,7 @@ fetch('data/web_snapshot.json', { cache: 'no-store' })
     renderImpactView();
     setupImpactControls();
     setupImpactObjectivesFilter();
+    setupObjectivesReportDownloads();
     renderContactsView();
     setupContactsFilters();
   })

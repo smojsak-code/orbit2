@@ -268,6 +268,25 @@ def main():
     # build_dashboard.py so the two surfaces never disagree.
     snapshot["objectives"] = bd.load_objectives_snapshot(snapshot.get("evidence"))
 
+    # Objectives Progress Report (tasks #29/#30) — same report content as the
+    # Cowork dashboard's version (bd.build_objectives_report() re-renders it
+    # from the same compute_objective_detail() data, generating a fresh
+    # timestamped docx+pdf every build — deliberately NOT overwritten
+    # in-place, so reports/ accumulates a dated history Steve can look back
+    # over, same as he asked for "a report ... that I can create at anytime
+    # to show my progress"). Only the filenames go into web_snapshot.json —
+    # same "manifest, not embed" pattern as report_manifest above — the
+    # actual bytes are reused on disk in reports/, no separate write here.
+    objectives_report_files = bd.build_objectives_report(snapshot["objectives"])
+    snapshot["objectives_report_files"] = (
+        {
+            "docx": objectives_report_files["docx"]["filename"],
+            "pdf": objectives_report_files["pdf"]["filename"],
+            "generated_at": objectives_report_files["generated_at"],
+        }
+        if objectives_report_files else None
+    )
+
     # Daily Alliance Manager homepage (R1-T06) — web-only, see module-level
     # comment above compute_homepage_aggregates().
     journal_entries = journal_mod.read_journal()

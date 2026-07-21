@@ -137,6 +137,39 @@ def check_report_files_exist(reports_dir, vendors):
     return True, f"report smoke test OK for {len(vendors)} vendor(s)"
 
 
+def check_objectives_report_exists(reports_dir):
+    """Pure check, no subprocess/build involved — same separation-of-concerns
+    reason as check_report_files_exist() above. Confirms build_web.py's call
+    to bd.build_objectives_report() (tasks #29/#30) produced a non-empty
+    Word report and PDF for the Objectives Progress Report. Naming
+    convention matches scripts_node/generate_objectives_report.js:
+    "Orbit2_Objectives_Progress_Report_<timestamp>.docx"/".pdf". Unlike
+    check_report_files_exist(), there's no per-vendor loop — the objectives
+    report spans all vendors' objectives in one document."""
+    docx_candidates = [
+        f for f in os.listdir(reports_dir)
+        if f.startswith("Orbit2_Objectives_Progress_Report_") and f.endswith(".docx")
+    ] if os.path.isdir(reports_dir) else []
+    pdf_candidates = [
+        f for f in os.listdir(reports_dir)
+        if f.startswith("Orbit2_Objectives_Progress_Report_") and f.endswith(".pdf")
+    ] if os.path.isdir(reports_dir) else []
+
+    missing = []
+    if not docx_candidates:
+        missing.append("no Objectives Progress Report .docx found")
+    elif os.path.getsize(os.path.join(reports_dir, sorted(docx_candidates)[-1])) == 0:
+        missing.append("Objectives Progress Report .docx is empty")
+    if not pdf_candidates:
+        missing.append("no Objectives Progress Report .pdf found")
+    elif os.path.getsize(os.path.join(reports_dir, sorted(pdf_candidates)[-1])) == 0:
+        missing.append("Objectives Progress Report .pdf is empty")
+
+    if missing:
+        return False, "; ".join(missing)
+    return True, "objectives progress report smoke test OK"
+
+
 def step_web_build():
     result = _run(["python3", "scripts/build_web.py"])
     if result.returncode != 0:
@@ -156,7 +189,9 @@ def step_web_build():
         weights = json.load(f)
     weights.pop("_comment", None)
 
-    return check_report_files_exist(REPORTS_DIR, list(weights.keys()))
+    ok_vendors, detail_vendors = check_report_files_exist(REPORTS_DIR, list(weights.keys()))
+    ok_objectives, detail_objectives = check_objectives_report_exists(REPORTS_DIR)
+    return (ok_vendors and ok_objectives), "; ".join(d for d in [detail_vendors, detail_objectives] if d)
 
 
 def step_html_checks():

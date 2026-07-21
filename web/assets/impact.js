@@ -192,6 +192,39 @@ function setupImpactObjectivesFilter() {
   if (sel) sel.addEventListener('change', renderImpactObjectives);
 }
 
+/* Objectives Progress Report download links (tasks #29/#30) — same static
+ * download-link pattern the Reports page uses for vendor reports
+ * (index_template.html's render(), 'reports/' + filename), reused here for
+ * SNAPSHOT.objectives_report_files (built by build_web.py's call to
+ * bd.build_objectives_report(), same content as the Cowork dashboard's
+ * button, just served as a plain file instead of a base64 blob since this
+ * page has a real filesystem). Wired once at load — the manifest doesn't
+ * change without a full page reload of fresh web_snapshot.json anyway. */
+function setupObjectivesReportDownloads() {
+  const info = SNAPSHOT.objectives_report_files;
+  const note = document.getElementById('objReportGeneratedNotePublic');
+  ['Word', 'Pdf'].forEach(label => {
+    const key = label === 'Word' ? 'docx' : 'pdf';
+    const btn = document.getElementById(`downloadObjReport${label}Btn`);
+    if (!btn) return;
+    const filename = info ? info[key] : null;
+    if (filename) {
+      btn.href = 'reports/' + encodeURIComponent(filename);
+      btn.setAttribute('download', filename);
+      btn.classList.remove('disabled');
+    } else {
+      btn.href = '#';
+      btn.removeAttribute('download');
+      btn.classList.add('disabled');
+    }
+  });
+  if (note) {
+    note.textContent = info
+      ? `Last generated ${String(info.generated_at || '').replace('T', ' ')}.`
+      : 'Not generated yet.';
+  }
+}
+
 // --- Objective detail click-through view (2026-07-21) ---
 // Same SNAPSHOT.objectives[].detail every objective carries (computed
 // once at build time by scripts/objectives.py's compute_objective_detail(),
