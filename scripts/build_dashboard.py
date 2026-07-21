@@ -46,6 +46,7 @@ import config as app_config  # scripts/config.py
 import actions as actions_mod  # scripts/actions.py — R1-T05
 import journal as journal_mod  # scripts/journal.py — read_journal(), used by load_objectives_snapshot()
 import objectives as objectives_mod  # scripts/objectives.py — R1-T08
+import contacts as contacts_mod  # scripts/contacts.py — Contacts Phase 1-2 (R3-T01)
 
 MIME = {
     "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -189,6 +190,26 @@ def load_objectives_snapshot():
     return rows
 
 
+def load_contacts_snapshot():
+    """Read the Contacts register and return rows with the same
+    compute_profile_summary()/possible_duplicate_flags() output every CLI
+    command already produces attached to each row — so the dashboard's
+    Contacts tab (Phase 3) renders exactly what contacts.py itself would
+    print, never a second reimplementation of the summary/flag logic in
+    JS. Same "compute once at build time, embed in the snapshot" pattern
+    as load_actions_snapshot()/load_objectives_snapshot() above."""
+    contacts = contacts_mod.read_contacts()
+    evidence = contacts_mod.read_evidence()
+    aliases = contacts_mod.read_aliases()
+    rows = []
+    for r in contacts:
+        row = dict(r)
+        row["profile_summary"] = contacts_mod.compute_profile_summary(r["contact_id"], contacts, evidence, aliases)
+        row["possible_duplicate_flags"] = contacts_mod.possible_duplicate_flags(r["contact_id"], evidence)
+        rows.append(row)
+    return rows
+
+
 def main():
     # 1. Rescore
     print("Re-running scoring engine...")
@@ -253,6 +274,16 @@ def main():
     # directly; the public site's My Impact "Objectives" section reads the
     # equivalent key built by build_web.py using the same helper.
     snapshot["objectives"] = load_objectives_snapshot()
+
+    # Contacts register (Contacts Phase 3, R3-T01) — the dashboard's
+    # Contacts tab reads this directly. contact_evidence_fields populates
+    # the "Add evidence" form's field dropdown (excluding the 'system'
+    # group — merge_event/possible_duplicate are system-generated, never
+    # something a person picks from a form).
+    snapshot["contacts"] = load_contacts_snapshot()
+    snapshot["contact_evidence_fields"] = {
+        k: v for k, v in contacts_mod.load_evidence_fields().items() if v.get("group") != "system"
+    }
 
     # 4. Render dashboard.html -> dashboard_rendered.html
     template_path = os.path.join(BASE_DIR, "dashboard.html")

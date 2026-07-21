@@ -200,6 +200,34 @@
   .obj-btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
   .obj-btn-row button { padding: 3px 8px; font-size: 10.5px; }
 
+  /* --- Contacts (Phase 3, R3-T01) --- */
+  #viewContacts { display: none; }
+  .contacts-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .contacts-filter-bar select, .contacts-filter-bar input[type="text"] { padding: 6px 9px; border-radius: 6px; border: 1px solid #d1d5db; background: #fff; font-size: 12px; }
+  .cont-checkbox-label { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #374151; }
+  .cont-checkbox-label input { width: auto; }
+  .contact-status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; background: #f3f4f6; color: #6b7280; }
+  .contact-status-provisional { background: #fffbeb; color: #b45309; }
+  .contact-status-confirmed { background: #ecfdf5; color: #059669; }
+  .contact-status-merged { background: #f3f4f6; color: #9ca3af; }
+  .contact-status-archived { background: #f3f4f6; color: #9ca3af; }
+  .contact-review-badge { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: #fef2f2; color: #dc2626; text-transform: uppercase; letter-spacing: .02em; margin-left: 4px; }
+  .contact-name-row { font-weight: 600; }
+  .contact-raw-name { font-size: 10.5px; color: #9ca3af; font-weight: 400; }
+  .cont-btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
+  .cont-btn-row button { padding: 3px 8px; font-size: 10.5px; }
+  .cont-inline-form { display: flex; flex-direction: column; gap: 4px; min-width: 210px; }
+  .cont-inline-form input, .cont-inline-form select, .cont-inline-form textarea { font-size: 11px; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; }
+  .contact-detail-row td { background: #f8fafc; padding: 14px 16px; }
+  .contact-detail-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; }
+  @media (max-width: 700px) { .contact-detail-grid { grid-template-columns: 1fr; } }
+  .contact-summary-text { font-size: 12px; line-height: 1.7; color: #374151; white-space: pre-line; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; }
+  .contact-review-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+  .contact-review-box .title { font-size: 11px; font-weight: 700; color: #dc2626; text-transform: uppercase; margin-bottom: 6px; }
+  .contact-review-item { font-size: 11.5px; color: #7f1d1d; margin-bottom: 6px; }
+  .contact-detail-section { margin-bottom: 12px; }
+  .contact-detail-section h4 { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin: 0 0 6px; }
+
   .report-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
   .report-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
   .report-sub { font-size: 11.5px; color: #9ca3af; }
@@ -235,6 +263,7 @@
     <button class="tab-btn active" id="tabDashboard" onclick="switchView('dashboard')">Dashboard</button>
     <button class="tab-btn" id="tabActions" onclick="switchView('actions')">Actions</button>
     <button class="tab-btn" id="tabObjectives" onclick="switchView('objectives')">Objectives</button>
+    <button class="tab-btn" id="tabContacts" onclick="switchView('contacts')">Contacts</button>
     <button class="tab-btn" id="tabReports" onclick="switchView('reports')">Reports</button>
     <button class="tab-btn" id="tabSettings" onclick="switchView('settings')">Settings</button>
   </div>
@@ -437,6 +466,27 @@
       </div>
       <table class="data-table" id="objectivesTable"></table>
       <div class="dz-empty-hint" id="objectivesHint"></div>
+    </section>
+  </div>
+
+  <div id="viewContacts">
+    <section class="block card">
+      <h2>Contacts <span class="toggle-hint">stakeholder identity resolution and profile history — extracted from meeting notes, transcripts and documents you share; nothing is ever deleted, only superseded</span></h2>
+      <div class="contacts-filter-bar">
+        <select id="contFilterStatus">
+          <option value="open_all" selected>Active (provisional or confirmed)</option>
+          <option value="provisional">Provisional only</option>
+          <option value="confirmed">Confirmed only</option>
+          <option value="merged">Merged</option>
+          <option value="archived">Archived</option>
+          <option value="all">All statuses</option>
+        </select>
+        <input type="text" id="contFilterSearch" placeholder="Search name, company, title…">
+        <label class="cont-checkbox-label"><input type="checkbox" id="contFilterReview"> Needs review only</label>
+        <button class="btn-primary" onclick="openContactModal()">+ Add Contact</button>
+      </div>
+      <table class="data-table" id="contactsTable"></table>
+      <div class="dz-empty-hint" id="contactsHint"></div>
     </section>
   </div>
 
@@ -652,6 +702,74 @@
 
       <div class="modal-actions">
         <button type="button" class="btn-secondary" onclick="closeObjectiveModal()">Cancel</button>
+        <button type="submit" class="btn-primary">Send to chat</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="contactModalOverlay" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle">
+  <div class="modal-card">
+    <h2 id="contactModalTitle">Add Contact</h2>
+    <div class="modal-sub">
+      Use this when you already know this is a new person — skips identity-resolution matching. If
+      you're not sure whether this person is already on file, tell Claude the name/company/title in
+      chat and it will run <code>contacts.py find-or-create</code> instead, which checks for a match
+      first. Nothing is written until you send this.
+    </div>
+    <form id="contactForm" onsubmit="return submitContactForm(event)">
+      <div class="modal-field" id="fieldContName">
+        <label for="contName">Name *</label>
+        <input type="text" id="contName" maxlength="200" placeholder="e.g. Jamie Chen">
+        <div class="modal-error">Please enter a name.</div>
+      </div>
+      <div class="modal-field">
+        <label for="contTitle">Title</label>
+        <input type="text" id="contTitle" placeholder="e.g. Director of Partnerships">
+      </div>
+      <div class="modal-field">
+        <label for="contCompany">Company</label>
+        <input type="text" id="contCompany" placeholder="e.g. Atlassian">
+      </div>
+      <details class="modal-more">
+        <summary>More options (email, affiliation, vendor, visibility…)</summary>
+        <div class="modal-more-grid">
+          <div class="modal-field">
+            <label for="contEmail">Email</label>
+            <input type="email" id="contEmail">
+          </div>
+          <div class="modal-field">
+            <label for="contAffiliation">Affiliation</label>
+            <select id="contAffiliation">
+              <option value="">—</option>
+              <option value="communardo">Communardo</option>
+              <option value="atlassian">Atlassian</option>
+              <option value="customer">Customer</option>
+              <option value="partner">Partner</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label for="contVendor">Vendor</label>
+            <input type="text" id="contVendor" placeholder="defaults to your app_config default_vendor">
+          </div>
+          <div class="modal-field">
+            <label for="contVisibility">Visibility</label>
+            <select id="contVisibility">
+              <option value="">— (defaults to communardo_internal)</option>
+              <option value="personal_only">Personal only</option>
+              <option value="communardo_internal">Communardo internal</option>
+              <option value="communardo_management">Communardo management</option>
+              <option value="atlassian_shareable">Atlassian shareable</option>
+              <option value="customer_approved">Customer approved</option>
+              <option value="anonymised">Anonymised</option>
+              <option value="public">Public</option>
+            </select>
+          </div>
+        </div>
+      </details>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeContactModal()">Cancel</button>
         <button type="submit" class="btn-primary">Send to chat</button>
       </div>
     </form>
@@ -896,7 +1014,7 @@ function render(vendorName) {
 // Note: #viewReports and #viewSettings both have a hard `display: none` in the stylesheet, so
 // showing one needs an explicit 'block' — setting style.display = '' just falls back to that CSS
 // rule and leaves it hidden even though nothing errors.
-const VIEWS = ['dashboard', 'actions', 'objectives', 'reports', 'settings'];
+const VIEWS = ['dashboard', 'actions', 'objectives', 'contacts', 'reports', 'settings'];
 function switchView(view) {
   VIEWS.forEach(v => {
     const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
@@ -1911,12 +2029,329 @@ function submitObjectiveForm(evt) {
   return false;
 }
 
+// --- Contacts (Phase 3, R3-T01) ---
+// Same "stage locally, confirm via chat" pattern as Actions/Objectives —
+// every write action here composes a sendPrompt() message asking Claude to
+// run the corresponding scripts/contacts.py CLI command, then rebuild and
+// push. Nothing is written to data/ until that message is sent. Read-only
+// content (the table, the profile summary, missing-info flags,
+// possible_duplicate review flags) comes straight from SNAPSHOT.contacts,
+// which build_dashboard.py populated by calling contacts.py's own
+// compute_profile_summary()/possible_duplicate_flags() — the dashboard
+// never reimplements that logic in JS.
+const CONTACT_SOURCE_TYPES = ['meeting_note', 'transcript', 'audio_summary', 'document', 'slide_deck', 'pdf', 'spreadsheet', 'email_summary', 'manual_note'];
+const CONTACT_CONFIDENCE = ['confirmed', 'probable', 'low_confidence'];
+const CONTACT_SENSITIVITY = ['standard', 'subjective', 'sensitive'];
+
+function contactsById() {
+  const map = {};
+  (SNAPSHOT.contacts || []).forEach(c => { map[c.contact_id] = c; });
+  return map;
+}
+
+function renderContactsView() {
+  const all = SNAPSHOT.contacts || [];
+  const status = document.getElementById('contFilterStatus').value;
+  const search = (document.getElementById('contFilterSearch').value || '').trim().toLowerCase();
+  const reviewOnly = document.getElementById('contFilterReview').checked;
+
+  const filtered = all.filter(c => {
+    if (status === 'open_all') { if (c.status === 'merged' || c.status === 'archived') return false; }
+    else if (status !== 'all' && c.status !== status) return false;
+    if (reviewOnly && !(c.possible_duplicate_flags && c.possible_duplicate_flags.length)) return false;
+    if (search) {
+      const hay = [c.canonical_name, c.raw_extracted_name, c.company, c.title].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  }).sort((a, b) => (a.canonical_name || '').localeCompare(b.canonical_name || ''));
+
+  const table = document.getElementById('contactsTable');
+  const hint = document.getElementById('contactsHint');
+  if (!filtered.length) {
+    table.innerHTML = '<tr><td class="empty">No contacts match those filters.</td></tr>';
+    hint.textContent = `0 of ${all.length} contact(s) shown.`;
+    return;
+  }
+
+  table.innerHTML = `
+    <tr><th>Name</th><th>Title / Company</th><th>Status</th><th>Influence / Strength</th><th>Owner</th><th>Actions</th></tr>
+    ${filtered.map(c => {
+      const flags = c.possible_duplicate_flags || [];
+      const reviewBadge = flags.length ? `<span class="contact-review-badge">${flags.length} needs review</span>` : '';
+      const nameLine = (c.raw_extracted_name && c.canonical_name && c.raw_extracted_name !== c.canonical_name)
+        ? `<div class="contact-raw-name">extracted as '${esc(c.raw_extracted_name)}'</div>` : '';
+      const terminal = c.status === 'merged' || c.status === 'archived';
+      let controls = `<button class="btn-secondary" onclick="toggleContactDetail('${esc(c.contact_id)}')">View</button>`;
+      if (!terminal) {
+        controls += `<div class="cont-btn-row" style="margin-top:4px;">`;
+        if (c.status === 'provisional') controls += `<button class="btn-secondary" onclick="startConfirmContact('${esc(c.contact_id)}')">Confirm</button>`;
+        controls += `<button class="btn-secondary" onclick="startArchiveContact('${esc(c.contact_id)}')">Archive</button>`;
+        controls += `</div>`;
+      } else if (c.status === 'merged') {
+        controls += `<div class="empty" style="font-style:italic;">merged into ${esc(c.merged_into || '?')}</div>`;
+      }
+      return `<tr id="contRow-${esc(c.contact_id)}">
+        <td><div class="contact-name-row">${esc(c.canonical_name || c.contact_id)}</div>${nameLine}</td>
+        <td>${esc(c.title) || '—'}${c.company ? ' @ ' + esc(c.company) : ''}</td>
+        <td><span class="contact-status-pill contact-status-${esc(c.status || 'provisional')}">${esc(c.status || 'provisional')}</span>${reviewBadge}</td>
+        <td>${esc(c.influence_level) || '—'} / ${esc(c.relationship_strength) || '—'}</td>
+        <td>${esc(c.relationship_owner) || '—'}</td>
+        <td id="contActions-${esc(c.contact_id)}">${controls}</td>
+      </tr>
+      <tr id="contDetail-${esc(c.contact_id)}" class="contact-detail-row" style="display:none;"><td colspan="6"></td></tr>`;
+    }).join('')}`;
+  hint.textContent = `${filtered.length} of ${all.length} contact(s) shown` +
+    (status === 'open_all' ? ' (provisional or confirmed — merged/archived hidden)' : '') + '.';
+}
+
+function setupContactsFilters() {
+  ['contFilterStatus', 'contFilterReview'].forEach(id =>
+    document.getElementById(id).addEventListener('change', renderContactsView));
+  document.getElementById('contFilterSearch').addEventListener('input', renderContactsView);
+}
+
+function toggleContactDetail(contactId) {
+  const row = document.getElementById('contDetail-' + contactId);
+  if (!row) return;
+  const isOpen = row.style.display !== 'none';
+  if (isOpen) { row.style.display = 'none'; return; }
+  row.style.display = '';
+  renderContactDetail(contactId);
+}
+
+function renderContactDetail(contactId) {
+  const c = contactsById()[contactId];
+  const row = document.getElementById('contDetail-' + contactId);
+  if (!c || !row) return;
+  const summary = c.profile_summary || {};
+  const flags = c.possible_duplicate_flags || [];
+  const terminal = c.status === 'merged' || c.status === 'archived';
+
+  const flagsHtml = flags.length ? `
+    <div class="contact-review-box">
+      <div class="title">Needs review — possible duplicate</div>
+      ${flags.map(f => `
+        <div class="contact-review-item">
+          ${esc(f.value)}
+          ${f.candidate_id ? `
+            <div class="cont-btn-row" style="margin-top:4px;">
+              <button class="btn-secondary" onclick="startResolveMatch('${esc(contactId)}','${esc(f.candidate_id)}','same')">Same person — merge into ${esc(f.candidate_id)}</button>
+              <button class="btn-secondary" onclick="startResolveMatch('${esc(contactId)}','${esc(f.candidate_id)}','different')">Different person</button>
+            </div>` : ''}
+        </div>`).join('')}
+    </div>` : '';
+
+  const otherContacts = (SNAPSHOT.contacts || []).filter(x => x.contact_id !== contactId && x.status !== 'merged');
+  const mergeSelect = !terminal && otherContacts.length ? `
+    <div class="contact-detail-section">
+      <h4>Merge into another contact</h4>
+      <div class="cont-inline-form">
+        <select id="contMergeTarget-${contactId}">
+          ${otherContacts.map(x => `<option value="${esc(x.contact_id)}">${esc(x.contact_id)} — ${esc(x.canonical_name)}</option>`).join('')}
+        </select>
+        <input type="text" id="contMergeReason-${contactId}" placeholder="Reason (optional)">
+        <div class="cont-btn-row"><button class="btn-secondary" onclick="startMergeInto('${contactId}')">Merge</button></div>
+      </div>
+    </div>` : '';
+
+  const editSection = !terminal ? `
+    <div class="contact-detail-section">
+      <h4>Set canonical name</h4>
+      <div class="cont-inline-form">
+        <input type="text" id="contSetName-${contactId}" value="${esc(c.canonical_name || '')}">
+        <div class="cont-btn-row"><button class="btn-secondary" onclick="startSetCanonicalName('${contactId}')">Update</button></div>
+      </div>
+    </div>
+    <div class="contact-detail-section">
+      <h4>Add evidence</h4>
+      <div class="cont-inline-form">
+        <select id="contEvField-${contactId}">
+          ${Object.entries(SNAPSHOT.contact_evidence_fields || {}).map(([k, v]) => `<option value="${esc(k)}">${esc(v.label || k)}</option>`).join('')}
+        </select>
+        <input type="text" id="contEvValue-${contactId}" placeholder="Value">
+        <select id="contEvSource-${contactId}">
+          ${CONTACT_SOURCE_TYPES.map(s => `<option value="${s}">${s}</option>`).join('')}
+        </select>
+        <select id="contEvConfidence-${contactId}">
+          ${CONTACT_CONFIDENCE.map(s => `<option value="${s}">${s}</option>`).join('')}
+        </select>
+        <select id="contEvSensitivity-${contactId}">
+          ${CONTACT_SENSITIVITY.map(s => `<option value="${s}" ${s === 'standard' ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+        <input type="text" id="contEvRationale-${contactId}" placeholder="Rationale (optional)">
+        <div class="cont-btn-row"><button class="btn-secondary" onclick="startAddEvidence('${contactId}')">Log evidence</button></div>
+      </div>
+    </div>` : '';
+
+  row.querySelector('td').innerHTML = `
+    <div class="contact-detail-grid">
+      <div>
+        <div class="contact-detail-section">
+          <h4>Profile summary</h4>
+          <div class="contact-summary-text">${esc(summary.text || 'No summary yet.')}</div>
+        </div>
+        ${flagsHtml}
+      </div>
+      <div>
+        ${editSection}
+        ${mergeSelect}
+      </div>
+    </div>`;
+}
+
+function startConfirmContact(contactId) {
+  sendPrompt(
+    `Confirm contact ${contactId} in Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run: scripts/contacts.py confirm --contact-id "${contactId}"\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly.`
+  );
+}
+
+function startArchiveContact(contactId) {
+  const cell = document.getElementById('contActions-' + contactId);
+  if (!cell) return;
+  cell.innerHTML = `
+    <div class="cont-btn-row">
+      <span class="empty" style="font-style:italic;">Archive this contact?</span>
+      <button class="btn-primary" onclick="confirmArchiveContact('${contactId}')">Yes, archive</button>
+      <button class="btn-secondary" onclick="renderContactsView()">Cancel</button>
+    </div>`;
+}
+
+function confirmArchiveContact(contactId) {
+  const cell = document.getElementById('contActions-' + contactId);
+  if (cell) cell.innerHTML = '<span class="empty">Requested — check chat ↓</span>';
+  sendPrompt(
+    `Archive contact ${contactId} in Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run: scripts/contacts.py archive --contact-id "${contactId}"\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly.`
+  );
+}
+
+function startSetCanonicalName(contactId) {
+  const name = (document.getElementById('contSetName-' + contactId).value || '').trim();
+  if (!name) return;
+  const esc2 = s => (s || '').replace(/"/g, '\\"');
+  sendPrompt(
+    `Update the canonical name for contact ${contactId} in Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run: scripts/contacts.py set-canonical-name --contact-id "${contactId}" --name "${esc2(name)}"\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly.`
+  );
+}
+
+function startAddEvidence(contactId) {
+  const field = document.getElementById('contEvField-' + contactId).value;
+  const value = (document.getElementById('contEvValue-' + contactId).value || '').trim();
+  const sourceType = document.getElementById('contEvSource-' + contactId).value;
+  const confidence = document.getElementById('contEvConfidence-' + contactId).value;
+  const sensitivity = document.getElementById('contEvSensitivity-' + contactId).value;
+  const rationale = (document.getElementById('contEvRationale-' + contactId).value || '').trim();
+  if (!value) {
+    document.getElementById('contEvValue-' + contactId).style.borderColor = '#dc2626';
+    return;
+  }
+  const esc2 = s => (s || '').replace(/"/g, '\\"');
+  let cmd = `scripts/contacts.py add-evidence --contact-id "${contactId}" --field "${field}" --value "${esc2(value)}" ` +
+    `--source-type ${sourceType} --confidence ${confidence} --sensitivity ${sensitivity}`;
+  if (rationale) cmd += ` --rationale "${esc2(rationale)}"`;
+  sendPrompt(
+    `Log a piece of evidence on contact ${contactId} in Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run: ${cmd}\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly, noting whether it updated the current profile value.`
+  );
+}
+
+function startResolveMatch(contactId, candidateId, verdict) {
+  sendPrompt(
+    `Resolve the possible-duplicate flag on contact ${contactId} in Orbit2 (candidate: ${candidateId}, verdict: ${verdict}) — ` +
+    `please process this automatically, no confirmation needed:\n` +
+    `1. Run: scripts/contacts.py resolve-match --contact-id "${contactId}" --matched-contact-id "${candidateId}" --verdict ${verdict}\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly` + (verdict === 'same' ? ', noting which contact_id survived the merge.' : '.')
+  );
+}
+
+function startMergeInto(contactId) {
+  const target = document.getElementById('contMergeTarget-' + contactId).value;
+  const reason = (document.getElementById('contMergeReason-' + contactId).value || '').trim();
+  if (!target) return;
+  const esc2 = s => (s || '').replace(/"/g, '\\"');
+  let cmd = `scripts/contacts.py merge --losing-id "${contactId}" --surviving-id "${target}"`;
+  if (reason) cmd += ` --reason "${esc2(reason)}"`;
+  sendPrompt(
+    `Merge contact ${contactId} into ${target} in Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run: ${cmd}\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly.`
+  );
+}
+
+function openContactModal() {
+  document.getElementById('contactModalOverlay').classList.add('open');
+  document.querySelector('.wrap').setAttribute('inert', '');
+  document.addEventListener('keydown', contactModalKeydown);
+  document.getElementById('contName').focus();
+}
+
+function closeContactModal() {
+  document.getElementById('contactModalOverlay').classList.remove('open');
+  document.querySelector('.wrap').removeAttribute('inert');
+  document.removeEventListener('keydown', contactModalKeydown);
+  document.getElementById('contactForm').reset();
+  document.getElementById('fieldContName').classList.remove('error');
+}
+
+function contactModalKeydown(e) {
+  if (e.key === 'Escape') closeContactModal();
+}
+
+function submitContactForm(evt) {
+  evt.preventDefault();
+  const name = document.getElementById('contName').value.trim();
+  document.getElementById('fieldContName').classList.toggle('error', !name);
+  if (!name) {
+    document.getElementById('contName').focus();
+    return false;
+  }
+  const title = document.getElementById('contTitle').value.trim();
+  const company = document.getElementById('contCompany').value.trim();
+  const email = document.getElementById('contEmail').value.trim();
+  const affiliation = document.getElementById('contAffiliation').value;
+  const vendor = document.getElementById('contVendor').value.trim();
+  const visibility = document.getElementById('contVisibility').value;
+
+  const esc2 = s => (s || '').replace(/"/g, '\\"');
+  let cmd = `scripts/contacts.py create --name "${esc2(name)}"`;
+  if (title) cmd += ` --title "${esc2(title)}"`;
+  if (company) cmd += ` --company "${esc2(company)}"`;
+  if (email) cmd += ` --email "${esc2(email)}"`;
+  if (affiliation) cmd += ` --affiliation ${affiliation}`;
+  if (vendor) cmd += ` --vendor "${esc2(vendor)}"`;
+  if (visibility) cmd += ` --visibility ${visibility}`;
+
+  closeContactModal();
+  sendPrompt(
+    `Add a new contact to Orbit2 — please process this automatically, no confirmation needed:\n` +
+    `1. Run: ${cmd}\n` +
+    `2. Run scripts/validate_data.py, rebuild the dashboard and public site, push to GitHub, and update the Cowork artifact.\n` +
+    `3. Confirm back to me briefly with the new contact_id.`
+  );
+  return false;
+}
+
 applyAppConfigHeader();
 renderSettingsView();
 renderActionsView();
 setupActionsFilters();
 renderObjectivesView();
 setupObjectivesFilters();
+renderContactsView();
+setupContactsFilters();
 setupVendorSelect();
 setupDropzone();
 setupDropzoneSchema();

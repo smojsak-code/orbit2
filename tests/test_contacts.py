@@ -443,6 +443,31 @@ def test_compute_profile_summary_surfaces_unresolved_possible_duplicate(patched_
     assert "NEEDS REVIEW" in lines[1]
 
 
+# ---------------------------------------------------------------------------
+# Phase 3: possible_duplicate_flags() — structured view for the dashboard UI
+# ---------------------------------------------------------------------------
+
+def test_possible_duplicate_flags_extracts_candidate_id():
+    evidence = [{
+        "contact_id": "CONT-0002", "field": "possible_duplicate", "superseded_by": "",
+        "evidence_id": "CEV-0009",
+        "value": "Possibly the same person as CONT-0001 (score 0.86, name similarity 0.86)",
+    }]
+    flags = contacts_mod.possible_duplicate_flags("CONT-0002", evidence)
+    assert len(flags) == 1
+    assert flags[0]["candidate_id"] == "CONT-0001"
+    assert flags[0]["evidence_id"] == "CEV-0009"
+
+
+def test_possible_duplicate_flags_excludes_superseded_and_other_contacts():
+    evidence = [
+        {"contact_id": "CONT-0002", "field": "possible_duplicate", "superseded_by": "CEV-0010", "value": "Possibly the same person as CONT-0001"},
+        {"contact_id": "CONT-0003", "field": "possible_duplicate", "superseded_by": "", "value": "Possibly the same person as CONT-0001"},
+        {"contact_id": "CONT-0002", "field": "title", "superseded_by": "", "value": "VP"},
+    ]
+    assert contacts_mod.possible_duplicate_flags("CONT-0002", evidence) == []
+
+
 def test_compute_profile_summary_possible_duplicate_excluded_from_probable_section(patched_contacts, tmp_path):
     """possible_duplicate is a system-generated review flag, not extracted
     content — it must not also leak into the ordinary probable/confirmed

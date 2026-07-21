@@ -309,6 +309,7 @@ def resolve_canonical(contact_id, contacts_by_id_map, _seen=None):
 
 _PUNCT_RE = re.compile(r"[^\w\s]")
 _WS_RE = re.compile(r"\s+")
+_CONTACT_ID_RE = re.compile(r"CONT-\d+")
 
 
 def normalize_name(name):
@@ -410,6 +411,29 @@ def _current_evidence_for_field(contact_id, field, evidence_rows):
         and not e.get("superseded_by")
     ]
     return sorted(rows, key=lambda e: e.get("extracted_at", ""), reverse=True)
+
+
+def possible_duplicate_flags(contact_id, evidence_rows):
+    """Structured view of this contact's unresolved possible_duplicate
+    evidence (Phase 2 batch ingest). compute_profile_summary() lists these
+    same rows as plain text; this returns the candidate contact_id parsed
+    out of that text too, so a UI (Contacts Phase 3 dashboard tab) can
+    link straight to a 'resolve-match' action without re-parsing free
+    text itself. The evidence schema has no dedicated structured field for
+    this — the candidate id is embedded in the human-readable `value`
+    string cmd_ingest wrote — so this is a light regex extraction, not a
+    second source of truth."""
+    flags = []
+    for e in evidence_rows:
+        if e.get("contact_id") != contact_id or e.get("field") != "possible_duplicate" or e.get("superseded_by"):
+            continue
+        m = _CONTACT_ID_RE.search(e.get("value", ""))
+        flags.append({
+            "evidence_id": e.get("evidence_id"),
+            "value": e.get("value", ""),
+            "candidate_id": m.group(0) if m else None,
+        })
+    return flags
 
 
 def compute_profile_summary(contact_id, contacts, evidence_rows, aliases):

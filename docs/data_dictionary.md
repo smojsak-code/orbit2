@@ -830,6 +830,29 @@ calls — nothing is persisted. Provisional `contact_id`s shown in a dry run
 are a preview, not a reservation; running for real afterward assigns the
 next available id at that time.
 
+### Contacts register — Cowork dashboard tab (Contacts Phase 3)
+`scripts/build_dashboard.py`'s `load_contacts_snapshot()` embeds every
+contact row plus its precomputed `compute_profile_summary()` result and
+`possible_duplicate_flags()` (structured `{evidence_id, value,
+candidate_id}` — the candidate id is parsed out of the evidence log's free
+text so the UI can link to it without re-parsing) into `SNAPSHOT.contacts`;
+`SNAPSHOT.contact_evidence_fields` (the controlled vocabulary minus the
+`system` group) populates the Add Evidence form's field dropdown. The
+dashboard never reimplements the summary/matching logic in JS — it only
+renders what `contacts.py` already computed.
+
+The Contacts tab lists/searches/filters contacts and expands a row into
+its profile summary, any unresolved `possible_duplicate` review flags
+(with one-click "same person — merge" / "different person" actions), and
+inline forms for set-canonical-name, add-evidence, and merge-into. Every
+write action follows the same "stage locally, confirm via chat" pattern
+as the Actions/Objectives tabs (`sendPrompt()` composes a message asking
+Claude to run the matching `contacts.py` CLI command, then rebuild and
+push) — nothing is written to `data/` until that message is sent. "+ Add
+Contact" opens a modal for `contacts.py create` (skips identity
+resolution — for an unsure case, ask Claude in chat to run
+`find-or-create` instead, which checks for a match first).
+
 ### Generated files (not sources of truth — do not hand-edit)
 - `scores_snapshot.json` — output of `scripts/scoring.py`. `scripts/build_dashboard.py` loads this and augments it in memory (adding `actions`, `objectives`, `app_config`, etc.) before embedding the result as the Cowork dashboard artifact's `SNAPSHOT` — the augmented version is never written back to `scores_snapshot.json` on disk.
 - `web_snapshot.json` — output of `scripts/build_web.py`, fetched at runtime by the public GitHub Pages site. Includes the `homepage` (R1-T06), `impact` (R1-T07), and `objectives` (R1-T08) keys documented above.
