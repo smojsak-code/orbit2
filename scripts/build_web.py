@@ -37,6 +37,7 @@ import journal as journal_mod  # scripts/journal.py — read_journal(), reused f
 import actions as actions_mod  # scripts/actions.py — today_london(), reused for period math
 import impact as impact_mod  # scripts/impact.py — compute_impact_aggregates() (R1-T07)
 import contacts as contacts_mod  # scripts/contacts.py — Contacts Phase 4 public-site mirror (R3-T01)
+import visibility as visibility_mod  # scripts/visibility.py — shared is_public_visible() (Improvement Roadmap IR-A1/A2/C1)
 
 # --- R1-T06: Daily Alliance Manager homepage aggregation ---
 #
@@ -190,6 +191,29 @@ def compute_homepage_aggregates(scores_snapshot, action_rows, journal_entries, e
     }
 
 
+def filter_public_objectives(rows):
+    """Pure filter, no I/O — the objective-half of Improvement Roadmap
+    IR-A1's fix. Separated out from main() so it's unit-testable without a
+    real build (see tests/test_visibility.py), same "pure check, separated
+    from the step that calls it" discipline validate_release.py's
+    check_report_files_exist() already uses. An objective only passes if
+    its own `visibility` is explicitly one of
+    visibility_mod.PUBLIC_VISIBILITY_TIERS — everything else, including a
+    missing/blank value, is excluded."""
+    return [o for o in rows if visibility_mod.is_public_visible(o)]
+
+
+def filter_public_actions(rows):
+    """Pure filter, no I/O — the action-half of Improvement Roadmap IR-A2's
+    fix. Same rule as filter_public_objectives() above (shared
+    visibility_mod.is_public_visible()), deliberately a DIFFERENT, stricter
+    cut than compute_homepage_aggregates()'s own _visible_for_homepage()
+    filter, which is unchanged and still only excludes personal_only for
+    the homepage's own aggregates — see the call site in main() for which
+    filter feeds which output."""
+    return [a for a in rows if visibility_mod.is_public_visible(a)]
+
+
 def compute_public_contacts():
     """Contacts Phase 4 — the public-site mirror. Deliberately stricter than
     every other public-site filter in this file: contacts carry real
@@ -259,14 +283,36 @@ def main():
             snapshot[key] = {}
 
     # actions.csv / action_statuses.json (R1-T05) — same as build_dashboard.py.
+    # `action_rows` (the FULL, unfiltered list) is kept for
+    # compute_homepage_aggregates() below, which has its own separate,
+    # narrower, already-documented filter (_visible_for_homepage, excludes
+    # only personal_only — an R1-T06 design choice, untouched here).
+    # snapshot["actions"] (the full Actions tab) is a DIFFERENT, stricter
+    # cut — see the Improvement Roadmap IR-A2 comment below.
     action_rows, action_statuses = bd.load_actions_snapshot()
-    snapshot["actions"] = action_rows
+    snapshot["actions"] = filter_public_actions(action_rows)
     snapshot["action_statuses"] = action_statuses
 
     # objectives.csv (R1-T08) — read-only status surfaced on the My Impact
     # tab (instruction #50); same computed-progress helper as
     # build_dashboard.py so the two surfaces never disagree.
-    snapshot["objectives"] = bd.load_objectives_snapshot(snapshot.get("evidence"))
+    #
+    # Improvement Roadmap IR-A1/IR-A2 (2026-07-22): until this fix, EVERY
+    # objective/action was embedded here regardless of its own `visibility`
+    # field — confirmed live during the 2026-07-22 platform assessment to
+    # be exposing communardo_internal objectives (including a private
+    # working note quoting Steve's JD) on the actual public URL. Both lists
+    # are now filtered through the same shared visibility_mod.is_public_visible()
+    # Contacts already uses (Contacts Phase 4) — an objective/action only
+    # appears here once its own `visibility` is explicitly set to one of
+    # visibility_mod.PUBLIC_VISIBILITY_TIERS. The private Cowork dashboard
+    # (build_dashboard.py's own separate call to load_objectives_snapshot())
+    # is completely unaffected — full detail regardless of visibility tier,
+    # by design, since that surface is never public.
+    all_objectives = bd.load_objectives_snapshot(snapshot.get("evidence"))
+    public_objectives = filter_public_objectives(all_objectives)
+    snapshot["objectives"] = public_objectives
+    snapshot["objectives_meta"] = {"total": len(all_objectives), "public": len(public_objectives)}
 
     # Objectives Progress Report (tasks #29/#30) — same report content as the
     # Cowork dashboard's version (bd.build_objectives_report() re-renders it
@@ -277,7 +323,10 @@ def main():
     # to show my progress"). Only the filenames go into web_snapshot.json —
     # same "manifest, not embed" pattern as report_manifest above — the
     # actual bytes are reused on disk in reports/, no separate write here.
-    objectives_report_files = bd.build_objectives_report(snapshot["objectives"])
+    # Built from `public_objectives` (not `all_objectives`) so the
+    # downloadable report can never contain more than the page itself shows
+    # — otherwise the report would reopen the exact exposure IR-A1 closes.
+    objectives_report_files = bd.build_objectives_report(public_objectives)
     snapshot["objectives_report_files"] = (
         {
             "docx": objectives_report_files["docx"]["filename"],

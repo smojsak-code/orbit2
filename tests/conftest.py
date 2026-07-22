@@ -152,6 +152,15 @@ def patched_contacts(monkeypatch, fixture_data_dir, patched_config):
 
 
 @pytest.fixture
+def patched_scoring(monkeypatch, fixture_data_dir):
+    """scoring.py, pointed at the isolated fixture copy — used by
+    Improvement Roadmap IR-B1's has_data tests (tests/test_scoring.py)."""
+    import scoring as scoring_mod
+    monkeypatch.setattr(scoring_mod, "DATA_DIR", fixture_data_dir)
+    return scoring_mod
+
+
+@pytest.fixture
 def patched_validate_data(monkeypatch, fixture_data_dir, patched_config, patched_metric_results, patched_contacts):
     """validate_data.py, pointed at the isolated fixture copy. Depends on
     patched_config too — validate_app_config() calls config.load_config()

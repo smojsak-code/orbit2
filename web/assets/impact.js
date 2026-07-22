@@ -164,7 +164,16 @@ function renderImpactObjectives() {
 
   list.innerHTML = '';
   if (!active.length) {
-    list.innerHTML = '<div class="home-empty">No active objectives match this filter. Add one from the Objectives tab in Cowork.</div>';
+    // Improvement Roadmap IR-A1 (2026-07-22): SNAPSHOT.objectives is now
+    // pre-filtered to publicly-shareable objectives only (build_web.py),
+    // so an empty list here usually means "objectives exist but are all
+    // private," not "no objectives exist" — SNAPSHOT.objectives_meta (also
+    // added by IR-A1) tells the two apart so this message doesn't imply
+    // there's nothing to add when there actually is, just not publicly.
+    const meta = SNAPSHOT.objectives_meta || { total: 0, public: 0 };
+    list.innerHTML = meta.total > 0
+      ? `<div class="home-empty">${esc(String(meta.total))} objective${meta.total === 1 ? ' is' : 's are'} currently tracked privately — none ${meta.total === 1 ? 'is' : 'are'} marked for public sharing yet. See the Cowork dashboard for full detail, or mark one shareable from there.</div>`
+      : '<div class="home-empty">No active objectives match this filter. Add one from the Objectives tab in Cowork.</div>';
     return;
   }
   active.forEach(o => {

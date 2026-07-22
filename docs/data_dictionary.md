@@ -73,6 +73,45 @@ Columns: `record_id, vendor, quarter, sub_metric, weight_pct_in_category, target
 - `weight_pct_in_category`: must sum to 100 across all rows for one vendor+quarter within a file.
 - `source`: free text — where the actual value came from (evidence ID, verbal update, etc.). Not yet a structured reference.
 
+### `has_data` field on scored sub-metrics/categories (Improvement Roadmap IR-B1, 2026-07-22)
+Not a CSV column — a display-layer field `scripts/scoring.py` computes at
+score time and adds to each sub-metric dict and category dict inside
+`scores_snapshot.json` (`vendors.<v>.categories.<cat>.has_data` and
+`...sub_metrics[i].has_data`). Never written back to the source CSVs.
+
+**Why this exists.** Before this fix, a sub-metric that was never measured
+(`actual` still at its reset default of 0, no evidence filed) scored and
+rendered identically to a sub-metric that was genuinely measured and came
+out to zero — both showed as a red/failing bar. The 2026-07-22 platform
+assessment flagged that this made almost every category read as
+non-performance across the board, when most of it actually just meant
+"not started yet."
+
+**How it's computed** — `submetric_has_data(row, category_key,
+active_pairs)`: true if `actual != 0` (a real number was entered), OR
+there is at least one `evidence_index.csv` row with `status == active`
+matching this exact `(vendor, category, sub_metric, quarter)`. The
+evidence half reuses the same "active evidence" concept
+`compute_homepage_aggregates()` already relies on for its missing-evidence
+list — no new mechanism, no schema migration. `score_category()` computes
+`has_data` per sub-metric and an `any_has_data` OR-aggregate for the
+category as a whole.
+
+**What it does NOT change.** `has_data` is purely a display signal —
+`score_submetric()`'s numeric score (and therefore every weighted average:
+category score, overall score) is completely unaffected. A zero with no
+data still contributes 0 to the weighted average exactly as before; the
+only change is how it's *labelled* in `dashboard.html` and
+`web/index_template.html` — a bar/score with `has_data === false` renders
+as a neutral grey "not yet measured" tag instead of a red failing score.
+
+**Known limitation:** `has_data` is not itself persisted anywhere outside
+`scores_snapshot.json` (it's recomputed fresh on every `scripts/scoring.py`
+run) — there is no historical record of *when* a sub-metric transitioned
+from unmeasured to measured. If that history becomes useful, it belongs in
+`metric_results_history.csv`'s existing versioning mechanism, not as a new
+field here.
+
 ### `metric_results_history.csv` (Metric result history, R2-T01)
 A period-indexed, append-only log of metric results — introduced by
 Release 2 to carry history, forecasts, confidence and evidence coverage
@@ -1008,6 +1047,61 @@ show my progress").
   that the most recent report's docx and PDF both exist and are non-empty,
   as part of the same step 4 (web build) that already smoke-tests the
   per-vendor reports.
+
+### Shared visibility service (`scripts/visibility.py`, Improvement Roadmap IR-A1/IR-A2/IR-C1, 2026-07-22)
+`PUBLIC_VISIBILITY_TIERS` / `is_public_visible(row)` — the single, shared
+answer to "is this record safe to publish on the public GitHub Pages
+site." First built for Contacts (Phase 4) as `contacts.py`'s own local
+implementation; extracted into this standalone module so every other
+feature imports the same check instead of writing its own copy.
+`contacts.py` re-exports both names from here (`from visibility import
+PUBLIC_VISIBILITY_TIERS, is_public_visible`) so nothing that already did
+`from contacts import is_public_visible` breaks.
+
+**Why this module exists.** The 2026-07-22 platform assessment found,
+and confirmed LIVE against the real public URL, that Objectives and
+Actions were being embedded into `web_snapshot.json` with **no**
+visibility check at all — every row, regardless of its own `visibility`
+field, was public. Concretely: an objective marked `communardo_internal`,
+including a private working note quoting Steve's own job description, was
+reachable on the public My Impact tab. This had been true since those
+features first shipped (R1-T06/R1-T08) — Contacts got a visibility check
+in its Phase 4 (R3-T01) because contacts carry third-party PII and the
+question was asked explicitly at the time; Objectives and Actions never
+got the equivalent question asked, and so never got the equivalent check.
+
+**The fix (IR-A1/IR-A2):** `scripts/build_web.py` now filters both lists
+through the shared `is_public_visible()` before they're embedded:
+- `filter_public_objectives(rows)` — used for `snapshot["objectives"]`
+  AND as the input to `bd.build_objectives_report()`, so the downloadable
+  Word/PDF report can never contain more than the page itself shows (a
+  report built from the unfiltered list would silently reopen the same
+  exposure through a different door). `snapshot["objectives_meta"]`
+  (`{total, public}`) is published alongside the filtered list so the
+  public My Impact tab can render an honest empty state — "N objectives
+  are tracked privately" — instead of implying nothing exists at all.
+- `filter_public_actions(rows)` — used for `snapshot["actions"]` (the
+  full public Actions tab) only. `compute_homepage_aggregates()`'s own,
+  separate, narrower filter (`_visible_for_homepage()`, which excludes
+  only `personal_only` — an R1-T06 design choice covering Steve's own
+  daily-priorities widgets) is deliberately **unchanged** — the two
+  filters answer different questions for different parts of the page and
+  are proven to diverge by `tests/test_visibility.py`.
+
+**What's still private, unaffected by any of this:** the Cowork
+dashboard (`build_dashboard.py`'s own, separate call to
+`load_objectives_snapshot()`/`load_actions_snapshot()`) always shows
+full detail regardless of visibility tier — this fix only touches what
+`build_web.py` publishes.
+
+**Known limitation, not yet built:** once an objective or action IS
+promoted to a public-shareable tier, its full row (including a `notes`
+field that may itself be an internal working note, same shape as the one
+that triggered this fix) is still published as-is — there is no
+per-field redaction step for Objectives/Actions the way Contacts'
+`public_contact_view()` strips `notes`/`relationship_owner`/etc. even for
+a cleared contact. Add that if/when Steve actually promotes an objective
+or action to a shareable tier and it turns out to matter.
 
 ### Generated files (not sources of truth — do not hand-edit)
 - `scores_snapshot.json` — output of `scripts/scoring.py`. `scripts/build_dashboard.py` loads this and augments it in memory (adding `actions`, `objectives`, `app_config`, etc.) before embedding the result as the Cowork dashboard artifact's `SNAPSHOT` — the augmented version is never written back to `scores_snapshot.json` on disk.

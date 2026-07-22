@@ -440,25 +440,26 @@ def _current_evidence_for_field(contact_id, field, evidence_rows):
 # Public-site visibility (Contacts Phase 4). The GitHub Pages site is a
 # genuinely public URL, and contacts carry real people's PII — this is a
 # categorically bigger exposure risk than a Steve-only Cowork dashboard, so
-# it gets its own, stricter allow-list rather than reusing
-# build_web.py's `_visible_for_homepage()` (which only excludes the single
-# `personal_only` value — fine for Steve's own activity log, not fine for
-# third parties' profile data). Confirmed with Steve: default is EXCLUDE.
-# A contact only appears on the public site once someone deliberately sets
-# its `visibility` to one of PUBLIC_VISIBILITY_TIERS; every contact's
-# default (`communardo_internal`, set by find-or-create/create) stays
-# internal-only unless explicitly changed via `edit --visibility`.
+# it gets the same strict allow-list as every other public-facing entity
+# now uses, rather than reusing build_web.py's `_visible_for_homepage()`
+# (which only excludes the single `personal_only` value — fine for
+# Steve's own activity log, not fine for third parties' profile data).
+# Confirmed with Steve: default is EXCLUDE. A contact only appears on the
+# public site once someone deliberately sets its `visibility` to one of
+# PUBLIC_VISIBILITY_TIERS; every contact's default (`communardo_internal`,
+# set by find-or-create/create) stays internal-only unless explicitly
+# changed via `edit --visibility`.
+#
+# PUBLIC_VISIBILITY_TIERS/is_public_visible() were the FIRST implementation
+# of this check in the project (Contacts Phase 4) and have since been
+# extracted into scripts/visibility.py as the shared service every other
+# public-facing entity (Objectives, Actions) now also uses (Improvement
+# Roadmap IR-C1) — re-imported and re-exported here under their original
+# names so nothing that already does `from contacts import
+# is_public_visible` breaks.
 # ---------------------------------------------------------------------------
 
-PUBLIC_VISIBILITY_TIERS = {"atlassian_shareable", "customer_approved", "anonymised", "public"}
-
-
-def is_public_visible(row):
-    """True only if this contact's own `visibility` field explicitly marks
-    it cleared for external/public sharing (see PUBLIC_VISIBILITY_TIERS
-    above). personal_only/communardo_internal/communardo_management —
-    including every contact's default — are never public."""
-    return (row.get("visibility") or "") in PUBLIC_VISIBILITY_TIERS
+from visibility import PUBLIC_VISIBILITY_TIERS, is_public_visible  # noqa: E402,F401 — re-exported, see comment above
 
 
 def public_contact_view(row, evidence_rows):

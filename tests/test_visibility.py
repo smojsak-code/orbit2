@@ -103,3 +103,74 @@ def test_compute_public_contacts_includes_explicitly_cleared_contact_and_strips_
     assert len(public) == 1
     assert public[0]["contact_id"] == "CONT-0001"
     assert "email" not in public[0]
+
+
+# ---------------------------------------------------------------------------
+# Improvement Roadmap IR-A1/IR-A2/IR-C1 (2026-07-22) — scripts/visibility.py
+# is the shared is_public_visible() service, extracted from Contacts Phase 4
+# so Objectives and Actions can use the exact same allow-list Contacts
+# already proved out, instead of each reinventing (or, as the 2026-07-22
+# platform assessment found, simply never building) their own check. These
+# tests lock in: the shared module's own behaviour, that contacts.py's
+# re-exported names still resolve to the SAME function object (not a
+# behaviour-alike copy that could drift), and that build_web.py's new
+# objective/action filters actually exclude what they're supposed to.
+# ---------------------------------------------------------------------------
+
+def test_visibility_module_is_public_visible_matches_public_tiers_only():
+    import visibility as visibility_mod
+    for v in ALL_VISIBILITY_VALUES:
+        row = {"visibility": v}
+        expected = v in visibility_mod.PUBLIC_VISIBILITY_TIERS
+        assert visibility_mod.is_public_visible(row) is expected, f"visibility={v}"
+
+
+def test_visibility_module_defaults_to_excluded_when_missing():
+    import visibility as visibility_mod
+    assert visibility_mod.is_public_visible({}) is False
+    assert visibility_mod.is_public_visible({"visibility": ""}) is False
+
+
+def test_contacts_reexports_the_same_shared_visibility_function():
+    """contacts.py must re-export scripts/visibility.py's actual function
+    object (not a separate copy) — proves IR-C1's consolidation didn't
+    leave two implementations that could silently drift apart again."""
+    import contacts as contacts_mod
+    import visibility as visibility_mod
+    assert contacts_mod.is_public_visible is visibility_mod.is_public_visible
+    assert contacts_mod.PUBLIC_VISIBILITY_TIERS is visibility_mod.PUBLIC_VISIBILITY_TIERS
+
+
+def test_filter_public_objectives_excludes_internal_and_includes_shareable():
+    import build_web as build_web_mod
+    rows = [
+        {"objective_id": "OBJ-0001", "visibility": "communardo_internal"},
+        {"objective_id": "OBJ-0002", "visibility": "atlassian_shareable"},
+        {"objective_id": "OBJ-0003", "visibility": ""},
+        {"objective_id": "OBJ-0004"},  # missing key entirely
+    ]
+    result = build_web_mod.filter_public_objectives(rows)
+    assert [o["objective_id"] for o in result] == ["OBJ-0002"]
+
+
+def test_filter_public_actions_excludes_internal_and_includes_shareable():
+    import build_web as build_web_mod
+    rows = [
+        {"action_id": "ACTN-0001", "visibility": "communardo_internal"},
+        {"action_id": "ACTN-0002", "visibility": "public"},
+        {"action_id": "ACTN-0003", "visibility": "personal_only"},
+    ]
+    result = build_web_mod.filter_public_actions(rows)
+    assert [a["action_id"] for a in result] == ["ACTN-0002"]
+
+
+def test_filter_public_actions_is_stricter_than_homepage_visibility():
+    """The full public Actions list (filter_public_actions) and the
+    homepage's own aggregate filter (_visible_for_homepage) are
+    deliberately DIFFERENT rules — this proves they still diverge on
+    communardo_internal the way the module-level comments describe, so a
+    future refactor that accidentally unifies them gets caught."""
+    import build_web as build_web_mod
+    row = {"visibility": "communardo_internal"}
+    assert build_web_mod._visible_for_homepage(row) is True
+    assert build_web_mod.filter_public_actions([row]) == []

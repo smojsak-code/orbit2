@@ -10,6 +10,7 @@
           "quarter": "2026-Q3",
           "category_score": 0.0,
           "weight_check": 100.0,
+          "has_data": false,
           "sub_metrics": [
             {
               "sub_metric": "Pipeline growth QoQ",
@@ -18,6 +19,7 @@
               "unit": "USD",
               "weight_pct_in_category": 35.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Net new pipeline value created this quarter vs last, sourced from CRM. Signals whether top-of-funnel demand generation is keeping pace with targets."
@@ -29,6 +31,7 @@
               "unit": "USD",
               "weight_pct_in_category": 40.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Closed-won bookings this quarter against the quota set with Atlassian/leadership. The single clearest signal of commercial performance."
@@ -40,6 +43,7 @@
               "unit": "%",
               "weight_pct_in_category": 25.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Percentage of Deal-Registered opportunities that closed won. Reflects how effectively registered pipeline converts to revenue."
@@ -52,6 +56,7 @@
           "quarter": "2026-Q3",
           "category_score": 0.0,
           "weight_check": 100.0,
+          "has_data": false,
           "sub_metrics": [
             {
               "sub_metric": "Co-marketing campaigns executed vs planned",
@@ -60,6 +65,7 @@
               "unit": "count",
               "weight_pct_in_category": 40.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Joint marketing activities (webinars, content, events) delivered against the quarter's plan with Atlassian."
@@ -71,6 +77,7 @@
               "unit": "%",
               "weight_pct_in_category": 30.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Share of allocated Market Development Funds actually drawn down and spent. Low utilization risks funds being reclaimed or programs being deprioritized."
@@ -82,6 +89,7 @@
               "unit": "count",
               "weight_pct_in_category": 30.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Leads generated directly from marketing activity, feeding the sales pipeline."
@@ -94,6 +102,7 @@
           "quarter": "2026-Q3",
           "category_score": 4.2,
           "weight_check": 100.0,
+          "has_data": true,
           "sub_metrics": [
             {
               "sub_metric": "Marketplace app rating",
@@ -102,6 +111,7 @@
               "unit": "stars",
               "weight_pct_in_category": 25.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Average star rating of Communardo's apps on the Atlassian Marketplace \u2014 a public signal of product quality visible to Atlassian and prospects."
@@ -113,6 +123,7 @@
               "unit": "%",
               "weight_pct_in_category": 20.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "How complete and up to date Communardo's public profile is on the Atlassian Partner Directory."
@@ -124,6 +135,7 @@
               "unit": "count",
               "weight_pct_in_category": 25.0,
               "score": 16.7,
+              "has_data": true,
               "source": "data/news_log.csv (live count)",
               "notes": "LIVE \u2014 driven by the automated 12h web scan for Communardo mentions; this is the only non-zero sub-metric in the whole reset, by design",
               "description": "Count of public mentions of Communardo found by the automated web scan \u2014 the only metric in this scorecard driven entirely by live, automated data rather than manual entry."
@@ -135,6 +147,7 @@
               "unit": "count",
               "weight_pct_in_category": 30.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Customer success stories published and available to share with Atlassian and prospects."
@@ -147,6 +160,7 @@
           "quarter": "2026-Q3",
           "category_score": 0.0,
           "weight_check": 100.0,
+          "has_data": false,
           "sub_metrics": [
             {
               "sub_metric": "Internal AI tool adoption rate (e.g. Rovo)",
@@ -155,6 +169,7 @@
               "unit": "%",
               "weight_pct_in_category": 40.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Share of relevant staff actively using Atlassian's AI tooling (e.g. Rovo) internally \u2014 a leading indicator Atlassian evaluates for AI-forward partners."
@@ -166,6 +181,7 @@
               "unit": "count",
               "weight_pct_in_category": 40.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Number of customer engagements this quarter that specifically involved AI capability (Rovo, AI-powered workflows, etc.)."
@@ -177,6 +193,7 @@
               "unit": "count",
               "weight_pct_in_category": 20.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Staff certifications completed in Atlassian's AI-related enablement tracks."
@@ -189,6 +206,7 @@
           "quarter": "2026-Q3",
           "category_score": 0.0,
           "weight_check": 100.0,
+          "has_data": false,
           "sub_metrics": [
             {
               "sub_metric": "QBR cadence adherence",
@@ -197,6 +215,7 @@
               "unit": "count",
               "weight_pct_in_category": 40.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Number of Quarterly Business Reviews actually held with Atlassian against the expected cadence."
@@ -208,6 +227,7 @@
               "unit": "%",
               "weight_pct_in_category": 40.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Progress against the goals set out in the joint business plan agreed with Atlassian."
@@ -219,6 +239,7 @@
               "unit": "%",
               "weight_pct_in_category": 20.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Share of action items from prior QBRs that were actually closed out \u2014 a proxy for how seriously the partnership follows through."
@@ -231,6 +252,7 @@
           "quarter": "2026-Q3",
           "category_score": 0.0,
           "weight_check": 100.0,
+          "has_data": false,
           "sub_metrics": [
             {
               "sub_metric": "Deal Registration volume & approval rate",
@@ -239,6 +261,7 @@
               "unit": "count",
               "weight_pct_in_category": 40.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Number of deals registered with Atlassian and approved, protecting margin and signaling active pipeline to the vendor."
@@ -250,6 +273,7 @@
               "unit": "count",
               "weight_pct_in_category": 30.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data; confirm with Atlassian whether PVR is still an active program before re-entering data",
               "description": "Registrations under Atlassian's Partner Value Registration program, recognizing partner-sourced value beyond a single deal."
@@ -261,6 +285,7 @@
               "unit": "count",
               "weight_pct_in_category": 30.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Registered services engagements, recognizing services-attach as part of the partner value delivered."
@@ -273,6 +298,7 @@
           "quarter": "2026-Q3",
           "category_score": 0.0,
           "weight_check": 100.0,
+          "has_data": false,
           "sub_metrics": [
             {
               "sub_metric": "Active joint engagements with SIs/ISVs",
@@ -281,6 +307,7 @@
               "unit": "count",
               "weight_pct_in_category": 20.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Count of active joint engagements with other system integrators or ISV partners."
@@ -292,6 +319,7 @@
               "unit": "USD",
               "weight_pct_in_category": 20.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Revenue where a third-party vendor or partner referral was a material factor."
@@ -303,6 +331,7 @@
               "unit": "count",
               "weight_pct_in_category": 20.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Deals registered in AWS's ACE (APN Customer Engagements) co-sell program."
@@ -314,6 +343,7 @@
               "unit": "count",
               "weight_pct_in_category": 20.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Joint engagements run through Google's partner co-sell motion."
@@ -325,6 +355,7 @@
               "unit": "USD",
               "weight_pct_in_category": 20.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Pipeline value being jointly pursued with Global System Integrators."
@@ -337,6 +368,7 @@
           "quarter": "2026-Q3",
           "category_score": 0.0,
           "weight_check": 100.0,
+          "has_data": false,
           "sub_metrics": [
             {
               "sub_metric": "Number of solutions created",
@@ -345,6 +377,7 @@
               "unit": "count",
               "weight_pct_in_category": 25.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Distinct packaged solutions built this quarter (repeatable offerings, not one-off custom work)."
@@ -356,6 +389,7 @@
               "unit": "count",
               "weight_pct_in_category": 30.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Instances of a packaged solution actually sold to a client."
@@ -367,6 +401,7 @@
               "unit": "USD",
               "weight_pct_in_category": 30.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Revenue directly attributable to packaged solution sales."
@@ -378,6 +413,7 @@
               "unit": "verticals",
               "weight_pct_in_category": 15.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data; see solution_verticals.csv",
               "description": "Number of industry verticals with at least one packaged solution, out of the target range \u2014 breadth of the solution portfolio."
@@ -390,6 +426,7 @@
           "quarter": "2026-Q3",
           "category_score": 0.0,
           "weight_check": 100.0,
+          "has_data": false,
           "sub_metrics": [
             {
               "sub_metric": "Services revenue sold to clients",
@@ -398,6 +435,7 @@
               "unit": "USD",
               "weight_pct_in_category": 60.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Total services revenue (implementation, consulting, managed services) sold this quarter."
@@ -409,6 +447,7 @@
               "unit": "count",
               "weight_pct_in_category": 40.0,
               "score": 0.0,
+              "has_data": false,
               "source": "",
               "notes": "RESET 2026-07-01 \u2014 awaiting real data",
               "description": "Distinct clients who purchased any services this quarter \u2014 breadth of services attach."

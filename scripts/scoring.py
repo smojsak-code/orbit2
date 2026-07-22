@@ -68,16 +68,56 @@ def score_submetric(row):
     return None
 
 
-def score_category(filename, vendor):
+def submetric_has_data(row, category_key, active_pairs):
+    """Improvement Roadmap IR-B1 (2026-07-22) — true if this sub-metric
+    result reflects a real measurement rather than an unmeasured default,
+    false if it's just sitting at its reset/never-touched value. Two ways
+    to earn True: a non-zero actual (someone entered a real number), or at
+    least one ACTIVE Evidence Library file on record for this exact
+    vendor/category/sub-metric/quarter — the same "active evidence" concept
+    scripts/build_web.py's compute_homepage_aggregates() already uses for
+    its own missing-evidence list, reused here rather than re-invented.
+
+    Why this matters: before this fix, an unmeasured sub-metric (actual=0,
+    no evidence — e.g. every sub-metric with a "RESET ... awaiting real
+    data" note) scored and displayed identically to a sub-metric that was
+    genuinely measured and came out to zero. The 2026-07-22 platform
+    assessment flagged this as reading like total non-performance across
+    almost every category, when it actually just meant "not started yet."
+    has_data is a display-layer signal only — score_submetric()'s own
+    numeric output (used in every weighted-average calculation) is
+    completely unchanged by this function; see dashboard.html/
+    index_template.html for where has_data actually changes what's shown."""
+    try:
+        actual = float(row.get("actual") or 0)
+    except (TypeError, ValueError):
+        actual = 0
+    if actual != 0:
+        return True
+    return (category_key, row.get("sub_metric")) in active_pairs
+
+
+def score_category(filename, vendor, category_key=None, evidence_rows=None):
     rows = [r for r in read_category_csv(filename) if r["vendor"] == vendor]
     q = latest_quarter(rows, vendor)
     rows = [r for r in rows if r["quarter"] == q]
+    evidence_rows = evidence_rows or []
+    # Scoped to this exact vendor + quarter so a differently-timed evidence
+    # filing for the same category/sub_metric name doesn't false-positive.
+    active_pairs = {
+        (e.get("category"), e.get("sub_metric"))
+        for e in evidence_rows
+        if e.get("vendor") == vendor and e.get("quarter") == q and e.get("status") == "active"
+    }
     submetrics = []
     weighted_sum = 0.0
     weight_total = 0.0
+    any_has_data = False
     for r in rows:
         s = score_submetric(r)
         w = float(r.get("weight_pct_in_category", 0) or 0)
+        has_data = submetric_has_data(r, category_key, active_pairs)
+        any_has_data = any_has_data or has_data
         submetrics.append({
             "sub_metric": r["sub_metric"],
             "target": r["target"],
@@ -85,6 +125,7 @@ def score_category(filename, vendor):
             "unit": r.get("unit", ""),
             "weight_pct_in_category": w,
             "score": s,
+            "has_data": has_data,
             "source": r.get("source", ""),
             "notes": r.get("notes", ""),
             "description": r.get("description", ""),
@@ -97,6 +138,7 @@ def score_category(filename, vendor):
         "quarter": q,
         "category_score": category_score,
         "weight_check": round(weight_total, 1),  # should be ~100; flag if not
+        "has_data": any_has_data,
         "sub_metrics": submetrics,
     }
 
@@ -121,12 +163,12 @@ def read_deals(vendor, quarter=None):
     return sorted(rows, key=lambda r: r.get("close_date", ""), reverse=True)
 
 
-def score_vendor(vendor, cat_weights, category_registry):
+def score_vendor(vendor, cat_weights, category_registry, evidence_rows=None):
     categories = {}
     overall_weighted_sum = 0.0
     overall_weight_total = 0.0
     for key, meta in category_registry.items():
-        result = score_category(meta["file"], vendor)
+        result = score_category(meta["file"], vendor, key, evidence_rows)
         result["label"] = meta["label"]
         w = cat_weights.get(key, 0)
         result["weight_pct"] = w
@@ -165,10 +207,11 @@ def main():
     weights = load_weights()
     weights.pop("_comment", None)
     categories = load_categories()
+    evidence_rows = read_evidence_index()
     snapshot = {
         "generated_note": "Run scripts/scoring.py after updating any CSV in /data to refresh this file.",
-        "vendors": {v: score_vendor(v, w, categories) for v, w in weights.items()},
-        "evidence": read_evidence_index(),
+        "vendors": {v: score_vendor(v, w, categories, evidence_rows) for v, w in weights.items()},
+        "evidence": evidence_rows,
         "changelog": read_changelog(),
         "category_registry": categories,
     }
