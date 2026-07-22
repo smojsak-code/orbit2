@@ -48,7 +48,21 @@ function homeListItem(titleHtml, metaHtml, onclick) {
   const div = document.createElement('div');
   div.className = 'home-list-item';
   div.innerHTML = `<div class="title-row"><span>${titleHtml}</span></div><div class="meta-row">${metaHtml}</div>`;
-  if (onclick) div.addEventListener('click', onclick);
+  // IR-D2 (2026-07-22): only rows with a real onclick are interactive —
+  // give those (and only those) keyboard access, matching the assessment's
+  // "every clickable non-button/link element is reachable via keyboard".
+  if (onclick) {
+    div.style.cursor = 'pointer';
+    div.setAttribute('role', 'button');
+    div.setAttribute('tabindex', '0');
+    div.addEventListener('click', onclick);
+    div.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+        ev.preventDefault();
+        onclick(ev);
+      }
+    });
+  }
   return div;
 }
 
@@ -82,7 +96,16 @@ function renderHomeActionSection(listId, badgeId, actions, emptyText, duePeriod)
     more.style.color = '#2563eb';
     more.style.fontWeight = '600';
     more.textContent = `+ ${actions.length - 6} more — view all in Actions`;
-    more.addEventListener('click', () => goToActionsFiltered(duePeriod));
+    more.setAttribute('role', 'button');
+    more.setAttribute('tabindex', '0');
+    const goMore = () => goToActionsFiltered(duePeriod);
+    more.addEventListener('click', goMore);
+    more.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+        ev.preventDefault();
+        goMore();
+      }
+    });
     list.appendChild(more);
   }
 }

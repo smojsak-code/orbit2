@@ -18,6 +18,16 @@
   .brand h1 { font-size: 19px; margin: 0; }
   .brand .sub { font-size: 12px; color: #6b7280; margin-top: 1px; }
   .controls { display: flex; align-items: center; gap: 10px; }
+  /* IR-D5 (2026-07-22): a single header status indicator so every
+     sendPrompt()-based write action gives some visible feedback that the
+     message actually went out — previously the modal just closed with no
+     confirmation. States: idle (nothing pending) / sent (just fired,
+     awaiting Claude's confirmation reply) / synced Xm ago (best-effort —
+     there's no real completion signal, so "synced" just means "some time
+     has passed since the last change was sent", not a confirmed write). */
+  .sync-indicator { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #f3f4f6; color: #6b7280; white-space: nowrap; }
+  .sync-indicator.sent { background: #fffbeb; color: #b45309; }
+  .sync-indicator.synced { background: #ecfdf5; color: #047857; }
   select, button { font: inherit; }
   select { padding: 7px 10px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; color: #1c1f24; font-size: 13px; }
   .btn-primary {
@@ -46,6 +56,7 @@
   @media (max-width: 980px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 560px) { .cat-grid { grid-template-columns: 1fr; } }
   .cat-card { cursor: pointer; }
+  .cat-card:focus-visible, .manage-row-head:focus-visible, .dropzone:focus-visible, .chip-rm:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
   .cat-card .head { display: flex; justify-content: space-between; align-items: flex-start; }
   .cat-card h3 { font-size: 13.5px; margin: 0 0 8px; line-height: 1.3; }
   .cat-score { font-size: 26px; font-weight: 800; }
@@ -70,9 +81,9 @@
   .news-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
   .news-item:last-child { border-bottom: none; }
   .sent-badge { flex-shrink: 0; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; height: fit-content; text-transform: uppercase; letter-spacing: .03em; }
-  .sent-positive { background: #ecfdf5; color: #059669; }
-  .sent-negative { background: #fef2f2; color: #dc2626; }
-  .sent-neutral { background: #f3f4f6; color: #6b7280; }
+  .sent-positive { background: #ecfdf5; color: #047857; }
+  .sent-negative { background: #fef2f2; color: #b91c1c; }
+  .sent-neutral { background: #f3f4f6; color: #4b5563; }
   .news-text .headline { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
   .news-text .meta { font-size: 11px; color: #9ca3af; }
   .footer-note { font-size: 11.5px; color: #9ca3af; text-align: center; margin-top: 22px; line-height: 1.6; }
@@ -83,9 +94,9 @@
   table.data-table td { padding: 7px 8px; border-bottom: 1px solid #f3f4f6; color: #374151; }
   table.data-table tr:last-child td { border-bottom: none; }
   .status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
-  .status-active { background: #ecfdf5; color: #059669; }
-  .status-superseded { background: #f3f4f6; color: #9ca3af; }
-  .status-removed { background: #fef2f2; color: #dc2626; }
+  .status-active { background: #ecfdf5; color: #047857; }
+  .status-superseded { background: #f3f4f6; color: #4b5563; }
+  .status-removed { background: #fef2f2; color: #b91c1c; }
   .evidence-layout { display: grid; grid-template-columns: 1fr 300px; gap: 16px; }
   @media (max-width: 860px) { .evidence-layout { grid-template-columns: 1fr; } }
   .dropzone {
@@ -120,9 +131,9 @@
   .changelog-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f3f4f6; font-size: 12px; }
   .changelog-item:last-child { border-bottom: none; }
   .change-pill { flex-shrink: 0; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; height: fit-content; }
-  .change-added { background: #ecfdf5; color: #059669; }
+  .change-added { background: #ecfdf5; color: #047857; }
   .change-amended { background: #fffbeb; color: #b45309; }
-  .change-deprecated { background: #fef2f2; color: #dc2626; }
+  .change-deprecated { background: #fef2f2; color: #b91c1c; }
   .changelog-text .title { font-weight: 600; margin-bottom: 1px; }
   .changelog-text .meta { color: #9ca3af; font-size: 11px; }
   .tab-bar { display: flex; border-bottom: 1px solid #e5e7eb; margin-bottom: 18px; }
@@ -165,19 +176,19 @@
   .actions-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
   .actions-filter-bar select, .actions-filter-bar input { padding: 6px 9px; border-radius: 6px; border: 1px solid #d1d5db; background: #fff; font-size: 12px; }
   .action-badge { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: .02em; margin-left: 4px; }
-  .action-overdue { background: #fef2f2; color: #dc2626; }
+  .action-overdue { background: #fef2f2; color: #b91c1c; }
   .action-due-soon { background: #fffbeb; color: #b45309; }
   .priority-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
-  .priority-critical { background: #fef2f2; color: #dc2626; }
+  .priority-critical { background: #fef2f2; color: #b91c1c; }
   .priority-high { background: #fffbeb; color: #b45309; }
   .priority-medium { background: #eff6ff; color: #2563eb; }
-  .priority-low { background: #f3f4f6; color: #6b7280; }
-  .action-status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; background: #f3f4f6; color: #6b7280; }
+  .priority-low { background: #f3f4f6; color: #4b5563; }
+  .action-status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; background: #f3f4f6; color: #4b5563; }
   .action-status-open { background: #eff6ff; color: #2563eb; }
-  .action-status-blocked { background: #fef2f2; color: #dc2626; }
+  .action-status-blocked { background: #fef2f2; color: #b91c1c; }
   .action-status-deferred { background: #fffbeb; color: #b45309; }
-  .action-status-completed { background: #ecfdf5; color: #059669; }
-  .action-status-cancelled { background: #f3f4f6; color: #9ca3af; }
+  .action-status-completed { background: #ecfdf5; color: #047857; }
+  .action-status-cancelled { background: #f3f4f6; color: #4b5563; }
   .action-inline-form { display: flex; flex-direction: column; gap: 4px; min-width: 190px; }
   .action-inline-form input, .action-inline-form select { font-size: 11px; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; }
   .action-btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -192,21 +203,21 @@
   .obj-progress-fill.at-risk { background: #dc2626; }
   .obj-progress-fill.completed { background: #059669; }
   .obj-progress-label { font-size: 10.5px; color: #6b7280; }
-  .obj-over-badge { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: #ecfdf5; color: #059669; margin-left: 4px; }
-  .objective-status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; background: #f3f4f6; color: #6b7280; }
+  .obj-over-badge { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: #ecfdf5; color: #047857; margin-left: 4px; }
+  .objective-status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; background: #f3f4f6; color: #4b5563; }
   .objective-status-on_track { background: #eff6ff; color: #2563eb; }
-  .objective-status-at_risk { background: #fef2f2; color: #dc2626; }
-  .objective-status-completed { background: #ecfdf5; color: #059669; }
-  .objective-status-missed { background: #f3f4f6; color: #9ca3af; }
-  .obj-priority-tag { font-size: 9.5px; padding: 1px 6px; border-radius: 999px; background: #f3f4f6; color: #6b7280; margin-right: 3px; }
+  .objective-status-at_risk { background: #fef2f2; color: #b91c1c; }
+  .objective-status-completed { background: #ecfdf5; color: #047857; }
+  .objective-status-missed { background: #f3f4f6; color: #4b5563; }
+  .obj-priority-tag { font-size: 9.5px; padding: 1px 6px; border-radius: 999px; background: #f3f4f6; color: #4b5563; margin-right: 3px; }
   .obj-priority-tag.high { background: #fffbeb; color: #b45309; }
   .obj-category-badge { font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
   .obj-category-relationship { background: #f5f3ff; color: #7c3aed; }
-  .obj-category-commercial { background: #ecfdf5; color: #059669; }
+  .obj-category-commercial { background: #ecfdf5; color: #047857; }
   .obj-category-strategic { background: #eff6ff; color: #2563eb; }
   .obj-category-operational { background: #fffbeb; color: #b45309; }
-  .obj-category-recognition { background: #fdf2f8; color: #db2777; }
-  .obj-category-uncategorised { background: #f3f4f6; color: #9ca3af; }
+  .obj-category-recognition { background: #fdf2f8; color: #be185d; }
+  .obj-category-uncategorised { background: #f3f4f6; color: #4b5563; }
   .obj-inline-form { display: flex; flex-direction: column; gap: 4px; min-width: 200px; }
   .obj-inline-form input, .obj-inline-form select, .obj-inline-form textarea { font-size: 11px; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; }
   .obj-btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -235,19 +246,19 @@
   .contacts-filter-bar select, .contacts-filter-bar input[type="text"] { padding: 6px 9px; border-radius: 6px; border: 1px solid #d1d5db; background: #fff; font-size: 12px; }
   .cont-checkbox-label { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #374151; }
   .cont-checkbox-label input { width: auto; }
-  .contact-status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; background: #f3f4f6; color: #6b7280; }
+  .contact-status-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; background: #f3f4f6; color: #4b5563; }
   .contact-status-provisional { background: #fffbeb; color: #b45309; }
-  .contact-status-confirmed { background: #ecfdf5; color: #059669; }
-  .contact-status-merged { background: #f3f4f6; color: #9ca3af; }
-  .contact-status-archived { background: #f3f4f6; color: #9ca3af; }
-  .contact-review-badge { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: #fef2f2; color: #dc2626; text-transform: uppercase; letter-spacing: .02em; margin-left: 4px; }
+  .contact-status-confirmed { background: #ecfdf5; color: #047857; }
+  .contact-status-merged { background: #f3f4f6; color: #4b5563; }
+  .contact-status-archived { background: #f3f4f6; color: #4b5563; }
+  .contact-review-badge { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: #fef2f2; color: #b91c1c; text-transform: uppercase; letter-spacing: .02em; margin-left: 4px; }
   .contact-function-badge { font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
   .contact-function-management { background: #eff6ff; color: #2563eb; }
-  .contact-function-sales { background: #ecfdf5; color: #059669; }
+  .contact-function-sales { background: #ecfdf5; color: #047857; }
   .contact-function-partner_channel { background: #f5f3ff; color: #7c3aed; }
   .contact-function-delivery_technical { background: #fffbeb; color: #b45309; }
-  .contact-function-solution { background: #fdf2f8; color: #db2777; }
-  .contact-function-unsectioned { background: #f3f4f6; color: #9ca3af; }
+  .contact-function-solution { background: #fdf2f8; color: #be185d; }
+  .contact-function-unsectioned { background: #f3f4f6; color: #4b5563; }
   .contact-section-header td { background: #f3f4f6; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: #4b5563; padding: 6px 12px; }
   .contact-name-row { font-weight: 600; }
   .contact-raw-name { font-size: 10.5px; color: #9ca3af; font-weight: 400; }
@@ -265,6 +276,14 @@
   .contact-detail-section { margin-bottom: 12px; }
   .contact-detail-section h4 { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin: 0 0 6px; }
 
+  /* IR-D4 (2026-07-22): report download/regenerate controls tucked behind
+     this disclosure so the default Objectives view is filters + Add/Export
+     only — Option B from the assessment's Objectives-filter-bar section. */
+  .report-disclosure { margin-bottom: 16px; }
+  .report-disclosure summary { cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; padding: 8px 0; }
+  .report-disclosure summary:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+  .report-disclosure[open] summary { margin-bottom: 4px; }
+  .report-disclosure .report-header { margin-top: 8px; }
   .report-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
   .report-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
   .report-sub { font-size: 11.5px; color: #9ca3af; }
@@ -290,6 +309,7 @@
       </div>
     </div>
     <div class="controls">
+      <span class="sync-indicator" id="syncIndicator" role="status" aria-live="polite">Idle</span>
       <button class="btn-primary" id="addActivityBtn" onclick="openActivityModal()">+ Add Activity</button>
       <select id="vendorSelect"></select>
       <button class="btn-primary" id="generateReportBtn" onclick="switchView('reports')">View Report</button>
@@ -509,17 +529,20 @@
         <button class="btn-primary" onclick="openObjectiveModal()">+ Add Objective</button>
         <button class="btn-secondary" onclick="startExportObjectives()">Export review</button>
       </div>
-      <div class="report-header">
-        <div>
-          <div class="report-title">Objectives Progress Report</div>
-          <div class="report-sub" id="objReportGeneratedNote">Dated, timestamped record of progress, evidence, examples and action points for every objective — generate on demand.</div>
+      <details class="report-disclosure">
+        <summary>Progress report <span class="toggle-hint" style="font-weight:400;">download or regenerate</span></summary>
+        <div class="report-header">
+          <div>
+            <div class="report-title">Objectives Progress Report</div>
+            <div class="report-sub" id="objReportGeneratedNote">Dated, timestamped record of progress, evidence, examples and action points for every objective — generate on demand.</div>
+          </div>
+          <div class="download-row">
+            <button class="btn-primary" id="downloadObjWordBtn" onclick="downloadObjectivesReport('docx')">Download Word (.docx)</button>
+            <button class="btn-primary" id="downloadObjPdfBtn" onclick="downloadObjectivesReport('pdf')">Download PDF</button>
+            <button class="btn-secondary" onclick="sendPrompt('Please regenerate the objectives progress report now with the latest data.')">Regenerate now</button>
+          </div>
         </div>
-        <div class="download-row">
-          <button class="btn-primary" id="downloadObjWordBtn" onclick="downloadObjectivesReport('docx')">Download Word (.docx)</button>
-          <button class="btn-primary" id="downloadObjPdfBtn" onclick="downloadObjectivesReport('pdf')">Download PDF</button>
-          <button class="btn-secondary" onclick="sendPrompt('Please regenerate the objectives progress report now with the latest data.')">Regenerate now</button>
-        </div>
-      </div>
+      </details>
       <table class="data-table" id="objectivesTable"></table>
       <div class="dz-empty-hint" id="objectivesHint"></div>
     </section>
@@ -1022,6 +1045,10 @@ function render(vendorName) {
     const color = barColor(c.category_score, c.has_data);
     const div = document.createElement('div');
     div.className = 'card cat-card';
+    div.setAttribute('role', 'button');
+    div.setAttribute('tabindex', '0');
+    div.setAttribute('aria-expanded', 'false');
+    div.setAttribute('aria-label', `${c.label} — click or press Enter for methodology detail`);
     const subRows = (c.sub_metrics || []).map(s => `
       <div class="sub-row">
         <div class="name">${esc(s.sub_metric)}</div>
@@ -1039,7 +1066,17 @@ function render(vendorName) {
       <div class="weight-tag">${esc(c.quarter) || 'no quarter'}</div>
       <div class="sub-list">${subRows}</div>
       <div class="toggle-hint">click for methodology</div>`;
-    div.addEventListener('click', () => div.classList.toggle('open'));
+    const toggleCatCard = () => {
+      const nowOpen = div.classList.toggle('open');
+      div.setAttribute('aria-expanded', String(nowOpen));
+    };
+    div.addEventListener('click', toggleCatCard);
+    div.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+        ev.preventDefault();
+        toggleCatCard();
+      }
+    });
     grid.appendChild(div);
   });
 
@@ -1387,6 +1424,10 @@ function renderManageGrid(vendorName, v) {
     row.className = 'manage-row';
     const head = document.createElement('div');
     head.className = 'manage-row-head';
+    head.setAttribute('role', 'button');
+    head.setAttribute('tabindex', '0');
+    head.setAttribute('aria-expanded', 'false');
+    head.setAttribute('aria-label', `${c.label} — click or press Enter to edit`);
     head.innerHTML = `
       <div>
         <div class="name">${esc(c.label)}</div>
@@ -1401,7 +1442,18 @@ function renderManageGrid(vendorName, v) {
     const lines = (c.sub_metrics || []).map((s, i) => editLine(key, s.sub_metric, s.weight_pct_in_category, s.target, s.actual, s.unit)).join('');
     body.innerHTML = `${fieldLabels}<div id="lines-${key}">${lines}</div>
       <button class="btn-secondary" style="margin-top:4px;" onclick="event.stopPropagation(); addLine('${key}')">+ Add sub-metric</button>`;
-    head.addEventListener('click', () => row.classList.toggle('open'));
+    const toggleManageRow = () => {
+      const nowOpen = row.classList.toggle('open');
+      head.setAttribute('aria-expanded', String(nowOpen));
+    };
+    head.addEventListener('click', toggleManageRow);
+    head.addEventListener('keydown', (ev) => {
+      if (ev.target !== head) return; // let the weight <input> handle its own keys
+      if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+        ev.preventDefault();
+        toggleManageRow();
+      }
+    });
     row.appendChild(head);
     row.appendChild(body);
     grid.appendChild(row);
@@ -1477,6 +1529,53 @@ function addCategoryPrompt() {
     `Please ask me for: a short key, a display label, its weight (and how the other categories' weights should adjust), ` +
     `and the sub-metrics it should track — then use scripts/metric_manager.py add-category and add-submetric to set it up.`
   );
+}
+
+/* IR-D5 (2026-07-22) — header sync indicator. Every write action in this
+   dashboard works by composing a sendPrompt() message and closing its own
+   modal immediately, with nothing on screen to confirm the message actually
+   went out. Rather than touch all ~30 sendPrompt() call sites individually,
+   this wraps the single global sendPrompt() once, so every existing and
+   future call site gets the indicator for free. There's no real completion
+   signal available here — "synced" just means "some time has passed since
+   the last change was sent", not a confirmed write; a true per-row pending
+   state (Option B from the assessment) would need the actual chat-response
+   plumbing and is left as a documented future upgrade. */
+let _syncSentAt = null;
+function setSyncIndicatorState(state) {
+  const el = document.getElementById('syncIndicator');
+  if (!el) return;
+  el.classList.remove('sent', 'synced');
+  if (state === 'sent') {
+    el.textContent = 'Change sent — awaiting confirmation';
+    el.classList.add('sent');
+  } else if (state === 'synced') {
+    el.textContent = 'Synced just now';
+    el.classList.add('synced');
+  } else {
+    el.textContent = 'Idle';
+  }
+}
+
+function setupSyncIndicator() {
+  if (typeof window.sendPrompt !== 'function') return; // host didn't inject it — nothing to wrap
+  const originalSendPrompt = window.sendPrompt;
+  window.sendPrompt = function (...args) {
+    _syncSentAt = Date.now();
+    setSyncIndicatorState('sent');
+    setTimeout(() => {
+      // Only advance if nothing newer has been sent meanwhile — a stale
+      // timeout from an earlier call must not downgrade a fresher "sent".
+      if (_syncSentAt && Date.now() - _syncSentAt >= 7000) setSyncIndicatorState('synced');
+    }, 7000);
+    return originalSendPrompt.apply(this, args);
+  };
+  setInterval(() => {
+    const el = document.getElementById('syncIndicator');
+    if (!el || !el.classList.contains('synced') || !_syncSentAt) return;
+    const mins = Math.floor((Date.now() - _syncSentAt) / 60000);
+    el.textContent = mins < 1 ? 'Synced just now' : `Synced ${mins}m ago`;
+  }, 30000);
 }
 
 function setupVendorSelect() {
@@ -1600,10 +1699,12 @@ function makeDropStager(opts) {
     state.files.forEach((file, i) => {
       const chip = document.createElement('span');
       chip.className = 'file-chip';
-      chip.innerHTML = `${esc(file.name)} (${Math.round(file.size/1024)} KB) <span class="chip-rm" data-i="${i}">✕</span>`;
-      chip.querySelector('.chip-rm').addEventListener('click', () => {
-        state.files.splice(i, 1);
-        render();
+      chip.innerHTML = `${esc(file.name)} (${Math.round(file.size/1024)} KB) <span class="chip-rm" role="button" tabindex="0" aria-label="Remove ${esc(file.name)}" data-i="${i}">✕</span>`;
+      const removeThis = () => { state.files.splice(i, 1); render(); };
+      const rmEl = chip.querySelector('.chip-rm');
+      rmEl.addEventListener('click', removeThis);
+      rmEl.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') { ev.preventDefault(); removeThis(); }
       });
       opts.chipsEl.appendChild(chip);
     });
@@ -1639,7 +1740,13 @@ const schemaStager = makeDropStager({
 function setupDropzone() {
   const dz = document.getElementById('dropzone');
   const input = document.getElementById('fileInput');
+  dz.setAttribute('role', 'button');
+  dz.setAttribute('tabindex', '0');
+  dz.setAttribute('aria-label', 'Drag and drop a file here, or activate to choose one');
   dz.addEventListener('click', () => input.click());
+  dz.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') { ev.preventDefault(); input.click(); }
+  });
   input.addEventListener('change', e => { evidenceStager.add(e.target.files); input.value = ''; });
   ['dragenter', 'dragover'].forEach(evt => dz.addEventListener(evt, e => {
     e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover');
@@ -1653,7 +1760,13 @@ function setupDropzone() {
 function setupDropzoneSchema() {
   const dz = document.getElementById('dropzoneSchema');
   const input = document.getElementById('fileInputSchema');
+  dz.setAttribute('role', 'button');
+  dz.setAttribute('tabindex', '0');
+  dz.setAttribute('aria-label', 'Drag and drop a file here, or activate to choose one');
   dz.addEventListener('click', () => input.click());
+  dz.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') { ev.preventDefault(); input.click(); }
+  });
   input.addEventListener('change', e => { schemaStager.add(e.target.files); input.value = ''; });
   ['dragenter', 'dragover'].forEach(evt => dz.addEventListener(evt, e => {
     e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover');
@@ -2698,6 +2811,7 @@ setupObjectivesFilters();
 renderContactsView();
 setupContactsFilters();
 setupVendorSelect();
+setupSyncIndicator();
 setupDropzone();
 setupDropzoneSchema();
 setupEvidenceSearch();
