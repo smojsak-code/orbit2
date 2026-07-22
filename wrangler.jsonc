@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "orbit2",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-07-22",
+  // public_site/ is a curated allowlist built by scripts/stage_public_site.py
+  // — see that script's docstring and worker/index.js's own comments for why.
+  "assets": {
+    "directory": "./public_site",
+    "binding": "ASSETS",
+    // Without this, Cloudflare serves static assets directly and never runs
+    // worker/index.js's login check at all — this is the single most
+    // important line in this file.
+    "run_worker_first": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "orbit2-worker",
+  "private": true,
+  "type": "module",
+  "description": "Deploy config only, for the Cloudflare Worker that gates and serves the Orbit2 public site (see wrangler.jsonc + worker/index.js). Unrelated to scripts_node/, which is Node used locally for report generation.",
+  "devDependencies": {
+    "wrangler": "^4"
+  },
+  "scripts": {
+    "deploy": "wrangler deploy"
+  }
+}

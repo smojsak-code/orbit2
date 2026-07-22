@@ -1,0 +1,2224 @@
+{
+  "generated_note": "Run scripts/scoring.py after updating any CSV in /data to refresh this file.",
+  "vendors": {
+    "Atlassian": {
+      "vendor": "Atlassian",
+      "overall_score": 0.3,
+      "weight_check": 100.0,
+      "categories": {
+        "sales_performance": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "has_data": false,
+          "sub_metrics": [
+            {
+              "sub_metric": "Pipeline growth QoQ",
+              "target": "500000",
+              "actual": "0",
+              "unit": "USD",
+              "weight_pct_in_category": 35.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Net new pipeline value created this quarter vs last, sourced from CRM. Signals whether top-of-funnel demand generation is keeping pace with targets."
+            },
+            {
+              "sub_metric": "Bookings/revenue attainment vs quota",
+              "target": "1200000",
+              "actual": "0",
+              "unit": "USD",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Closed-won bookings this quarter against the quota set with Atlassian/leadership. The single clearest signal of commercial performance."
+            },
+            {
+              "sub_metric": "Win rate on registered deals",
+              "target": "35",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 25.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Percentage of Deal-Registered opportunities that closed won. Reflects how effectively registered pipeline converts to revenue."
+            }
+          ],
+          "label": "Sales Performance",
+          "weight_pct": 18
+        },
+        "marketing": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "has_data": false,
+          "sub_metrics": [
+            {
+              "sub_metric": "Co-marketing campaigns executed vs planned",
+              "target": "6",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Joint marketing activities (webinars, content, events) delivered against the quarter's plan with Atlassian."
+            },
+            {
+              "sub_metric": "MDF utilization rate",
+              "target": "100",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Share of allocated Market Development Funds actually drawn down and spent. Low utilization risks funds being reclaimed or programs being deprioritized."
+            },
+            {
+              "sub_metric": "Marketing-sourced leads",
+              "target": "40",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Leads generated directly from marketing activity, feeding the sales pipeline."
+            }
+          ],
+          "label": "Marketing",
+          "weight_pct": 8
+        },
+        "market_visibility": {
+          "quarter": "2026-Q3",
+          "category_score": 4.2,
+          "weight_check": 100.0,
+          "has_data": true,
+          "sub_metrics": [
+            {
+              "sub_metric": "Marketplace app rating",
+              "target": "4.5",
+              "actual": "0",
+              "unit": "stars",
+              "weight_pct_in_category": 25.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Average star rating of Communardo's apps on the Atlassian Marketplace \u2014 a public signal of product quality visible to Atlassian and prospects."
+            },
+            {
+              "sub_metric": "Partner directory profile completeness",
+              "target": "100",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "How complete and up to date Communardo's public profile is on the Atlassian Partner Directory."
+            },
+            {
+              "sub_metric": "Press/analyst mentions volume",
+              "target": "12",
+              "actual": "2",
+              "unit": "count",
+              "weight_pct_in_category": 25.0,
+              "score": 16.7,
+              "has_data": true,
+              "source": "data/news_log.csv (live count)",
+              "notes": "LIVE \u2014 driven by the automated 12h web scan for Communardo mentions; this is the only non-zero sub-metric in the whole reset, by design",
+              "description": "Count of public mentions of Communardo found by the automated web scan \u2014 the only metric in this scorecard driven entirely by live, automated data rather than manual entry."
+            },
+            {
+              "sub_metric": "Case studies/success stories published",
+              "target": "4",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Customer success stories published and available to share with Atlassian and prospects."
+            }
+          ],
+          "label": "Market Visibility",
+          "weight_pct": 8
+        },
+        "ai_adoption": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "has_data": false,
+          "sub_metrics": [
+            {
+              "sub_metric": "Internal AI tool adoption rate (e.g. Rovo)",
+              "target": "100",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Share of relevant staff actively using Atlassian's AI tooling (e.g. Rovo) internally \u2014 a leading indicator Atlassian evaluates for AI-forward partners."
+            },
+            {
+              "sub_metric": "AI-related customer engagements delivered",
+              "target": "8",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Number of customer engagements this quarter that specifically involved AI capability (Rovo, AI-powered workflows, etc.)."
+            },
+            {
+              "sub_metric": "AI enablement certifications completed",
+              "target": "15",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Staff certifications completed in Atlassian's AI-related enablement tracks."
+            }
+          ],
+          "label": "AI Adoption",
+          "weight_pct": 8
+        },
+        "business_planning_qbr": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "has_data": false,
+          "sub_metrics": [
+            {
+              "sub_metric": "QBR cadence adherence",
+              "target": "4",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Number of Quarterly Business Reviews actually held with Atlassian against the expected cadence."
+            },
+            {
+              "sub_metric": "Joint business plan goal attainment",
+              "target": "100",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Progress against the goals set out in the joint business plan agreed with Atlassian."
+            },
+            {
+              "sub_metric": "QBR action item closure rate",
+              "target": "100",
+              "actual": "0",
+              "unit": "%",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Share of action items from prior QBRs that were actually closed out \u2014 a proxy for how seriously the partnership follows through."
+            }
+          ],
+          "label": "Business Planning & QBRs",
+          "weight_pct": 12
+        },
+        "registrations": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "has_data": false,
+          "sub_metrics": [
+            {
+              "sub_metric": "Deal Registration volume & approval rate",
+              "target": "30",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Number of deals registered with Atlassian and approved, protecting margin and signaling active pipeline to the vendor."
+            },
+            {
+              "sub_metric": "PVR (Partner Value Registration) volume/approval",
+              "target": "15",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data; confirm with Atlassian whether PVR is still an active program before re-entering data",
+              "description": "Registrations under Atlassian's Partner Value Registration program, recognizing partner-sourced value beyond a single deal."
+            },
+            {
+              "sub_metric": "Service Registration volume/approval",
+              "target": "10",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Registered services engagements, recognizing services-attach as part of the partner value delivered."
+            }
+          ],
+          "label": "Registrations (Deal Reg / PVR / Service Reg)",
+          "weight_pct": 12
+        },
+        "third_party_coselling": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "has_data": false,
+          "sub_metrics": [
+            {
+              "sub_metric": "Active joint engagements with SIs/ISVs",
+              "target": "8",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Count of active joint engagements with other system integrators or ISV partners."
+            },
+            {
+              "sub_metric": "Revenue influenced via 3rd-party referrals",
+              "target": "300000",
+              "actual": "0",
+              "unit": "USD",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Revenue where a third-party vendor or partner referral was a material factor."
+            },
+            {
+              "sub_metric": "AWS co-sell deals (ACE) registered",
+              "target": "10",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Deals registered in AWS's ACE (APN Customer Engagements) co-sell program."
+            },
+            {
+              "sub_metric": "Google co-sell engagements",
+              "target": "6",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Joint engagements run through Google's partner co-sell motion."
+            },
+            {
+              "sub_metric": "GSI joint pipeline value",
+              "target": "400000",
+              "actual": "0",
+              "unit": "USD",
+              "weight_pct_in_category": 20.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Pipeline value being jointly pursued with Global System Integrators."
+            }
+          ],
+          "label": "3rd Party Vendors & Co-selling (AWS, Google, GSIs)",
+          "weight_pct": 12
+        },
+        "solutions": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "has_data": false,
+          "sub_metrics": [
+            {
+              "sub_metric": "Number of solutions created",
+              "target": "6",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 25.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Distinct packaged solutions built this quarter (repeatable offerings, not one-off custom work)."
+            },
+            {
+              "sub_metric": "Number of solutions sold",
+              "target": "15",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Instances of a packaged solution actually sold to a client."
+            },
+            {
+              "sub_metric": "Revenue generated from solutions",
+              "target": "400000",
+              "actual": "0",
+              "unit": "USD",
+              "weight_pct_in_category": 30.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Revenue directly attributable to packaged solution sales."
+            },
+            {
+              "sub_metric": "Solution vertical coverage",
+              "target": "5",
+              "actual": "0",
+              "unit": "verticals",
+              "weight_pct_in_category": 15.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data; see solution_verticals.csv",
+              "description": "Number of industry verticals with at least one packaged solution, out of the target range \u2014 breadth of the solution portfolio."
+            }
+          ],
+          "label": "Solutions",
+          "weight_pct": 12
+        },
+        "services": {
+          "quarter": "2026-Q3",
+          "category_score": 0.0,
+          "weight_check": 100.0,
+          "has_data": false,
+          "sub_metrics": [
+            {
+              "sub_metric": "Services revenue sold to clients",
+              "target": "600000",
+              "actual": "0",
+              "unit": "USD",
+              "weight_pct_in_category": 60.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Total services revenue (implementation, consulting, managed services) sold this quarter."
+            },
+            {
+              "sub_metric": "Number of clients who purchased services",
+              "target": "25",
+              "actual": "0",
+              "unit": "count",
+              "weight_pct_in_category": 40.0,
+              "score": 0.0,
+              "has_data": false,
+              "source": "",
+              "notes": "RESET 2026-07-01 \u2014 awaiting real data",
+              "description": "Distinct clients who purchased any services this quarter \u2014 breadth of services attach."
+            }
+          ],
+          "label": "Services",
+          "weight_pct": 10
+        }
+      },
+      "solution_verticals": [
+        {
+          "record_id": "SV-0001",
+          "vendor": "Atlassian",
+          "quarter": "2026-Q3",
+          "vertical": "Finance",
+          "solutions_count": "0",
+          "solutions_sold": "0",
+          "revenue": "0",
+          "source": "",
+          "notes": "RESET 2026-07-01 \u2014 awaiting real data"
+        },
+        {
+          "record_id": "SV-0002",
+          "vendor": "Atlassian",
+          "quarter": "2026-Q3",
+          "vertical": "Automotive",
+          "solutions_count": "0",
+          "solutions_sold": "0",
+          "revenue": "0",
+          "source": "",
+          "notes": "RESET 2026-07-01 \u2014 awaiting real data"
+        },
+        {
+          "record_id": "SV-0003",
+          "vendor": "Atlassian",
+          "quarter": "2026-Q3",
+          "vertical": "Pharmaceutical",
+          "solutions_count": "0",
+          "solutions_sold": "0",
+          "revenue": "0",
+          "source": "",
+          "notes": "RESET 2026-07-01 \u2014 awaiting real data"
+        }
+      ],
+      "deals": []
+    }
+  },
+  "evidence": [],
+  "changelog": [
+    {
+      "record_id": "CHG-0001",
+      "date": "2026-07-01",
+      "vendor": "Atlassian",
+      "category": "third_party_coselling",
+      "sub_metric": "(category merge)",
+      "change_type": "amended",
+      "old_value": "third_party_vendors (10%) + coselling (10%) as separate categories",
+      "new_value": "merged into third_party_coselling (12%)",
+      "reason": "Both categories measured revenue/pipeline generated with another party rather than solo \u2014 combined per Steve's request to avoid double-counting the same kind of activity",
+      "source": "Steve Mojsak"
+    },
+    {
+      "record_id": "CHG-0002",
+      "date": "2026-07-01",
+      "vendor": "Atlassian",
+      "category": "solutions",
+      "sub_metric": "(new category)",
+      "change_type": "added",
+      "old_value": "",
+      "new_value": "Number of solutions created / sold, revenue generated, vertical coverage (12%)",
+      "reason": "New category requested to track packaged solution output separately from generic sales pipeline",
+      "source": "Steve Mojsak"
+    },
+    {
+      "record_id": "CHG-0003",
+      "date": "2026-07-01",
+      "vendor": "Atlassian",
+      "category": "services",
+      "sub_metric": "(new category)",
+      "change_type": "added",
+      "old_value": "",
+      "new_value": "Services revenue sold, number of clients purchasing services (10%)",
+      "reason": "New category requested to track services attach separately from solutions and core sales",
+      "source": "Steve Mojsak"
+    },
+    {
+      "record_id": "CHG-0004",
+      "date": "2026-07-01",
+      "vendor": "Atlassian",
+      "category": "all",
+      "sub_metric": "(full reset)",
+      "change_type": "amended",
+      "old_value": "sample data populating all categories (overall ~77)",
+      "new_value": "all sub-metrics reset to actual=0 for 2026-Q3; only the Market Visibility 'Press/analyst mentions volume' sub-metric reflects real data, sourced from the live news scan",
+      "reason": "Steve requested all sample scores cleared and reset to zero, keeping only real Communardo web-mention data \u2014 the earlier PVR-retirement scenario was illustrative demo data and has been reverted",
+      "source": "Steve Mojsak"
+    },
+    {
+      "record_id": "CHG-0005",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "sales_performance",
+      "sub_metric": "Pipeline growth QoQ",
+      "change_type": "amended",
+      "old_value": "weight 35%, target 500000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
+    },
+    {
+      "record_id": "CHG-0006",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "sales_performance",
+      "sub_metric": "Bookings/revenue attainment vs quota",
+      "change_type": "amended",
+      "old_value": "weight 40%, target 1200000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
+    },
+    {
+      "record_id": "CHG-0007",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "third_party_coselling",
+      "sub_metric": "Revenue influenced via 3rd-party referrals",
+      "change_type": "amended",
+      "old_value": "weight 20%, target 300000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
+    },
+    {
+      "record_id": "CHG-0008",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "third_party_coselling",
+      "sub_metric": "GSI joint pipeline value",
+      "change_type": "amended",
+      "old_value": "weight 20%, target 400000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
+    },
+    {
+      "record_id": "CHG-0009",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "solutions",
+      "sub_metric": "Revenue generated from solutions",
+      "change_type": "amended",
+      "old_value": "weight 30%, target 400000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
+    },
+    {
+      "record_id": "CHG-0010",
+      "date": "2026-07-18",
+      "vendor": "Atlassian",
+      "category": "services",
+      "sub_metric": "Services revenue sold to clients",
+      "change_type": "amended",
+      "old_value": "weight 60%, target 600000 EUR",
+      "new_value": "see notes",
+      "reason": "Steve requested switching the account's financial currency from EUR to USD",
+      "source": "Claude"
+    }
+  ],
+  "category_registry": {
+    "sales_performance": {
+      "label": "Sales Performance",
+      "file": "sales_performance"
+    },
+    "marketing": {
+      "label": "Marketing",
+      "file": "marketing"
+    },
+    "market_visibility": {
+      "label": "Market Visibility",
+      "file": "market_visibility"
+    },
+    "ai_adoption": {
+      "label": "AI Adoption",
+      "file": "ai_adoption"
+    },
+    "business_planning_qbr": {
+      "label": "Business Planning & QBRs",
+      "file": "business_planning_qbr"
+    },
+    "registrations": {
+      "label": "Registrations (Deal Reg / PVR / Service Reg)",
+      "file": "registrations"
+    },
+    "third_party_coselling": {
+      "label": "3rd Party Vendors & Co-selling (AWS, Google, GSIs)",
+      "file": "third_party_coselling"
+    },
+    "solutions": {
+      "label": "Solutions",
+      "file": "solutions"
+    },
+    "services": {
+      "label": "Services",
+      "file": "services"
+    }
+  },
+  "news": [
+    {
+      "record_id": "NEWS-0001",
+      "date_found": "2026-06-28",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo strengthens European presence with expansion into the Benelux region",
+      "source_url": "https://www.bu-partners.com/news/communardo-strengthens-european-presence-with-expansion-into-the-benelux-region-by-acquiring-dutch-atlassian-platinum-partner-prepend/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Acquisition of Dutch Atlassian Platinum partner Prepend, expanding Communardo's European footprint."
+    },
+    {
+      "record_id": "NEWS-0002",
+      "date_found": "2026-06-15",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo scales as an Atlassian & Microsoft platform across Europe",
+      "source_url": "https://www.bu-partners.com/news/how-communardo-is-scaling-across-europe-as-an-atlassian-platinum-solution-partner-atlassian-marketplace-vendor-and-microsoft-solutions-partner/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Coverage of Communardo's growth as Atlassian Platinum Solution Partner and Marketplace vendor."
+    },
+    {
+      "record_id": "NEWS-0003",
+      "date_found": "2026-07-16",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo acquires Ambientia's Atlassian business in Finland",
+      "source_url": "https://www.bu-partners.com/news/communardo-acquires-ambientias-atlassian-business-in-finland-and-expands-its-presence-in-northern-europe/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo acquired Ambientia's Atlassian business, expanding its presence into Finland as part of its Nordic growth strategy."
+    },
+    {
+      "record_id": "NEWS-0004",
+      "date_found": "2026-07-16",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo acquires Austrian Atlassian Platinum Partner ByteSource",
+      "source_url": "https://www.bu-partners.com/news/communardo-continues-its-growth-trajectory-and-acquires-bytesource-to-strengthen-its-position-in-the-dach-region-as-well-as-its-capabilities-in-enterprise-cloud-aws-and-devops/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo acquired ByteSource, Austria's leading Atlassian Platinum Partner and first AWS Premier Tier Partner, strengthening its DACH-region and cloud/DevOps capabilities."
+    },
+    {
+      "record_id": "NEWS-0005",
+      "date_found": "2026-07-16",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Group acquires Copenhagen-based Aety, scaling Danish presence past 480 employees",
+      "source_url": "https://www.communardo.com/company/press-releases/press-release/with-the-acquisition-of-copenhagen-based-aety-the-communardo-group-scales-its-danish-presence/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo acquired Danish Atlassian consultancy Aety, growing the group to more than 480 employees and building a full delivery organization in Denmark."
+    },
+    {
+      "record_id": "NEWS-0006",
+      "date_found": "2026-07-16",
+      "vendor_context": "Atlassian",
+      "headline": "Florence Heinen appointed VP Operations Atlassian Professional Services",
+      "source_url": "https://www.communardo.com/company/press-releases/press-release/florence-heinen-wird-vp-operations-atlassian-professional-services/",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Communardo created a new group-level leadership role, naming Florence Heinen VP Operations for Atlassian Professional Services effective June 1, 2026."
+    },
+    {
+      "record_id": "NEWS-0007",
+      "date_found": "2026-07-16",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Experts launches as a joint venture with Spirit Experts in Morocco",
+      "source_url": "https://www.communardo.com/company/press-releases/press-release/communardo-experts-launches-as-a-joint-venture-with-spirit-experts-in-morocco/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo formed a joint venture, Communardo Experts GmbH, with Spirit Experts to build an Atlassian delivery hub in Casablanca, extending into the MENA region."
+    },
+    {
+      "record_id": "NEWS-0008",
+      "date_found": "2026-07-16",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Group GmbH acquires Computas Opus, becoming Atlassian market leader in Norway",
+      "source_url": "https://www.communardo.com/company/press-releases/press-release/communardo-group-gmbh-has-acquired-computas-opus/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo acquired Norwegian Atlassian Platinum Partner Computas Opus, establishing itself as the market leader in Norway's Atlassian ecosystem."
+    },
+    {
+      "record_id": "NEWS-0009",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "celix joins the Communardo Group",
+      "source_url": "https://www.communardo.com/company/news/detail/celix-joins-the-communardo-group/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo acquired Austrian Atlassian Platinum Solution Partner celix Solutions GmbH, strengthening its market leadership in the DACH region."
+    },
+    {
+      "record_id": "NEWS-0010",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Partnership with Mibex strengthens software portfolio",
+      "source_url": "https://www.communardo.com/unternehmen/presse-und-unternehmensinformationen/press-release/partnership-with-mibex-strengthens-software-portfolio/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo acquired Swiss Atlassian Gold Marketplace Partner Mibex Software, adding a DevOps-focused app portfolio serving over 2,700 customers."
+    },
+    {
+      "record_id": "NEWS-0011",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo enters Nordic market with acquisition of Stretch Addera in Sweden",
+      "source_url": "https://www.communardo.com/unternehmen/presse-und-unternehmensinformationen/press-release/strategic-expansion-skandinavia/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo acquired Swedish Atlassian Platinum Solution Partner Stretch Addera, entering the Nordic market and reinforcing its position as a pan-European Atlassian leader."
+    },
+    {
+      "record_id": "NEWS-0012",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo expands Industry Advisory Board with Seidensticker and Kranebitter",
+      "source_url": "https://www.communardo.com/unternehmen/presse-und-unternehmensinformationen/press-release/communardo-expands-advisory-board/",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Communardo added Dr. Franz-Josef Seidensticker as Chairman and Christian Kranebitter to its Industry Advisory Board to support market expansion and process professionalization."
+    },
+    {
+      "record_id": "NEWS-0013",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo partners with Bregal Unternehmerkapital to drive growth strategy and European expansion",
+      "source_url": "https://www.communardo.com/unternehmen/presse-und-unternehmensinformationen/press-release/communardo-partners-with-bregal-unternehmerkapital-to-drive-its-customer-centric-growth-strategy-and-expansion-in-europe/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Bregal Unternehmerkapital funds invested in Communardo Holding GmbH to accelerate its customer-centric growth strategy, European expansion, and service/software portfolio extension."
+    },
+    {
+      "record_id": "NEWS-0014",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Anje Hickey appointed CEO for Atlassian Professional Services in Europe",
+      "source_url": "https://www.communardo.de/unternehmen/presse-und-unternehmensinformationen/pressemitteilung/anje-hickey-wird-ceo-fuer-atlassian-professional-services-in-europa/",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Communardo named Anje Hickey, former CEO of Fellowmind Germany and 12-year Microsoft veteran, as CEO of its Atlassian Professional Services business across Europe effective January 1, 2026."
+    },
+    {
+      "record_id": "NEWS-0015",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Products rebrands as Elevatic unifying Marketplace app portfolio",
+      "source_url": "https://community.atlassian.com/forums/App-Central-articles/Meet-Elevatic-Our-New-Name-Same-Trusted-Solutions/ba-p/3218177",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Communardo Products rebranded as Elevatic, consolidating the former Communardo Products, bitvoodoo, and Mibex brands into one independent Atlassian Marketplace vendor."
+    },
+    {
+      "record_id": "NEWS-0016",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo extends Nordic market leadership with acquisition of Danish Atlassian partner Aety",
+      "source_url": "https://www.bu-partners.com/news/communardo-extends-nordic-market-leadership-with-acquisition-of-danish-atlassian-partner-aety/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "BU Partners' own coverage of Communardo's acquisition of Danish Atlassian consultancy Aety, extending its Nordic market leadership (signed April 30, 2026)."
+    },
+    {
+      "record_id": "NEWS-0017",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Paul Hastings advised Bregal on acquisition of Mibex by Communardo",
+      "source_url": "https://www.paulhastings.com/news/paul-hastings-advised-bregal-on-acquisition-of-mibex-by-communardo",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Law firm Paul Hastings announced (Dec 19, 2024) it advised Bregal Unternehmerkapital on Communardo Group's acquisition of Atlassian Gold Marketplace Partner Mibex Software."
+    },
+    {
+      "record_id": "NEWS-0018",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "PROM12 to sell Communardo Holding GmbH to Bregal Unternehmerkapital",
+      "source_url": "https://www.loyensloeff.com/insights/news--events/news/prom12-to-sell-communardo-holding-gmbh-to-bregal-unternehmerkapital/",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Law firm Loyens & Loeff announced (Sept 6, 2024) it served as Swiss legal advisor to PROM12 on the sale of a majority stake in Communardo Holding GmbH to Bregal Unternehmerkapital."
+    },
+    {
+      "record_id": "NEWS-0019",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Has Agreed to be Acquired by Bregal Unternehmerkapital",
+      "source_url": "https://www.williamblair.com/News/Communardo-and-Bregal-Unternehmerkapital-Transaction",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "William Blair announced (Sept 4, 2024) it acted as exclusive financial advisor to Communardo, then a PROM12 portfolio company, on its agreed sale to Bregal Unternehmerkapital."
+    },
+    {
+      "record_id": "NEWS-0020",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Group welcomes Stretch Addera as a new partner",
+      "source_url": "https://www.bu-partners.com/news/communardo-group-welcomes-stretch-addera-as-a-new-partner/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "BU Partners' coverage of Communardo Group welcoming Swedish Atlassian Platinum Partner Stretch Addera, marking its Nordic market entry."
+    },
+    {
+      "record_id": "NEWS-0021",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Acquisition Strengthens Communardo's Market Position in Germany",
+      "source_url": "https://www.communardo.com/knowledge/blog/acquisition-strengthens-communardos-market-position-in-germany/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo blog post (April 25, 2024) announcing the integration of German IT service provider Scolution into the Communardo Group, strengthening its Atlassian market position and regional presence in Swabian Hall."
+    },
+    {
+      "record_id": "NEWS-0022",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Group extends Nordic platform with the acquisition of Aety",
+      "source_url": "https://accura.dk/en/cases/communardo-group-acquires-aety/",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Danish law firm Accura's case page describing its advisory role for Communardo Group in its acquisition of Aety, extending the group's Nordic Atlassian platform to roughly 100 specialists."
+    },
+    {
+      "record_id": "NEWS-0023",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "German Communardo Group, backed by Bregal Unternehmerkapital (BU), acquires Swedish Atlassian partner Stretch Addera",
+      "source_url": "https://www.mainsights.io/ma-news/german-communardo-group-backed-by-bregal-unternehmerkapital-bu-acquires-swedish-atlassian-partner-stretch-addera",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "M&A intelligence tracker NKP/Mainsights' historical coverage (May 27, 2025) of Communardo Group's acquisition of Swedish Atlassian partner Stretch Addera, including deal financial details."
+    },
+    {
+      "record_id": "NEWS-0024",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Expanding Nordic Coverage: Communardo Group Adds Ambientia's Atlassian Business",
+      "source_url": "https://communardo-nordics.com/insights/expanding-nordic-coverage/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo Nordics blog post (Jan 8, 2026) on the acquisition of Ambientia's Atlassian business in Finland, extending Nordic coverage to Sweden, Norway, Denmark, and Finland."
+    },
+    {
+      "record_id": "NEWS-0025",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Stretch Addera joins Communardo Group",
+      "source_url": "https://communardo-nordics.com/insights/stretch-addera-joins-communardo-group/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo Nordics (formerly Stretch Addera) blog post (May 27, 2025) announcing Stretch Addera joining the Communardo Group, forming a group of 420+ Atlassian experts."
+    },
+    {
+      "record_id": "NEWS-0026",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Expanding Nordic Coverage: Communardo Group Adds Ambientia's Atlassian Business",
+      "source_url": "https://stretchaddera.com/insights/expanding-nordic-coverage/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Mirror of the Communardo Nordics blog post on stretchaddera.com, covering the Ambientia Atlassian business acquisition in Finland."
+    },
+    {
+      "record_id": "NEWS-0027",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Stretch Addera joins Communardo Group",
+      "source_url": "https://stretchaddera.com/insights/stretch-addera-joins-communardo-group/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Mirror of the Communardo Nordics blog post on stretchaddera.com, announcing Stretch Addera joining the Communardo Group."
+    },
+    {
+      "record_id": "NEWS-0028",
+      "date_found": "2026-07-18",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo GmbH - Atlassian Solutions Partner Directory listing",
+      "source_url": "https://partnerdirectory.atlassian.com/communardo-gmbh",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Atlassian's official partner directory profile for Communardo GmbH shows Platinum Solution Partner status, a 5.0 rating, and Atlassian Partner of the Year awards for 2019, 2023, and 2025 (Cloud Platform Solutions)."
+    },
+    {
+      "record_id": "NEWS-0029",
+      "date_found": "2026-07-19",
+      "vendor_context": "Atlassian",
+      "headline": "Elevatic, Communardo Group's software business, to acquire Atlassian marketplace vendor Elements",
+      "source_url": "https://www.bu-partners.com/news/elevatic-communardo-groups-software-business-to-acquire-atlassian-marketplace-vendor-elements/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Elevatic Software GmbH, the Communardo Group's software business, agreed to acquire France-based Atlassian Marketplace vendor Elements APPS SAS, adding Service Management as a third solution area to its portfolio."
+    },
+    {
+      "record_id": "NEWS-0030",
+      "date_found": "2026-07-19",
+      "vendor_context": "Atlassian",
+      "headline": "Elevatic enters into a put option agreement to acquire Elements",
+      "source_url": "https://www.clipperton.com/news-transaction/elevatic-enters-into-a-put-option-agreement-to-acquire-elements-adding-service-management-to-its-portfolio-of-trusted-atlassian-solutions",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "M&A advisory firm Clipperton's announcement of Elevatic's put option agreement to acquire Atlassian Marketplace vendor Elements, adding Service Management capabilities to Elevatic's portfolio."
+    },
+    {
+      "record_id": "NEWS-0031",
+      "date_found": "2026-07-19",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo strengthens its presence in Norway through the acquisition of Computas Opus",
+      "source_url": "https://www.bu-partners.com/news/communardo-strengthens-its-presence-in-norway-through-the-acquisition-of-computas-opus/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "BU Bregal Unternehmerkapital's coverage of Communardo Group's acquisition of Norwegian Atlassian Platinum Partner Computas Opus, establishing market leadership across all four Nordic countries."
+    },
+    {
+      "record_id": "NEWS-0032",
+      "date_found": "2026-07-20",
+      "vendor_context": "Atlassian",
+      "headline": "SWNetwork joins the Communardo Group and strengthens DevOps capabilities",
+      "source_url": "https://www.bu-partners.com/news/swnetwork-joins-the-communardo-group-and-strengthens-the-groups-devops-capabilities/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo Group acquired Atlassian DevOps specialist SWNetwork (founded 2016), strengthening its DevOps consulting and solution development capabilities; all SWNetwork employees join Communardo's existing DevOps team."
+    },
+    {
+      "record_id": "NEWS-0033",
+      "date_found": "2026-07-20",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo and Mibex Software join forces",
+      "source_url": "https://www.bu-partners.com/news/communardo-und-mibex-software-gehen-gemeinsame-wege/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Communardo Group's own press release (Dec 17, 2024) announcing its acquisition of Swiss Atlassian Gold Marketplace Partner Mibex Software, strengthening its DevOps app portfolio serving 2,700+ customers."
+    },
+    {
+      "record_id": "NEWS-0034",
+      "date_found": "2026-07-20",
+      "vendor_context": "Atlassian",
+      "headline": "Paul Hastings advises BU Bregal Unternehmerkapital on acquisition of Stretch Addera by Communardo",
+      "source_url": "https://www.paulhastings.com/news/paul-hastings-advises-bu-bregal-unternehmerkapital-on-acquisition-of-stretch-addera",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Law firm Paul Hastings announced it advised BU Bregal Unternehmerkapital on Communardo's acquisition of Swedish Atlassian Platinum Solution Partner Stretch Addera, marking Communardo's entry into the Nordic market."
+    },
+    {
+      "record_id": "NEWS-0035",
+      "date_found": "2026-07-20",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Acquires Stretch Addera from Stretch AB",
+      "source_url": "https://globallegalchronicle.com/communardo-acquires-stretch-addera-from-stretch-ab/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Global Legal Chronicle's coverage of Communardo Group's acquisition of Stretch Addera AB, a leading Atlassian Platinum Solution Partner in Sweden, and the legal advisors involved."
+    },
+    {
+      "record_id": "NEWS-0036",
+      "date_found": "2026-07-20",
+      "vendor_context": "Atlassian",
+      "headline": "BU-backed Communardo adds on Stretch Addera",
+      "source_url": "https://www.pehub.com/bu-backed-communardo-adds-on-stretch-addera/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "PE Hub's private-equity trade coverage of BU-backed Communardo Group's add-on acquisition of Swedish Atlassian partner Stretch Addera."
+    },
+    {
+      "record_id": "NEWS-0037",
+      "date_found": "2026-07-20",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Switzerland - Atlassian Solutions Partner Directory listing",
+      "source_url": "https://partnerdirectory.atlassian.com/communardo-switzerland",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Atlassian's official partner directory profile for Communardo Switzerland (formerly bitvoodoo) shows Platinum Solution Partner status, 46 sales and 24 delivery accreditations, and a 2023 Marketing Innovator award."
+    },
+    {
+      "record_id": "NEWS-0038",
+      "date_found": "2026-07-20",
+      "vendor_context": "Atlassian",
+      "headline": "Elevatic - Atlassian Marketplace vendor listing",
+      "source_url": "https://marketplace.atlassian.com/vendors/95/communardo-products-gmbh",
+      "sentiment": "neutral",
+      "sentiment_confidence": "medium",
+      "summary": "Atlassian Marketplace vendor profile for Elevatic (formerly Communardo Products, bitvoodoo, and Mibex), listing Platinum Marketplace and Solution Partner status and its portfolio of 16+ Confluence/Jira/Bitbucket apps."
+    },
+    {
+      "record_id": "NEWS-0039",
+      "date_found": "2026-07-21",
+      "vendor_context": "Atlassian",
+      "headline": "BU-backed Communardo buys Celix Solutions in Austria",
+      "source_url": "https://www.pehub.com/bu-backed-communardo-buys-celix-solutions-in-austria/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "PE Hub's trade coverage of BU-backed Communardo Group's acquisition of Austrian Atlassian consultancy Celix Solutions, strengthening its DACH-region market position."
+    },
+    {
+      "record_id": "NEWS-0040",
+      "date_found": "2026-07-21",
+      "vendor_context": "Atlassian",
+      "headline": "Paul Hastings advises Bregal on acquisition of Celix by Communardo",
+      "source_url": "https://www.paulhastings.com/news/paul-hastings-advises-bregal-on-acquisition-of-celix-by-communardo",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Law firm Paul Hastings announced it advised Bregal Unternehmerkapital on Communardo's acquisition of Austrian Atlassian partner Celix Solutions."
+    },
+    {
+      "record_id": "NEWS-0041",
+      "date_found": "2026-07-21",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo welcomes celix as a new partner",
+      "source_url": "https://www.bu-partners.com/news/bu-portfolio-company-communardo-welcomes-celix-as-a-new-partner-and-strengthens-its-market-position-in-austria/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "BU Bregal Unternehmerkapital's own coverage of Communardo Group welcoming Austrian Atlassian specialist celix, strengthening its market position in Austria."
+    },
+    {
+      "record_id": "NEWS-0042",
+      "date_found": "2026-07-21",
+      "vendor_context": "Atlassian",
+      "headline": "celix wird zu Communardo Austria (brand transition FAQ)",
+      "source_url": "https://www.celix.at/faq-markenumstellung/",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "celix Solutions' customer FAQ page announcing its rebrand to Communardo Austria GmbH as part of deeper integration into the Communardo Group, with contracts and contacts unchanged."
+    },
+    {
+      "record_id": "NEWS-0043",
+      "date_found": "2026-07-21",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo weitet Europa-Pr\u00e4senz aus",
+      "source_url": "https://www.channelpartner.de/article/4115160/communardo-weitet-europa-prasenz-aus.html",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "ChannelPartner (Jan 12, 2026) reports Communardo expanded into the Netherlands (Prepend) and Finland (Ambientia) in late 2025/early 2026, putting it in nine European countries as it pursues becoming Europe's largest Atlassian partner."
+    },
+    {
+      "record_id": "NEWS-0044",
+      "date_found": "2026-07-22",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo acquires Ambientia's Atlassian business in Finland (Chambers legal highlight)",
+      "source_url": "https://chambers.com/articles/communardo-acquires-ambientia-s-atlassian-business-in-finland",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Chambers and Partners legal highlight (Jan 20, 2026) on Avance advising Communardo Group in its acquisition of Ambientia Group's Atlassian business in Finland, backed by BU Bregal Unternehmerkapital."
+    },
+    {
+      "record_id": "NEWS-0045",
+      "date_found": "2026-07-22",
+      "vendor_context": "Atlassian",
+      "headline": "15 Monate Partnerschaft mit Bregal Unternehmerkapital",
+      "source_url": "https://silicon-saxony.de/15-monate-partnerschaft-mit-bregal-unternehmerkapital/",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Silicon Saxony member profile (Feb 4, 2026) reporting Communardo's positive 15-month interim assessment of its BU Bregal Unternehmerkapital partnership: 460+ employees, 21 locations, seven acquisitions, and quotes from Atlassian's Head of International Partners and Alliances praising Communardo's growth."
+    },
+    {
+      "record_id": "NEWS-0046",
+      "date_found": "2026-07-22",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo gewinnt Bregal Unternehmerkapital als Partner",
+      "source_url": "https://www.bregal.ch/aktuelles/artikel/communardo-gewinnt-bregal-unternehmerkapital-als-partner-um-die-kundenorientierte-wachstumsstrategie-und-die-expansion-in-europa-voranzutreiben",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Bregal's own announcement (German) of its partnership with Communardo Holding GmbH to drive its customer-centric growth strategy and European expansion."
+    },
+    {
+      "record_id": "NEWS-0047",
+      "date_found": "2026-07-22",
+      "vendor_context": "Atlassian",
+      "headline": "Case Study: Bregal Unternehmerkapital x Communardo",
+      "source_url": "https://www.codeandco.com/case-studies/tech-product-dd/bregal-unternehmerkapital-communardo/",
+      "sentiment": "neutral",
+      "sentiment_confidence": "medium",
+      "summary": "Code and Co. case study describing its tech/product due-diligence engagement for Bregal Unternehmerkapital on the Communardo transaction."
+    },
+    {
+      "record_id": "NEWS-0048",
+      "date_found": "2026-07-22",
+      "vendor_context": "Atlassian",
+      "headline": "GOF advises PROM12 on the sale of Communardo to Bregal Unternehmerkapital",
+      "source_url": "https://www.gof-partner.com/en/news-detail/gof-beraet-prom12-beim-verkauf-der-communardo-an-bregal-unternehmerkapital",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Law firm GOF announced it advised PROM12 on the sale of a majority stake in Communardo to Bregal Unternehmerkapital."
+    },
+    {
+      "record_id": "NEWS-0049",
+      "date_found": "2026-07-22",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo gewinnt Bregal Unternehmerkapital als Partner (PROM12 announcement)",
+      "source_url": "https://prom12.com/communardo-gewinnt-bregal-unternehmerkapital-als-partner-um-die-kundenorientierte-wachstumsstrategie-und-die-expansion-in-europa-voranzutreiben/",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "PROM12's own press release (German) announcing Communardo winning Bregal Unternehmerkapital as a partner to drive its customer-centric growth strategy and European expansion."
+    },
+    {
+      "record_id": "NEWS-0050",
+      "date_found": "2026-07-22",
+      "vendor_context": "Atlassian",
+      "headline": "BU-backed software company Communardo acquires Austrian IT firm ByteSource",
+      "source_url": "https://www.mainsights.io/ma-news/bu-backed-software-company-communardo-acquires-austrian-it-firm-bytesource",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "M&A intelligence tracker Mainsights' coverage of BU-backed Communardo's acquisition of Austrian Atlassian Platinum Partner ByteSource, strengthening its DACH and cloud/DevOps capabilities."
+    },
+    {
+      "record_id": "NEWS-0051",
+      "date_found": "2026-07-22",
+      "vendor_context": "Atlassian",
+      "headline": "aety Acquired by Communardo",
+      "source_url": "https://www.trysignalbase.com/news/acquisitions/aety-acquired-by-communardo-acquisition",
+      "sentiment": "positive",
+      "sentiment_confidence": "high",
+      "summary": "Signalbase M&A news tracker coverage of Communardo's acquisition of Danish Atlassian consultancy Aety, extending its Nordic market leadership."
+    },
+    {
+      "record_id": "NEWS-0052",
+      "date_found": "2026-07-22",
+      "vendor_context": "Atlassian",
+      "headline": "Communardo Sweden AB - Atlassian Solutions Partner Directory listing",
+      "source_url": "https://partnerdirectory.atlassian.com/communardo-sweden-ab",
+      "sentiment": "positive",
+      "sentiment_confidence": "medium",
+      "summary": "Atlassian's official partner directory profile for Communardo Sweden AB (formerly Stretch Addera) shows Platinum Solution Partner status, 86 delivery/107 sales accreditations, and a 2018 Atlassian Partner of the Year: Cloud award."
+    }
+  ],
+  "report_files": {
+    "Atlassian": {
+      "docx": "Orbit2_Report_Atlassian_2026-Q3.docx",
+      "pdf": "Orbit2_Report_Atlassian_2026-Q3.pdf",
+      "pptx": "Orbit2_Deck_Atlassian_2026-Q3.pptx"
+    }
+  },
+  "app_config": {
+    "job_title": "Atlassian Alliance Manager",
+    "timezone": "Europe/London",
+    "financial_currency": "USD",
+    "reporting_year": 2026,
+    "feature_flags": {
+      "evidence_library": true,
+      "reports_tab": true,
+      "news_monitoring": true,
+      "ai_assisted_features": false
+    },
+    "user_display_name": "Steve Mojsak",
+    "company": "Communardo",
+    "default_vendor": "Atlassian"
+  },
+  "activity_types": {
+    "qbr": {
+      "label": "QBR",
+      "description": "Quarterly Business Review with Atlassian or a joint QBR involving a customer."
+    },
+    "meeting": {
+      "label": "Meeting",
+      "description": "General meeting or call with an Atlassian contact, customer, or ecosystem partner."
+    },
+    "enablement": {
+      "label": "Enablement",
+      "description": "Training, certification, or enablement session \u2014 given or received."
+    },
+    "co_sell": {
+      "label": "Co-sell activity",
+      "description": "Joint selling activity with Atlassian, AWS, Google, or a GSI."
+    },
+    "workshop": {
+      "label": "Workshop",
+      "description": "Workshop or working session with a customer or Atlassian."
+    },
+    "escalation_support": {
+      "label": "Escalation support",
+      "description": "Supporting or resolving a customer or partner escalation."
+    },
+    "marketplace_activity": {
+      "label": "Marketplace activity",
+      "description": "Work on an Atlassian Marketplace app, listing, or submission."
+    },
+    "executive_briefing": {
+      "label": "Executive briefing",
+      "description": "Executive-level briefing or relationship-building conversation."
+    },
+    "campaign": {
+      "label": "Campaign",
+      "description": "Marketing or co-marketing campaign activity."
+    },
+    "deal_support": {
+      "label": "Deal support",
+      "description": "Direct support on a specific deal or opportunity."
+    },
+    "program_admin": {
+      "label": "Program administration",
+      "description": "Partner program administration \u2014 registrations, renewals, compliance."
+    },
+    "other": {
+      "label": "Other",
+      "description": "Anything not covered above \u2014 explain in the notes field."
+    }
+  },
+  "contribution_types": {
+    "initiated": {
+      "label": "Initiated",
+      "description": "You started this \u2014 it wouldn't have happened without you raising it."
+    },
+    "led": {
+      "label": "Led",
+      "description": "You owned and drove this activity end to end."
+    },
+    "influenced": {
+      "label": "Influenced",
+      "description": "You shaped the outcome without owning the activity outright."
+    },
+    "supported": {
+      "label": "Supported",
+      "description": "You contributed to someone else's activity."
+    },
+    "connected": {
+      "label": "Connected",
+      "description": "You made an introduction or connection that enabled this."
+    },
+    "accelerated": {
+      "label": "Accelerated",
+      "description": "You sped up something already in motion."
+    },
+    "protected": {
+      "label": "Protected",
+      "description": "You prevented a loss, churn, or negative outcome."
+    },
+    "other": {
+      "label": "Other",
+      "description": "Anything not covered above \u2014 explain in the notes field."
+    }
+  },
+  "actions": [],
+  "action_statuses": {
+    "open": {
+      "label": "Open",
+      "description": "Not started or in progress. The default status for a new action. Eligible for overdue/due-soon calculation.",
+      "terminal": false
+    },
+    "blocked": {
+      "label": "Blocked",
+      "description": "Cannot proceed \u2014 waiting on the dependency named in the action's 'dependency' field (a person, decision, or another action). Still eligible for overdue/due-soon calculation, since being blocked doesn't move the due date.",
+      "terminal": false
+    },
+    "deferred": {
+      "label": "Deferred",
+      "description": "Explicitly pushed to a new due date via the 'defer' command. The original due date is preserved separately in 'original_due_date' for audit history.",
+      "terminal": false
+    },
+    "completed": {
+      "label": "Completed",
+      "description": "Done. Set only via the 'complete' command, which stamps completed_at and \u2014 if the action was created with evidence_required \u2014 requires a completion note or evidence reference first. Terminal: excluded from overdue/due-soon.",
+      "terminal": true
+    },
+    "cancelled": {
+      "label": "Cancelled",
+      "description": "No longer needed. Set only via the 'cancel' command, which requires a reason. Terminal: excluded from overdue/due-soon.",
+      "terminal": true
+    }
+  },
+  "objectives": [
+    {
+      "objective_id": "OBJ-0001",
+      "period": "2026-Q3",
+      "category": "operational",
+      "objective": "Establish Atlassian partnership KPIs, reporting structure, and dashboards",
+      "success_measure": "Group Revenue Operations-aligned KPI set, reporting cadence, and dashboard live and adopted by regional teams",
+      "target": "",
+      "target_unit": "",
+      "target_date": "2026-09-30",
+      "communardo_priority": "high",
+      "atlassian_priority": "medium",
+      "status": "on_track",
+      "progress_method": "manual",
+      "progress_pct": "0",
+      "linked_activities": "",
+      "linked_evidence": "",
+      "at_risk_reason": "",
+      "recovery_action": "",
+      "completed_at": "",
+      "completion_note": "",
+      "missed_at": "",
+      "missed_reason": "",
+      "vendor": "Atlassian",
+      "visibility": "atlassian_shareable",
+      "created_at": "2026-07-21T17:18:06",
+      "updated_at": "2026-07-22T09:40:23",
+      "created_by": "",
+      "updated_by": "",
+      "notes": "",
+      "progress": {
+        "raw_pct": 0.0,
+        "official_pct": 0.0,
+        "overachievement_pct": 0.0,
+        "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0001",
+        "objective": "Establish Atlassian partnership KPIs, reporting structure, and dashboards",
+        "category": "operational",
+        "category_label": "Operational",
+        "period": "2026-Q3",
+        "status": "on_track",
+        "success_measure": "Group Revenue Operations-aligned KPI set, reporting cadence, and dashboard live and adopted by regional teams",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-09-30",
+        "communardo_priority": "high",
+        "atlassian_priority": "medium",
+        "vendor": "Atlassian",
+        "visibility": "atlassian_shareable",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 1: Partner Lifecycle & Operational Excellence",
+        "created_at": "2026-07-21T17:18:06",
+        "updated_at": "2026-07-22T09:40:23",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [],
+        "summary_text": "Establish Atlassian partnership KPIs, reporting structure, and dashboards \u2014 Operational objective for 2026-Q3.\nSuccess measure: Group Revenue Operations-aligned KPI set, reporting cadence, and dashboard live and adopted by regional teams.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: medium.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-22T09:41:35"
+      }
+    },
+    {
+      "objective_id": "OBJ-0002",
+      "period": "2026-Q3",
+      "category": "operational",
+      "objective": "Stand up rigorous deal registration, licensing, and quoting processes across regions",
+      "success_measure": "Documented, repeatable deal registration/licensing/quoting playbook landed and followed in DACH, Nordics, and Benelux",
+      "target": "",
+      "target_unit": "",
+      "target_date": "2026-09-30",
+      "communardo_priority": "high",
+      "atlassian_priority": "high",
+      "status": "on_track",
+      "progress_method": "manual",
+      "progress_pct": "0",
+      "linked_activities": "",
+      "linked_evidence": "",
+      "at_risk_reason": "",
+      "recovery_action": "",
+      "completed_at": "",
+      "completion_note": "",
+      "missed_at": "",
+      "missed_reason": "",
+      "vendor": "Atlassian",
+      "visibility": "atlassian_shareable",
+      "created_at": "2026-07-21T17:18:06",
+      "updated_at": "2026-07-22T09:40:24",
+      "created_by": "",
+      "updated_by": "",
+      "notes": "",
+      "progress": {
+        "raw_pct": 0.0,
+        "official_pct": 0.0,
+        "overachievement_pct": 0.0,
+        "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0002",
+        "objective": "Stand up rigorous deal registration, licensing, and quoting processes across regions",
+        "category": "operational",
+        "category_label": "Operational",
+        "period": "2026-Q3",
+        "status": "on_track",
+        "success_measure": "Documented, repeatable deal registration/licensing/quoting playbook landed and followed in DACH, Nordics, and Benelux",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-09-30",
+        "communardo_priority": "high",
+        "atlassian_priority": "high",
+        "vendor": "Atlassian",
+        "visibility": "atlassian_shareable",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 1: Partner Lifecycle & Operational Excellence",
+        "created_at": "2026-07-21T17:18:06",
+        "updated_at": "2026-07-22T09:40:24",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [],
+        "summary_text": "Stand up rigorous deal registration, licensing, and quoting processes across regions \u2014 Operational objective for 2026-Q3.\nSuccess measure: Documented, repeatable deal registration/licensing/quoting playbook landed and followed in DACH, Nordics, and Benelux.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: high.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-22T09:41:35"
+      }
+    },
+    {
+      "objective_id": "OBJ-0003",
+      "period": "2026-Q3",
+      "category": "operational",
+      "objective": "Embed Atlassian partner-driven deals into One CRM with high forecast accuracy",
+      "success_measure": "All Atlassian partner-related deals embedded in One CRM with accurate stage/forecast data; forecast variance tracked against actuals",
+      "target": "",
+      "target_unit": "",
+      "target_date": "2026-09-30",
+      "communardo_priority": "high",
+      "atlassian_priority": "medium",
+      "status": "on_track",
+      "progress_method": "manual",
+      "progress_pct": "0",
+      "linked_activities": "",
+      "linked_evidence": "",
+      "at_risk_reason": "",
+      "recovery_action": "",
+      "completed_at": "",
+      "completion_note": "",
+      "missed_at": "",
+      "missed_reason": "",
+      "vendor": "Atlassian",
+      "visibility": "atlassian_shareable",
+      "created_at": "2026-07-21T17:18:06",
+      "updated_at": "2026-07-22T09:40:24",
+      "created_by": "",
+      "updated_by": "",
+      "notes": "",
+      "progress": {
+        "raw_pct": 0.0,
+        "official_pct": 0.0,
+        "overachievement_pct": 0.0,
+        "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0003",
+        "objective": "Embed Atlassian partner-driven deals into One CRM with high forecast accuracy",
+        "category": "operational",
+        "category_label": "Operational",
+        "period": "2026-Q3",
+        "status": "on_track",
+        "success_measure": "All Atlassian partner-related deals embedded in One CRM with accurate stage/forecast data; forecast variance tracked against actuals",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-09-30",
+        "communardo_priority": "high",
+        "atlassian_priority": "medium",
+        "vendor": "Atlassian",
+        "visibility": "atlassian_shareable",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 2: Pipeline, Forecasting & Co-Sell Execution / Success Measures",
+        "created_at": "2026-07-21T17:18:06",
+        "updated_at": "2026-07-22T09:40:24",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [],
+        "summary_text": "Embed Atlassian partner-driven deals into One CRM with high forecast accuracy \u2014 Operational objective for 2026-Q3.\nSuccess measure: All Atlassian partner-related deals embedded in One CRM with accurate stage/forecast data; forecast variance tracked against actuals.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: medium.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-22T09:41:35"
+      }
+    },
+    {
+      "objective_id": "OBJ-0004",
+      "period": "2026-Q3",
+      "category": "strategic",
+      "objective": "Deliver a joint business plan with Atlassian aligned to Group GTM",
+      "success_measure": "First quarterly joint business plan completed with Atlassian, with clear growth targets and sign-off on Group GTM alignment",
+      "target": "",
+      "target_unit": "",
+      "target_date": "2026-09-30",
+      "communardo_priority": "high",
+      "atlassian_priority": "high",
+      "status": "on_track",
+      "progress_method": "manual",
+      "progress_pct": "0",
+      "linked_activities": "",
+      "linked_evidence": "",
+      "at_risk_reason": "",
+      "recovery_action": "",
+      "completed_at": "",
+      "completion_note": "",
+      "missed_at": "",
+      "missed_reason": "",
+      "vendor": "Atlassian",
+      "visibility": "atlassian_shareable",
+      "created_at": "2026-07-21T17:18:06",
+      "updated_at": "2026-07-22T09:40:24",
+      "created_by": "",
+      "updated_by": "",
+      "notes": "",
+      "progress": {
+        "raw_pct": 0.0,
+        "official_pct": 0.0,
+        "overachievement_pct": 0.0,
+        "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0004",
+        "objective": "Deliver a joint business plan with Atlassian aligned to Group GTM",
+        "category": "strategic",
+        "category_label": "Strategic",
+        "period": "2026-Q3",
+        "status": "on_track",
+        "success_measure": "First quarterly joint business plan completed with Atlassian, with clear growth targets and sign-off on Group GTM alignment",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-09-30",
+        "communardo_priority": "high",
+        "atlassian_priority": "high",
+        "vendor": "Atlassian",
+        "visibility": "atlassian_shareable",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 3: GTM Alignment & Partner Strategy",
+        "created_at": "2026-07-21T17:18:06",
+        "updated_at": "2026-07-22T09:40:24",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [],
+        "summary_text": "Deliver a joint business plan with Atlassian aligned to Group GTM \u2014 Strategic objective for 2026-Q3.\nSuccess measure: First quarterly joint business plan completed with Atlassian, with clear growth targets and sign-off on Group GTM alignment.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: high.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-22T09:41:35"
+      }
+    },
+    {
+      "objective_id": "OBJ-0005",
+      "period": "2026",
+      "category": "commercial",
+      "objective": "Grow Atlassian partner-sourced and co-sold revenue contribution",
+      "success_measure": "Increased partner-sourced and co-sold revenue contribution to the Group commercial engine (12-24 month success measure; 2026 is the first-year checkpoint)",
+      "target": "",
+      "target_unit": "",
+      "target_date": "2026-12-31",
+      "communardo_priority": "high",
+      "atlassian_priority": "high",
+      "status": "on_track",
+      "progress_method": "manual",
+      "progress_pct": "0",
+      "linked_activities": "",
+      "linked_evidence": "",
+      "at_risk_reason": "",
+      "recovery_action": "",
+      "completed_at": "",
+      "completion_note": "",
+      "missed_at": "",
+      "missed_reason": "",
+      "vendor": "Atlassian",
+      "visibility": "atlassian_shareable",
+      "created_at": "2026-07-21T17:18:20",
+      "updated_at": "2026-07-22T09:40:24",
+      "created_by": "",
+      "updated_by": "",
+      "notes": "",
+      "progress": {
+        "raw_pct": 0.0,
+        "official_pct": 0.0,
+        "overachievement_pct": 0.0,
+        "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0005",
+        "objective": "Grow Atlassian partner-sourced and co-sold revenue contribution",
+        "category": "commercial",
+        "category_label": "Commercial",
+        "period": "2026",
+        "status": "on_track",
+        "success_measure": "Increased partner-sourced and co-sold revenue contribution to the Group commercial engine (12-24 month success measure; 2026 is the first-year checkpoint)",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-12-31",
+        "communardo_priority": "high",
+        "atlassian_priority": "high",
+        "vendor": "Atlassian",
+        "visibility": "atlassian_shareable",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Success Measures (12-24 months)",
+        "created_at": "2026-07-21T17:18:20",
+        "updated_at": "2026-07-22T09:40:24",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [],
+        "summary_text": "Grow Atlassian partner-sourced and co-sold revenue contribution \u2014 Commercial objective for 2026.\nSuccess measure: Increased partner-sourced and co-sold revenue contribution to the Group commercial engine (12-24 month success measure; 2026 is the first-year checkpoint).\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: high.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-22T09:41:35"
+      }
+    },
+    {
+      "objective_id": "OBJ-0006",
+      "period": "2026",
+      "category": "commercial",
+      "objective": "Improve pipeline coverage and conversion rates for Atlassian-related deals",
+      "success_measure": "Demonstrated improvement in pipeline coverage ratio and win-rate for Atlassian co-sell opportunities vs. 2026 baseline",
+      "target": "",
+      "target_unit": "",
+      "target_date": "2026-12-31",
+      "communardo_priority": "high",
+      "atlassian_priority": "high",
+      "status": "on_track",
+      "progress_method": "manual",
+      "progress_pct": "0",
+      "linked_activities": "",
+      "linked_evidence": "",
+      "at_risk_reason": "",
+      "recovery_action": "",
+      "completed_at": "",
+      "completion_note": "",
+      "missed_at": "",
+      "missed_reason": "",
+      "vendor": "Atlassian",
+      "visibility": "atlassian_shareable",
+      "created_at": "2026-07-21T17:18:20",
+      "updated_at": "2026-07-22T09:40:24",
+      "created_by": "",
+      "updated_by": "",
+      "notes": "",
+      "progress": {
+        "raw_pct": 0.0,
+        "official_pct": 0.0,
+        "overachievement_pct": 0.0,
+        "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0006",
+        "objective": "Improve pipeline coverage and conversion rates for Atlassian-related deals",
+        "category": "commercial",
+        "category_label": "Commercial",
+        "period": "2026",
+        "status": "on_track",
+        "success_measure": "Demonstrated improvement in pipeline coverage ratio and win-rate for Atlassian co-sell opportunities vs. 2026 baseline",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-12-31",
+        "communardo_priority": "high",
+        "atlassian_priority": "high",
+        "vendor": "Atlassian",
+        "visibility": "atlassian_shareable",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 2 / Success Measures (12-24 months)",
+        "created_at": "2026-07-21T17:18:20",
+        "updated_at": "2026-07-22T09:40:24",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [],
+        "summary_text": "Improve pipeline coverage and conversion rates for Atlassian-related deals \u2014 Commercial objective for 2026.\nSuccess measure: Demonstrated improvement in pipeline coverage ratio and win-rate for Atlassian co-sell opportunities vs. 2026 baseline.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: high.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-22T09:41:35"
+      }
+    },
+    {
+      "objective_id": "OBJ-0007",
+      "period": "2026",
+      "category": "relationship",
+      "objective": "Drive internal adoption of Atlassian partner motions across all regions",
+      "success_measure": "Sales, Marketing, and Delivery teams across DACH, Nordics, and Benelux trained and actively using partner-centric selling motions",
+      "target": "",
+      "target_unit": "",
+      "target_date": "2026-12-31",
+      "communardo_priority": "medium",
+      "atlassian_priority": "medium",
+      "status": "on_track",
+      "progress_method": "manual",
+      "progress_pct": "0",
+      "linked_activities": "",
+      "linked_evidence": "",
+      "at_risk_reason": "",
+      "recovery_action": "",
+      "completed_at": "",
+      "completion_note": "",
+      "missed_at": "",
+      "missed_reason": "",
+      "vendor": "Atlassian",
+      "visibility": "atlassian_shareable",
+      "created_at": "2026-07-21T17:18:20",
+      "updated_at": "2026-07-22T09:40:24",
+      "created_by": "",
+      "updated_by": "",
+      "notes": "",
+      "progress": {
+        "raw_pct": 0.0,
+        "official_pct": 0.0,
+        "overachievement_pct": 0.0,
+        "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0007",
+        "objective": "Drive internal adoption of Atlassian partner motions across all regions",
+        "category": "relationship",
+        "category_label": "Relationship",
+        "period": "2026",
+        "status": "on_track",
+        "success_measure": "Sales, Marketing, and Delivery teams across DACH, Nordics, and Benelux trained and actively using partner-centric selling motions",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-12-31",
+        "communardo_priority": "medium",
+        "atlassian_priority": "medium",
+        "vendor": "Atlassian",
+        "visibility": "atlassian_shareable",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 5: Internal Enablement & Communication / Success Measures",
+        "created_at": "2026-07-21T17:18:20",
+        "updated_at": "2026-07-22T09:40:24",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [],
+        "summary_text": "Drive internal adoption of Atlassian partner motions across all regions \u2014 Relationship objective for 2026.\nSuccess measure: Sales, Marketing, and Delivery teams across DACH, Nordics, and Benelux trained and actively using partner-centric selling motions.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: medium. Atlassian priority: medium.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-22T09:41:35"
+      }
+    },
+    {
+      "objective_id": "OBJ-0008",
+      "period": "2026",
+      "category": "recognition",
+      "objective": "Elevate Communardo's strategic positioning with Atlassian",
+      "success_measure": "Recognised by Atlassian as a strategic, high-performing partner; strengthened relationships across Atlassian sales, partner management, and leadership layers",
+      "target": "",
+      "target_unit": "",
+      "target_date": "2026-12-31",
+      "communardo_priority": "high",
+      "atlassian_priority": "high",
+      "status": "on_track",
+      "progress_method": "manual",
+      "progress_pct": "0",
+      "linked_activities": "",
+      "linked_evidence": "",
+      "at_risk_reason": "",
+      "recovery_action": "",
+      "completed_at": "",
+      "completion_note": "",
+      "missed_at": "",
+      "missed_reason": "",
+      "vendor": "Atlassian",
+      "visibility": "atlassian_shareable",
+      "created_at": "2026-07-21T17:18:20",
+      "updated_at": "2026-07-22T09:40:24",
+      "created_by": "",
+      "updated_by": "",
+      "notes": "",
+      "progress": {
+        "raw_pct": 0.0,
+        "official_pct": 0.0,
+        "overachievement_pct": 0.0,
+        "basis": "manually entered"
+      },
+      "detail": {
+        "objective_id": "OBJ-0008",
+        "objective": "Elevate Communardo's strategic positioning with Atlassian",
+        "category": "recognition",
+        "category_label": "Recognition",
+        "period": "2026",
+        "status": "on_track",
+        "success_measure": "Recognised by Atlassian as a strategic, high-performing partner; strengthened relationships across Atlassian sales, partner management, and leadership layers",
+        "target": "",
+        "target_unit": "",
+        "target_date": "2026-12-31",
+        "communardo_priority": "high",
+        "atlassian_priority": "high",
+        "vendor": "Atlassian",
+        "visibility": "atlassian_shareable",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 6: Partner Relationship Management / Success Measures",
+        "created_at": "2026-07-21T17:18:20",
+        "updated_at": "2026-07-22T09:40:24",
+        "progress": {
+          "raw_pct": 0.0,
+          "official_pct": 0.0,
+          "overachievement_pct": 0.0,
+          "basis": "manually entered"
+        },
+        "linked_evidence": [],
+        "linked_activities": [],
+        "action_points": [],
+        "summary_text": "Elevate Communardo's strategic positioning with Atlassian \u2014 Recognition objective for 2026.\nSuccess measure: Recognised by Atlassian as a strategic, high-performing partner; strengthened relationships across Atlassian sales, partner management, and leadership layers.\nStatus: on track. 0.0% complete \u2014 manually entered.\nCommunardo priority: high. Atlassian priority: high.\nNo evidence or linked activities recorded yet.",
+        "generated_at": "2026-07-22T09:41:35"
+      }
+    }
+  ],
+  "objectives_meta": {
+    "total": 8,
+    "public": 8
+  },
+  "objectives_report_files": {
+    "docx": "Orbit2_Objectives_Progress_Report_2026-07-22_0941.docx",
+    "pdf": "Orbit2_Objectives_Progress_Report_2026-07-22_0941.pdf",
+    "generated_at": "2026-07-22T09:41:35"
+  },
+  "homepage": {
+    "generated_at_london": "2026-07-22",
+    "overdue_actions": [],
+    "due_soon_actions": [],
+    "followups_due": [],
+    "per_vendor": {
+      "Atlassian": {
+        "metrics_at_risk": [
+          {
+            "category_key": "market_visibility",
+            "category_label": "Market Visibility",
+            "sub_metric": "Press/analyst mentions volume",
+            "score": 16.7,
+            "actual": "2",
+            "target": "12",
+            "unit": "count"
+          }
+        ],
+        "missing_evidence": [
+          {
+            "category_key": "market_visibility",
+            "category_label": "Market Visibility",
+            "sub_metric": "Press/analyst mentions volume",
+            "actual": "2",
+            "unit": "count"
+          }
+        ]
+      }
+    },
+    "by_period": {
+      "week": {
+        "period_start": "2026-07-20",
+        "recent_journal": [],
+        "recent_journal_total": 0,
+        "unrecognised_value": []
+      },
+      "month": {
+        "period_start": "2026-07-01",
+        "recent_journal": [],
+        "recent_journal_total": 0,
+        "unrecognised_value": []
+      },
+      "quarter": {
+        "period_start": "2026-07-01",
+        "recent_journal": [],
+        "recent_journal_total": 0,
+        "unrecognised_value": []
+      },
+      "year": {
+        "period_start": "2026-01-01",
+        "recent_journal": [],
+        "recent_journal_total": 0,
+        "unrecognised_value": []
+      }
+    }
+  },
+  "impact": {
+    "generated_at_london": "2026-07-22",
+    "by_period": {
+      "week": {
+        "period_start": "2026-07-20",
+        "total_contributions": 0,
+        "organisations": [],
+        "distinct_participants": 0,
+        "categories": {
+          "relationship": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "commercial": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "strategic": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "operational": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          }
+        },
+        "financial": {
+          "by_status": {
+            "confirmed": {},
+            "estimated": {},
+            "protected": {},
+            "potential": {}
+          },
+          "counts_by_status": {
+            "confirmed": 0,
+            "estimated": 0,
+            "protected": 0,
+            "potential": 0
+          },
+          "awaiting_validation": {},
+          "awaiting_validation_count": 0
+        },
+        "recognition": {
+          "by_status": {
+            "unrecognised": {
+              "count": 0,
+              "entries": []
+            },
+            "logged": {
+              "count": 0,
+              "entries": []
+            },
+            "shared": {
+              "count": 0,
+              "entries": []
+            },
+            "acknowledged": {
+              "count": 0,
+              "entries": []
+            }
+          }
+        },
+        "narrative": "Nothing logged this week yet. Use \"+ Add Activity\" on the Home tab to start building this picture \u2014 it takes under a minute per entry."
+      },
+      "month": {
+        "period_start": "2026-07-01",
+        "total_contributions": 0,
+        "organisations": [],
+        "distinct_participants": 0,
+        "categories": {
+          "relationship": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "commercial": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "strategic": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "operational": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          }
+        },
+        "financial": {
+          "by_status": {
+            "confirmed": {},
+            "estimated": {},
+            "protected": {},
+            "potential": {}
+          },
+          "counts_by_status": {
+            "confirmed": 0,
+            "estimated": 0,
+            "protected": 0,
+            "potential": 0
+          },
+          "awaiting_validation": {},
+          "awaiting_validation_count": 0
+        },
+        "recognition": {
+          "by_status": {
+            "unrecognised": {
+              "count": 0,
+              "entries": []
+            },
+            "logged": {
+              "count": 0,
+              "entries": []
+            },
+            "shared": {
+              "count": 0,
+              "entries": []
+            },
+            "acknowledged": {
+              "count": 0,
+              "entries": []
+            }
+          }
+        },
+        "narrative": "Nothing logged this month yet. Use \"+ Add Activity\" on the Home tab to start building this picture \u2014 it takes under a minute per entry."
+      },
+      "quarter": {
+        "period_start": "2026-07-01",
+        "total_contributions": 0,
+        "organisations": [],
+        "distinct_participants": 0,
+        "categories": {
+          "relationship": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "commercial": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "strategic": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "operational": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          }
+        },
+        "financial": {
+          "by_status": {
+            "confirmed": {},
+            "estimated": {},
+            "protected": {},
+            "potential": {}
+          },
+          "counts_by_status": {
+            "confirmed": 0,
+            "estimated": 0,
+            "protected": 0,
+            "potential": 0
+          },
+          "awaiting_validation": {},
+          "awaiting_validation_count": 0
+        },
+        "recognition": {
+          "by_status": {
+            "unrecognised": {
+              "count": 0,
+              "entries": []
+            },
+            "logged": {
+              "count": 0,
+              "entries": []
+            },
+            "shared": {
+              "count": 0,
+              "entries": []
+            },
+            "acknowledged": {
+              "count": 0,
+              "entries": []
+            }
+          }
+        },
+        "narrative": "Nothing logged this quarter yet. Use \"+ Add Activity\" on the Home tab to start building this picture \u2014 it takes under a minute per entry."
+      },
+      "year": {
+        "period_start": "2026-01-01",
+        "total_contributions": 0,
+        "organisations": [],
+        "distinct_participants": 0,
+        "categories": {
+          "relationship": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "commercial": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "strategic": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          },
+          "operational": {
+            "count": 0,
+            "evidence_coverage_pct": 0,
+            "contribution_type_counts": {},
+            "confidence_counts": {},
+            "organisations": [],
+            "entries": []
+          }
+        },
+        "financial": {
+          "by_status": {
+            "confirmed": {},
+            "estimated": {},
+            "protected": {},
+            "potential": {}
+          },
+          "counts_by_status": {
+            "confirmed": 0,
+            "estimated": 0,
+            "protected": 0,
+            "potential": 0
+          },
+          "awaiting_validation": {},
+          "awaiting_validation_count": 0
+        },
+        "recognition": {
+          "by_status": {
+            "unrecognised": {
+              "count": 0,
+              "entries": []
+            },
+            "logged": {
+              "count": 0,
+              "entries": []
+            },
+            "shared": {
+              "count": 0,
+              "entries": []
+            },
+            "acknowledged": {
+              "count": 0,
+              "entries": []
+            }
+          }
+        },
+        "narrative": "Nothing logged this year yet. Use \"+ Add Activity\" on the Home tab to start building this picture \u2014 it takes under a minute per entry."
+      }
+    }
+  },
+  "contacts": []
+}
