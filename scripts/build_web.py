@@ -191,6 +191,49 @@ def compute_homepage_aggregates(scores_snapshot, action_rows, journal_entries, e
     }
 
 
+def redact_public_objective(o):
+    """Privacy-conscious copy of one already-public (is_public_visible()
+    passed) objective row + its precomputed `detail`, for embedding in
+    web_snapshot.json. Added 2026-07-22 when Steve asked to make his 8
+    JD-derived objectives visible on the public My Impact page — this is
+    what closes the "Known limitation" flagged in docs/data_dictionary.md's
+    visibility-service section, where promoting an objective to public
+    would otherwise have republished its full raw row/detail verbatim,
+    same shape as contacts.py's public_contact_view().
+
+    Strips Steve's own internal free-text commentary (notes/at_risk_reason/
+    recovery_action/completion_note/missed_reason/created_by/updated_by)
+    regardless of what it currently says — future entries here are Steve's
+    private working notes, not written for a public audience, same as why
+    Contacts strips its own `notes` field. Also drops any linked activity
+    whose OWN `visibility` field isn't itself public-safe: an objective
+    being public must never drag a private Partner Value Journal entry
+    along with it just because the two are linked. Linked evidence
+    metadata is deliberately kept as-is — that was already the original
+    R1-T08/click-through-view design (evidence descriptions are public,
+    only the underlying file is dashboard-only), not something this
+    redaction changes."""
+    redacted = dict(o)
+    for f in ("notes", "at_risk_reason", "recovery_action", "completion_note", "missed_reason", "created_by", "updated_by"):
+        redacted[f] = ""
+    detail = dict(o.get("detail") or {})
+    safe_activities = [
+        a for a in detail.get("linked_activities", [])
+        if a.get("found") and visibility_mod.is_public_visible(a)
+    ]
+    safe_activity_ids = {a.get("activity_id") for a in safe_activities}
+    detail["linked_activities"] = safe_activities
+    dropped_sources = {"notes", "at-risk reason", "recovery action", "completion note", "missed reason"}
+    detail["action_points"] = [
+        ap for ap in detail.get("action_points", [])
+        if ap.get("source") not in dropped_sources
+        and (not str(ap.get("source", "")).startswith("next action from")
+             or ap["source"].split("next action from ", 1)[1] in safe_activity_ids)
+    ]
+    redacted["detail"] = detail
+    return redacted
+
+
 def filter_public_objectives(rows):
     """Pure filter, no I/O — the objective-half of Improvement Roadmap
     IR-A1's fix. Separated out from main() so it's unit-testable without a
@@ -199,8 +242,10 @@ def filter_public_objectives(rows):
     check_report_files_exist() already uses. An objective only passes if
     its own `visibility` is explicitly one of
     visibility_mod.PUBLIC_VISIBILITY_TIERS — everything else, including a
-    missing/blank value, is excluded."""
-    return [o for o in rows if visibility_mod.is_public_visible(o)]
+    missing/blank value, is excluded. Every objective that passes is then
+    run through redact_public_objective() (2026-07-22) so nothing internal
+    rides along once an objective is promoted to public."""
+    return [redact_public_objective(o) for o in rows if visibility_mod.is_public_visible(o)]
 
 
 def filter_public_actions(rows):

@@ -174,3 +174,78 @@ def test_filter_public_actions_is_stricter_than_homepage_visibility():
     row = {"visibility": "communardo_internal"}
     assert build_web_mod._visible_for_homepage(row) is True
     assert build_web_mod.filter_public_actions([row]) == []
+
+
+def _objective_with_detail(**detail_overrides):
+    detail = {
+        "linked_activities": [
+            {"activity_id": "ACT-0001", "found": True, "visibility": "atlassian_shareable", "next_action": "Follow up with vendor"},
+            {"activity_id": "ACT-0002", "found": True, "visibility": "communardo_internal", "next_action": "Private next step"},
+            {"activity_id": "ACT-0003", "found": False},
+        ],
+        "action_points": [
+            {"text": "From Partner Alliance Manager (Atlassian) JD, Responsibility 1", "source": "notes"},
+            {"text": "Slipping because of Q3 budget freeze", "source": "at-risk reason"},
+            {"text": "Follow up with vendor", "source": "next action from ACT-0001"},
+            {"text": "Private next step", "source": "next action from ACT-0002"},
+        ],
+    }
+    detail.update(detail_overrides)
+    return {
+        "objective_id": "OBJ-0001",
+        "visibility": "atlassian_shareable",
+        "notes": "From Partner Alliance Manager (Atlassian) JD, Responsibility 1",
+        "at_risk_reason": "Slipping because of Q3 budget freeze",
+        "recovery_action": "Escalate to VP",
+        "completion_note": "",
+        "missed_reason": "",
+        "created_by": "Steve Mojsak",
+        "updated_by": "Steve Mojsak",
+        "detail": detail,
+    }
+
+
+def test_redact_public_objective_strips_internal_free_text_fields():
+    import build_web as build_web_mod
+    o = _objective_with_detail()
+    redacted = build_web_mod.redact_public_objective(o)
+    for f in ("notes", "at_risk_reason", "recovery_action", "completion_note", "missed_reason", "created_by", "updated_by"):
+        assert redacted[f] == ""
+
+
+def test_redact_public_objective_drops_linked_activity_that_is_not_public_visible():
+    import build_web as build_web_mod
+    o = _objective_with_detail()
+    redacted = build_web_mod.redact_public_objective(o)
+    ids = {a["activity_id"] for a in redacted["detail"]["linked_activities"]}
+    assert ids == {"ACT-0001"}  # ACT-0002 is communardo_internal, ACT-0003 is a dangling (not found) reference
+
+
+def test_redact_public_objective_drops_notes_and_at_risk_action_points_but_keeps_safe_next_actions():
+    import build_web as build_web_mod
+    o = _objective_with_detail()
+    redacted = build_web_mod.redact_public_objective(o)
+    sources = {ap["source"] for ap in redacted["detail"]["action_points"]}
+    assert sources == {"next action from ACT-0001"}  # notes/at-risk reason dropped, and ACT-0002's next action dropped with it
+
+
+def test_filter_public_objectives_applies_redaction_to_every_included_row():
+    """filter_public_objectives() (what build_web.py actually calls) must
+    apply the same redaction, not just the standalone function — this is
+    what actually protects web_snapshot.json once an objective goes public
+    (2026-07-22, prompted by Steve asking to publish his 8 JD objectives)."""
+    import build_web as build_web_mod
+    o = _objective_with_detail()
+    result = build_web_mod.filter_public_objectives([o])
+    assert len(result) == 1
+    assert result[0]["notes"] == ""
+    assert {a["activity_id"] for a in result[0]["detail"]["linked_activities"]} == {"ACT-0001"}
+
+
+def test_redact_public_objective_tolerates_missing_detail_key():
+    """Objectives with no detail computed yet (e.g. a bare test fixture)
+    must not crash the redaction step."""
+    import build_web as build_web_mod
+    o = {"objective_id": "OBJ-0001", "visibility": "public"}
+    redacted = build_web_mod.redact_public_objective(o)
+    assert redacted["detail"] == {"linked_activities": [], "action_points": []}
