@@ -1094,14 +1094,27 @@ dashboard (`build_dashboard.py`'s own, separate call to
 full detail regardless of visibility tier — this fix only touches what
 `build_web.py` publishes.
 
-**Known limitation, not yet built:** once an objective or action IS
-promoted to a public-shareable tier, its full row (including a `notes`
-field that may itself be an internal working note, same shape as the one
-that triggered this fix) is still published as-is — there is no
-per-field redaction step for Objectives/Actions the way Contacts'
-`public_contact_view()` strips `notes`/`relationship_owner`/etc. even for
-a cleared contact. Add that if/when Steve actually promotes an objective
-or action to a shareable tier and it turns out to matter.
+**Update, 2026-07-22 — Objectives half of this limitation is now fixed.**
+Steve promoted his 8 JD-derived objectives (OBJ-0001..0008) to
+`atlassian_shareable` the same day this limitation was first written, so
+it stopped being hypothetical. `scripts/build_web.py`'s
+`redact_public_objective(o)` — called from inside
+`filter_public_objectives()`, so it's automatic for any objective that
+passes the visibility check, not something to remember per-objective —
+strips `notes`/`at_risk_reason`/`recovery_action`/`completion_note`/
+`missed_reason`/`created_by`/`updated_by`, and drops any linked Partner
+Value Journal activity from the public detail view unless that
+activity's own `visibility` is itself public-safe (linked evidence
+metadata is kept, matching the original click-through-detail design).
+Same shape as Contacts' `public_contact_view()`. Covered by 5 tests in
+`tests/test_visibility.py`.
+
+**Still not built — Actions.** `filter_public_actions()` has no
+equivalent redaction step yet. `data/actions.csv` is currently empty, so
+this is still latent, not live — but if Steve ever promotes an action to
+a public-shareable tier, build the same `redact_public_action()` pattern
+before that ships, rather than assuming Actions is fine because
+Objectives already got fixed.
 
 ### Generated files (not sources of truth — do not hand-edit)
 - `scores_snapshot.json` — output of `scripts/scoring.py`. `scripts/build_dashboard.py` loads this and augments it in memory (adding `actions`, `objectives`, `app_config`, etc.) before embedding the result as the Cowork dashboard artifact's `SNAPSHOT` — the augmented version is never written back to `scores_snapshot.json` on disk.
